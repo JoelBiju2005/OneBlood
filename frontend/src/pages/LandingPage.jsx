@@ -1,0 +1,354 @@
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Shield, Activity, Users, MapPin, Search, ArrowRight, HeartPulse } from 'lucide-react';
+import Logo from '../components/shared/Logo';
+import api from '../utils/api';
+import useAuthStore from '../store/authStore';
+import toast from 'react-hot-toast';
+import HallOfFameSection from '../components/shared/HallOfFameSection';
+
+const AnimatedNumber = ({ value, suffix = "" }) => {
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    let start = 0;
+    const end = parseInt(value, 10) || 0;
+    if (end === 0) return;
+    
+    const duration = 1500; // ms
+    const incrementTime = Math.max(Math.floor(duration / end), 15);
+    
+    const timer = setInterval(() => {
+      start += Math.max(Math.ceil(end / 100), 1);
+      if (start >= end) {
+        clearInterval(timer);
+        setCurrent(end);
+      } else {
+        setCurrent(start);
+      }
+    }, incrementTime);
+
+    return () => clearInterval(timer);
+  }, [value]);
+
+  return <span>{current.toLocaleString()}{suffix}</span>;
+};
+
+const LandingPage = () => {
+  const { user, login } = useAuthStore();
+  const navigate = useNavigate();
+  const [stats, setStats] = useState({
+    totalDonors: 1240,
+    totalBanks: 37,
+    requestsFulfilled: 890,
+    livesHelped: 2600,
+  });
+
+  const handleQuickLogin = async (onebloodId, email, password) => {
+    try {
+      await login(onebloodId, email, password);
+      toast.success('Logged in successfully!');
+      navigate('/home', { replace: true });
+    } catch (err) {
+      toast.error('Quick login failed. Make sure DB is seeded!');
+    }
+  };
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await api.get('/stats/public');
+        if (res.data) {
+          setStats(res.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch public stats:', err);
+      }
+    };
+    fetchStats();
+  }, []);
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.15
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 100 } }
+  };
+
+  return (
+    <div className="relative overflow-hidden bg-slate-950 min-h-[calc(100vh-80px)] flex flex-col justify-center">
+      {/* Dynamic decorative backdrop gradients */}
+      <div className="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-red-600/10 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-amber-500/5 blur-[120px] pointer-events-none" />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative z-10 w-full font-sans">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          
+          {/* Left Column: Heading and Tagline */}
+          <div className="lg:col-span-7 space-y-8 text-left">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5 }}
+              className="inline-flex items-center space-x-2 bg-red-500/10 border border-red-500/20 rounded-full px-4 py-1.5 text-xs text-red-500 font-semibold"
+            >
+              <HeartPulse className="w-4 h-4 text-red-500 animate-pulse" />
+              <span>Real-time Blood Coordination Service</span>
+            </motion.div>
+
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.1, duration: 0.6 }}
+              className="space-y-4"
+            >
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-tight font-display">
+                One Platform.<br />
+                <span className="text-red-500">Every Blood Need.</span>
+              </h1>
+              <p className="text-sm sm:text-base text-slate-400 max-w-xl leading-relaxed">
+                Connect directly with active donors and local blood banks in South India. Request emergency units with instant AI letter validation and secure proximity alerts.
+              </p>
+            </motion.div>
+
+            {/* Call To Actions */}
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.6 }}
+              className="flex flex-wrap gap-4"
+            >
+              <Link 
+                to={user ? "/home" : "/auth/signup?role=patient"}
+                state={{ role: 'patient' }}
+                className="px-8 py-4 rounded-full bg-oneblood-crimson hover:bg-red-700 text-white font-bold hover:shadow-lg hover:shadow-red-700/30 transition-all duration-200 flex items-center space-x-2.5 group"
+              >
+                <span>🩸 I Need Blood</span>
+              </Link>
+              <Link 
+                to={user ? "/noticeboard" : "/auth/signup?role=donor"}
+                state={{ role: 'donor' }}
+                className="px-8 py-4 rounded-full bg-oneblood-crimson hover:bg-red-700 text-white font-bold hover:shadow-lg hover:shadow-red-700/30 transition-all duration-200 flex items-center space-x-2.5 group"
+              >
+                <span>💉 I Want to Donate</span>
+              </Link>
+            </motion.div>
+
+            {/* Quick stats row */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-6 border-t border-white/10 max-w-xl"
+            >
+              <div>
+                <p className="text-2xl font-bold text-red-500">
+                  <AnimatedNumber value={stats.totalDonors} suffix="+" />
+                </p>
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Donors</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-white">
+                  <AnimatedNumber value={stats.totalBanks} />
+                </p>
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Blood Banks</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-amber-500">
+                  <AnimatedNumber value={stats.requestsFulfilled} />
+                </p>
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Requests Fulfilled</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-emerald-500">
+                  <AnimatedNumber value={stats.livesHelped} suffix="+" />
+                </p>
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Lives Helped</p>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Right Column: Hero interactive display */}
+          <div className="lg:col-span-5 relative flex flex-col items-center">
+            {/* Pulsing graphic wrapper */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3, type: "spring", stiffness: 80 }}
+              className="relative w-72 h-72 sm:w-80 sm:h-80 bg-slate-900 border border-white/5 rounded-3xl p-8 flex flex-col justify-between shadow-2xl overflow-hidden group hover:border-white/10 transition-all duration-300"
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-red-600/5 blur-[50px] pointer-events-none group-hover:bg-red-600/10 transition-colors" />
+              
+              <div className="flex justify-between items-start">
+                <div className="p-3 bg-red-500/10 rounded-xl border border-red-500/20 animate-pulse">
+                  <Activity className="w-6 h-6 text-red-500" />
+                </div>
+                <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">
+                  LIVE TRACKING
+                </span>
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold text-white">South India Network</h3>
+                <p className="text-[11px] text-slate-400 leading-relaxed">
+                  Real-time network map displays current blood availability across Bengaluru, Hyderabad, Hubballi-Dharwad, and AP coastal cities.
+                </p>
+              </div>
+
+              <Link 
+                to="/search" 
+                className="w-full py-3 bg-white/5 hover:bg-red-600 border border-white/10 hover:border-none rounded-xl text-xs font-semibold text-center transition-all duration-200 text-white"
+              >
+                View Live Inventory Map
+              </Link>
+            </motion.div>
+          </div>
+        </div>
+
+        {/* Feature section cards */}
+        <motion.div 
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-24"
+        >
+          <motion.div variants={itemVariants} className="bg-slate-900/40 border border-white/5 rounded-2xl p-6 text-left hover:border-white/10 transition-all">
+            <Shield className="w-8 h-8 text-red-500 mb-4" />
+            <h3 className="text-base font-bold text-white mb-2">Claude AI Verification</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Every request requires a prescription letter upload, scanned instantly by Anthropic's Claude API to guarantee authenticity and prevent spam.
+            </p>
+          </motion.div>
+
+          <motion.div variants={itemVariants} className="bg-slate-900/40 border border-white/5 rounded-2xl p-6 text-left hover:border-white/10 transition-all">
+            <Activity className="w-8 h-8 text-amber-400 mb-4" />
+            <h3 className="text-base font-bold text-white mb-2">Proximity Broadcasts</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Proximity filters automatically target matching donors and local blood banks within a 10km to 25km radius for immediate dispatch responses.
+            </p>
+          </motion.div>
+
+          <motion.div variants={itemVariants} className="bg-slate-900/40 border border-white/5 rounded-2xl p-6 text-left hover:border-white/10 transition-all">
+            <Users className="w-8 h-8 text-emerald-400 mb-4" />
+            <h3 className="text-base font-bold text-white mb-2">Donor Privacy Lock</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Donor contact information is encrypted and completely hidden from public listings, revealed only after the donor accepts a specific emergency.
+            </p>
+          </motion.div>
+        </motion.div>
+
+        {/* Blood Donation Knowledge Base */}
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+          className="mt-24 space-y-12 max-w-5xl mx-auto"
+        >
+          <div className="text-center space-y-3">
+            <span className="px-3 py-1 bg-red-500/10 border border-red-500/20 text-[#C0152A] font-black uppercase tracking-wider rounded-full text-xs">
+              Education & Safety
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
+              Understanding Blood Donation
+            </h2>
+            <p className="text-sm text-slate-400 max-w-xl mx-auto">
+              Basic knowledge, safety guidelines, health advantages, and the different ways you can save lives.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Column 1: Donation Safety */}
+            <div className="bg-slate-900/40 border border-white/5 rounded-3xl p-6 text-left backdrop-blur-md hover:border-white/10 transition-all flex flex-col justify-between">
+              <div className="space-y-4">
+                <div className="p-3 bg-red-500/15 border border-red-500/20 text-red-500 rounded-2xl w-fit">
+                  <Shield className="w-6 h-6" />
+                </div>
+                <h3 className="text-lg font-bold text-white">Donation Safety & Guidelines</h3>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Donating blood is completely safe. Every donation uses a new, sterile, disposable needle that is discarded immediately after use.
+                </p>
+                <ul className="text-xs text-slate-400 space-y-2 pt-2 border-t border-white/5">
+                  <li className="flex items-start gap-2">
+                    <span className="text-[#C0152A] font-bold">✓</span>
+                    <span><strong>Eligibility:</strong> Age 18–65, weight ≥ 45 kg, and in generally good health.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-[#C0152A] font-bold">✓</span>
+                    <span><strong>Preparation:</strong> Eat a healthy meal, drink plenty of water, and get 8 hours of sleep before donating.</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Column 2: Health Advantages */}
+            <div className="bg-slate-900/40 border border-white/5 rounded-3xl p-6 text-left backdrop-blur-md hover:border-white/10 transition-all flex flex-col justify-between">
+              <div className="space-y-4">
+                <div className="p-3 bg-emerald-500/15 border border-emerald-500/20 text-emerald-400 rounded-2xl w-fit">
+                  <HeartPulse className="w-6 h-6" />
+                </div>
+                <h3 className="text-lg font-bold text-white">Health Advantages</h3>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Saving lives has outstanding biological and psychological rewards for the donor as well.
+                </p>
+                <ul className="text-xs text-slate-400 space-y-2 pt-2 border-t border-white/5">
+                  <li className="flex items-start gap-2">
+                    <span className="text-emerald-400 font-bold">✓</span>
+                    <span><strong>Regulates Iron:</strong> Helps maintain healthy iron concentrations, reducing the risk of heart disease.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-emerald-400 font-bold">✓</span>
+                    <span><strong>Cell Renewal:</strong> Stimulates the production of fresh red blood cells in the bone marrow.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-emerald-400 font-bold">✓</span>
+                    <span><strong>Joy of Giving:</strong> Proven psychological benefits from helping those undergoing emergency medical procedures.</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Column 3: Types of Donation */}
+            <div className="bg-slate-900/40 border border-white/5 rounded-3xl p-6 text-left backdrop-blur-md hover:border-white/10 transition-all flex flex-col justify-between">
+              <div className="space-y-4">
+                <div className="p-3 bg-amber-500/15 border border-amber-500/20 text-amber-400 rounded-2xl w-fit">
+                  <Activity className="w-6 h-6" />
+                </div>
+                <h3 className="text-lg font-bold text-white">Types of Donations</h3>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Your blood is separated into multiple life-saving components depending on patients' medical needs:
+                </p>
+                <div className="space-y-3 pt-2 border-t border-white/5">
+                  <div className="text-[11px] text-slate-400">
+                    <span className="text-white font-bold block">Whole Blood</span>
+                    The most common type. Includes red cells, plasma, and platelets. Used for trauma, surgeries, and anemia.
+                  </div>
+                  <div className="text-[11px] text-slate-400">
+                    <span className="text-white font-bold block">Platelets (Apheresis)</span>
+                    Crucial for cancer patients undergoing chemotherapy, organ transplants, and massive blood loss. Can be done every 7 days.
+                  </div>
+                  <div className="text-[11px] text-slate-400">
+                    <span className="text-white font-bold block">Plasma / RBCs</span>
+                    Plasma contains clotting factors and proteins used for severe burns and shock. Red blood cells (RBCs) target oxygen delivery.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+        
+        {/* Hall of Fame section */}
+        <HallOfFameSection />
+      </div>
+    </div>
+  );
+};
+
+export default LandingPage;
