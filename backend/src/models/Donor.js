@@ -13,8 +13,8 @@ const donorSchema = new mongoose.Schema({
   city: { type: String },
   pincode: { type: String },
   location: {
-    type: { type: String, enum: ['Point'], default: 'Point' },
-    coordinates: { type: [Number] } // [longitude, latitude]
+    type: { type: String, enum: ['Point'] },
+    coordinates: { type: [Number] }
   },
   bio: { type: String },
   medicalConditions: [String],

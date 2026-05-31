@@ -15,8 +15,8 @@ const userSchema = new mongoose.Schema({
   donorProfileComplete: { type: Boolean, default: false },
   bankProfileComplete: { type: Boolean, default: false },
   location: {
-    type: { type: String, enum: ['Point'], default: 'Point' },
-    coordinates: { type: [Number] } // [longitude, latitude]
+    type: { type: String, enum: ['Point'] },
+    coordinates: { type: [Number] }
   }
 }, {
   timestamps: true,
