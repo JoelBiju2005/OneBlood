@@ -89,6 +89,53 @@ const LandingPage = () => {
       <div className="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-red-600/10 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-amber-500/5 blur-[120px] pointer-events-none" />
 
+      {/* ── Logo Symbolism Banner ── */}
+      <motion.div
+        initial={{ opacity: 0, y: -16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="relative z-10 border-b border-white/5 bg-gradient-to-r from-red-950/25 via-slate-950 to-slate-950 px-4 sm:px-8 py-5"
+      >
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center gap-5 sm:gap-10">
+          {/* Logo large */}
+          <div className="flex-shrink-0 flex flex-col items-center gap-1.5">
+            <Logo size="lg" showText={false} />
+            <p className="text-[9px] font-black uppercase tracking-[3px] text-red-500/60">OneBlood</p>
+          </div>
+
+          {/* Symbolism pillars */}
+          <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            <div className="bg-white/3 border border-white/7 rounded-2xl p-3 text-center hover:border-red-500/30 transition-all duration-300 group cursor-default">
+              <div className="text-xl mb-1 group-hover:scale-110 transition-transform duration-200">🩸</div>
+              <p className="text-[10px] font-bold text-white">Blood Drop</p>
+              <p className="text-[9px] text-slate-500 mt-0.5 leading-snug hidden sm:block">Unified ecosystem around life-saving blood</p>
+            </div>
+            <div className="bg-white/3 border border-white/7 rounded-2xl p-3 text-center hover:border-slate-400/30 transition-all duration-300 group cursor-default">
+              <div className="text-xl mb-1 group-hover:scale-110 transition-transform duration-200">1️⃣</div>
+              <p className="text-[10px] font-bold text-white">The "1"</p>
+              <p className="text-[9px] text-slate-500 mt-0.5 leading-snug hidden sm:block">One platform · one network · one response</p>
+            </div>
+            <div className="bg-white/3 border border-white/7 rounded-2xl p-3 text-center hover:border-amber-500/30 transition-all duration-300 group cursor-default">
+              <div className="text-xl mb-1 group-hover:scale-110 transition-transform duration-200">🕯️</div>
+              <p className="text-[10px] font-bold text-white">The Flame</p>
+              <p className="text-[9px] text-slate-500 mt-0.5 leading-snug hidden sm:block">Hope · Life · Urgency in emergencies</p>
+            </div>
+            <div className="bg-white/3 border border-white/7 rounded-2xl p-3 text-center hover:border-emerald-500/30 transition-all duration-300 group cursor-default">
+              <div className="text-xl mb-1 group-hover:scale-110 transition-transform duration-200">🤲</div>
+              <p className="text-[10px] font-bold text-white">The Hand</p>
+              <p className="text-[9px] text-slate-500 mt-0.5 leading-snug hidden sm:block">Human care · donors · protecting hope</p>
+            </div>
+          </div>
+
+          {/* Brand tagline — desktop only */}
+          <div className="hidden xl:flex flex-col items-end text-right flex-shrink-0 border-l border-white/8 pl-8">
+            <p className="text-sm font-black text-white leading-tight">One Need.</p>
+            <p className="text-sm font-black text-white leading-tight">One Response.</p>
+            <p className="text-sm font-black text-red-500 leading-tight">One Life.</p>
+          </div>
+        </div>
+      </motion.div>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative z-10 w-full font-sans">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           
@@ -176,39 +223,65 @@ const LandingPage = () => {
             </motion.div>
           </div>
 
-          {/* Right Column: Hero interactive display */}
+          {/* Right Column: Logo Symbolism Card */}
           <div className="lg:col-span-5 relative flex flex-col items-center">
-            {/* Pulsing graphic wrapper */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
+              initial={{ opacity: 0, scale: 0.85 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3, type: "spring", stiffness: 80 }}
-              className="relative w-72 h-72 sm:w-80 sm:h-80 bg-slate-900 border border-white/5 rounded-3xl p-8 flex flex-col justify-between shadow-2xl overflow-hidden group hover:border-white/10 transition-all duration-300"
+              className="relative w-full bg-gradient-to-br from-slate-900 via-red-950/20 to-slate-900 border border-red-500/20 rounded-3xl p-8 flex flex-col gap-5 shadow-2xl overflow-hidden group hover:border-red-500/40 transition-all duration-300"
             >
-              <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-red-600/5 blur-[50px] pointer-events-none group-hover:bg-red-600/10 transition-colors" />
-              
-              <div className="flex justify-between items-start">
-                <div className="p-3 bg-red-500/10 rounded-xl border border-red-500/20 animate-pulse">
-                  <Activity className="w-6 h-6 text-red-500" />
+              {/* Glow effects */}
+              <div className="absolute top-0 right-0 w-40 h-40 rounded-full bg-red-600/8 blur-[60px] pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full bg-amber-500/5 blur-[50px] pointer-events-none" />
+
+              {/* Header */}
+              <div className="flex items-center justify-between relative z-10">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[3px] text-red-500/80">Brand Story</p>
+                  <h3 className="text-lg font-extrabold text-white mt-0.5">What Our Logo Says</h3>
                 </div>
-                <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">
-                  LIVE TRACKING
-                </span>
+                <Logo size="md" showText={false} />
               </div>
 
-              <div className="space-y-2">
-                <h3 className="text-xl font-bold text-white">South India Network</h3>
-                <p className="text-[11px] text-slate-400 leading-relaxed">
-                  Real-time network map displays current blood availability across Bengaluru, Hyderabad, Hubballi-Dharwad, and AP coastal cities.
+              {/* Symbolism items */}
+              <div className="space-y-2.5 relative z-10">
+                <div className="flex items-start gap-3 p-3 rounded-xl bg-white/4 border border-white/6 hover:border-red-500/25 transition-all">
+                  <span className="text-xl flex-shrink-0">🩸</span>
+                  <div>
+                    <p className="text-xs font-bold text-white">The Blood Drop</p>
+                    <p className="text-[10px] text-slate-400 leading-snug mt-0.5">A unified ecosystem around the life-saving resource — blood donation, availability, and emergency response.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-3 rounded-xl bg-white/4 border border-white/6 hover:border-white/20 transition-all">
+                  <span className="text-xl flex-shrink-0">1️⃣</span>
+                  <div>
+                    <p className="text-xs font-bold text-white">The "1" — OneBlood</p>
+                    <p className="text-[10px] text-slate-400 leading-snug mt-0.5">One platform · one network · one response. The "One" literally sits at the center of everything.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-3 rounded-xl bg-white/4 border border-white/6 hover:border-amber-500/25 transition-all">
+                  <span className="text-xl flex-shrink-0">🕯️</span>
+                  <div>
+                    <p className="text-xs font-bold text-white">The Flame — Hope</p>
+                    <p className="text-[10px] text-slate-400 leading-snug mt-0.5">The "1" becomes a candle: hope for those waiting, urgency in every second, life and remembrance.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-3 rounded-xl bg-white/4 border border-white/6 hover:border-emerald-500/25 transition-all">
+                  <span className="text-xl flex-shrink-0">🤲</span>
+                  <div>
+                    <p className="text-xs font-bold text-white">The Hand — Human Care</p>
+                    <p className="text-[10px] text-slate-400 leading-snug mt-0.5">A donor giving. Human support and protection — the hand holds the candle of hope steady.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom tagline */}
+              <div className="border-t border-white/8 pt-4 text-center relative z-10">
+                <p className="text-[11px] italic text-slate-300 font-medium">
+                  "Protecting hope through one coordinated blood network."
                 </p>
               </div>
-
-              <Link 
-                to="/search" 
-                className="w-full py-3 bg-white/5 hover:bg-red-600 border border-white/10 hover:border-none rounded-xl text-xs font-semibold text-center transition-all duration-200 text-white"
-              >
-                View Live Inventory Map
-              </Link>
             </motion.div>
           </div>
         </div>

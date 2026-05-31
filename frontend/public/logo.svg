@@ -1,11 +1,46 @@
-<svg width="512" height="512" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M 50,5 C 20,40 15,80 50,95 C 85,80 80,40 50,5 Z" fill="url(#dropletGradient)" />
-  <path d="M 45,55 H 55 M 50,50 V 60" stroke="white" strokeWidth="3.5" strokeLinecap="round" />
-  <path d="M 5,60 H 32 L 38,40 L 44,80 L 50,50 L 56,70 L 62,60 H 95" stroke="#F59E0B" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+<svg width="512" height="614" viewBox="0 0 200 240" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="dropletGradient" x1="50" y1="5" x2="50" y2="95" gradientUnits="userSpaceOnUse">
-      <stop stopColor="#DC2626" />
-      <stop offset="1" stopColor="#7F1D1D" />
-    </linearGradient>
+    <radialGradient id="dropGrad" cx="50%" cy="40%" r="60%" fx="50%" fy="30%">
+      <stop offset="0%" stop-color="#EF1C25" />
+      <stop offset="100%" stop-color="#8B0000" />
+    </radialGradient>
+    <radialGradient id="flameGrad" cx="50%" cy="70%" r="60%">
+      <stop offset="0%" stop-color="#FFD700" />
+      <stop offset="60%" stop-color="#FF6B00" />
+      <stop offset="100%" stop-color="#CC0000" />
+    </radialGradient>
   </defs>
+
+  <!-- Blood drop outer shape -->
+  <path
+    d="M100 8 C60 55 38 100 38 138 C38 180 66 212 100 212 C134 212 162 180 162 138 C162 100 140 55 100 8 Z"
+    fill="url(#dropGrad)"
+  />
+
+  <!-- Supporting hand — white curved stroke at bottom -->
+  <path
+    d="M58 168 Q68 155 80 162 Q90 168 100 162 Q110 155 120 162 Q132 168 142 160"
+    stroke="white"
+    stroke-width="6"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    fill="none"
+  />
+
+  <!-- "1" body — white rectangle -->
+  <rect x="90" y="100" width="20" height="60" rx="3" fill="white" />
+  <!-- "1" top angled stroke -->
+  <path d="M78 115 L90 100" stroke="white" stroke-width="8" stroke-linecap="round" />
+
+  <!-- Flame -->
+  <path
+    d="M100 99 C96 90 88 82 92 72 C94 66 98 62 100 56 C102 62 106 66 108 72 C112 82 104 90 100 99 Z"
+    fill="url(#flameGrad)"
+  />
+  <!-- Inner flame highlight -->
+  <path
+    d="M100 94 C98 88 94 83 96 76 C97 72 99 70 100 66 C101 70 103 72 104 76 C106 83 102 88 100 94 Z"
+    fill="white"
+    opacity="0.55"
+  />
 </svg>

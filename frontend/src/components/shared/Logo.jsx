@@ -2,60 +2,73 @@ import React from 'react';
 
 export default function Logo({ size = 'md', showText = true, className = '' }) {
   const dimensions = {
-    sm: { height: 28, fontSize: 'text-lg' },
-    md: { height: 40, fontSize: 'text-2xl' },
-    lg: { height: 60, fontSize: 'text-4xl' },
-    xl: { height: 100, fontSize: 'text-6xl' }
-  }[size] || { height: 40, fontSize: 'text-2xl' };
+    sm: { height: 32, fontSize: 'text-lg' },
+    md: { height: 44, fontSize: 'text-2xl' },
+    lg: { height: 68, fontSize: 'text-4xl' },
+    xl: { height: 110, fontSize: 'text-6xl' }
+  }[size] || { height: 44, fontSize: 'text-2xl' };
 
   return (
     <div className={`flex items-center gap-3 select-none ${className}`}>
-      {/* SVG Droplet Icon */}
+      {/* New OneBlood Logo: Blood drop + "1" candle + flame + supporting hand */}
       <svg
         height={dimensions.height}
-        viewBox="0 0 100 100"
+        viewBox="0 0 200 240"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="drop-shadow-[0_2px_8px_rgba(185,28,28,0.4)]"
+        className="drop-shadow-[0_2px_12px_rgba(185,28,28,0.5)]"
       >
-        {/* Two Arcs forming a Droplet */}
+        <defs>
+          <radialGradient id="dropGrad" cx="50%" cy="40%" r="60%" fx="50%" fy="30%">
+            <stop offset="0%" stopColor="#EF1C25" />
+            <stop offset="100%" stopColor="#8B0000" />
+          </radialGradient>
+          <radialGradient id="flameGrad" cx="50%" cy="70%" r="60%">
+            <stop offset="0%" stopColor="#FFD700" />
+            <stop offset="60%" stopColor="#FF6B00" />
+            <stop offset="100%" stopColor="#CC0000" />
+          </radialGradient>
+        </defs>
+
+        {/* Blood drop outer shape */}
         <path
-          d="M 50,5 C 20,40 15,80 50,95 C 85,80 80,40 50,5 Z"
-          fill="url(#dropletGradient)"
-        />
-        
-        {/* Embedded White Medical Cross */}
-        <path
-          d="M 45,55 H 55 M 50,50 V 60"
-          stroke="white"
-          strokeWidth="3.5"
-          strokeLinecap="round"
+          d="M100 8 C60 55 38 100 38 138 C38 180 66 212 100 212 C134 212 162 180 162 138 C162 100 140 55 100 8 Z"
+          fill="url(#dropGrad)"
         />
 
-        {/* Pulse / Heartbeat Line cutting through horizontally */}
+        {/* Supporting hand — white negative-space curved stroke at the bottom */}
         <path
-          d="M 5,60 H 32 L 38,40 L 44,80 L 50,50 L 56,70 L 62,60 H 95"
-          stroke="#F59E0B" /* Accent Gold */
-          strokeWidth="3"
+          d="M58 168 Q68 155 80 162 Q90 168 100 162 Q110 155 120 162 Q132 168 142 160"
+          stroke="white"
+          strokeWidth="6"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="animate-pulse"
+          fill="none"
         />
 
-        {/* Gradient Definition */}
-        <defs>
-          <linearGradient id="dropletGradient" x1="50" y1="5" x2="50" y2="95" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#DC2626" /> {/* Crimson Light */}
-            <stop offset="1" stopColor="#7F1D1D" /> {/* Crimson Dark */}
-          </linearGradient>
-        </defs>
+        {/* "1" body — white negative space */}
+        <rect x="90" y="100" width="20" height="60" rx="3" fill="white" />
+        {/* "1" top serif / angled stroke */}
+        <path d="M78 115 L90 100" stroke="white" strokeWidth="8" strokeLinecap="round" />
+
+        {/* Flame */}
+        <path
+          d="M100 99 C96 90 88 82 92 72 C94 66 98 62 100 56 C102 62 106 66 108 72 C112 82 104 90 100 99 Z"
+          fill="url(#flameGrad)"
+        />
+        {/* Inner flame highlight */}
+        <path
+          d="M100 94 C98 88 94 83 96 76 C97 72 99 70 100 66 C101 70 103 72 104 76 C106 83 102 88 100 94 Z"
+          fill="white"
+          opacity="0.55"
+        />
       </svg>
 
-      {/* Brand Text */}
+      {/* Brand text: OneBlood */}
       {showText && (
         <span className={`${dimensions.fontSize} font-heading tracking-wide flex items-center`}>
-          <span className="font-extrabold text-oneblood-crimson">ONE</span>
-          <span className="font-normal text-white ml-0.5">BLOOD</span>
+          <span className="font-extrabold text-oneblood-crimson">One</span>
+          <span className="font-bold text-white">Blood</span>
         </span>
       )}
     </div>
