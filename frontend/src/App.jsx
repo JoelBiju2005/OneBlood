@@ -30,6 +30,7 @@ import HowItWorksPage from './pages/HowItWorksPage';
 import ChatPage from './pages/ChatPage';
 import SuccessPage from './pages/SuccessPage';
 import AdminMonitoringPage from './pages/AdminMonitoringPage';
+import DonorFindRequestsPage from './pages/DonorFindRequestsPage';
 
 // Notice Board & Confirmation Pages
 import NoticeBoardPage from './pages/NoticeBoardPage';
@@ -46,13 +47,13 @@ const HomeRedirect = () => {
 };
 
 function App() {
-  const { initializeAuth, isLoading } = useAuthStore();
+  const { initializeAuth, isInitialized } = useAuthStore();
 
   useEffect(() => {
     initializeAuth();
   }, []);
 
-  if (isLoading) {
+  if (!isInitialized) {
     return <FullPageSpinner />;
   }
 
@@ -145,7 +146,12 @@ function App() {
           {/* Donor Only Routes */}
           <Route path="/dashboard/donor" element={
             <ProtectedRoute allowedRoles={['donor']}>
-              <DonorDashboard />
+              <DonorHomePage />
+            </ProtectedRoute>
+          } />
+          <Route path="/donor/find-requests" element={
+            <ProtectedRoute allowedRoles={['donor']}>
+              <DonorFindRequestsPage />
             </ProtectedRoute>
           } />
           <Route path="/donor/register" element={

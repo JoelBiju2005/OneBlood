@@ -57,6 +57,9 @@ const registerDonor = async (req, res, next) => {
       await User.findByIdAndUpdate(userId, { role: 'donor', donorProfileComplete: true });
     } else {
       // Create new donor profile
+      donorData.totalDonations = 0;
+      donorData.rating = 5.0;
+      donorData.badges = [];
       donor = await Donor.create(donorData);
       // Update user role to donor
       await User.findByIdAndUpdate(userId, { role: 'donor', donorProfileComplete: true });

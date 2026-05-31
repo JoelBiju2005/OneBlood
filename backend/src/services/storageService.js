@@ -72,9 +72,8 @@ const uploadFile = async (file) => {
   const localFilePath = path.join(UPLOADS_DIR, filename);
   await fs.promises.writeFile(localFilePath, file.buffer);
   
-  // Return local API access URL
-  const port = process.env.PORT || 5000;
-  return `http://localhost:${port}/uploads/${filename}`;
+  // Return local API access URL (relative path to support dynamic hosting)
+  return `/uploads/${filename}`;
 };
 
 /**
@@ -93,8 +92,7 @@ const getPresignedUrl = async (filename) => {
     }
   }
   
-  const port = process.env.PORT || 5000;
-  return `http://localhost:${port}/uploads/${filename}`;
+  return `/uploads/${filename}`;
 };
 
 module.exports = {

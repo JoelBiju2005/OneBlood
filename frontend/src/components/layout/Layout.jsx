@@ -4,10 +4,11 @@ import useAuthStore from '../../store/authStore';
 import useNotificationStore from '../../store/notificationStore';
 import Logo from '../shared/Logo';
 import api from '../../utils/api';
+import toast from 'react-hot-toast';
 import { Bell, User, LogOut, Menu, X, Check, Heart, Shield, Landmark, MessageCircle, Home, ClipboardList } from 'lucide-react';
 
 const Layout = () => {
-  const { user, logout, isAuthenticated, oneblood_token } = useAuthStore();
+  const { user, logout, isAuthenticated, oneblood_token, switchRole } = useAuthStore();
   const { notifications, unreadCount, initSocket, disconnectSocket, fetchNotifications, markAsRead, markAllAsRead, socket } = useNotificationStore();
   
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -93,6 +94,21 @@ const Layout = () => {
     navigate('/');
   };
 
+  const handleRoleToggle = async () => {
+    const toastId = toast.loading('Switching perspective...');
+    try {
+      const updatedUser = await switchRole();
+      toast.success(`Switched to ${updatedUser.role === 'donor' ? 'Donor' : 'Seeker'} mode!`, { id: toastId });
+      if (updatedUser.role === 'donor') {
+        navigate('/home/donor');
+      } else {
+        navigate('/home/seeker');
+      }
+    } catch (err) {
+      toast.error('Failed to switch perspective.', { id: toastId });
+    }
+  };
+
   const getDashboardPath = () => {
     if (!user) return '/auth/login';
     if (user.role === 'donor') return '/dashboard/donor';
@@ -133,7 +149,7 @@ const Layout = () => {
                 to="/noticeboard" 
                 className={`transition-colors duration-200 hover:text-oneblood-crimson ${location.pathname === '/noticeboard' ? 'text-oneblood-crimson' : 'text-slate-300'}`}
               >
-                📋 Notice Board
+                📋 Requests Board
               </Link>
               {!isAuthenticated && (
                 <Link 
@@ -146,8 +162,8 @@ const Layout = () => {
               {isAuthenticated && user?.role === 'donor' && (
                 <>
                   <Link 
-                    to="/search" 
-                    className={`transition-colors duration-200 hover:text-oneblood-crimson ${location.pathname === '/search' ? 'text-oneblood-crimson' : 'text-slate-300'}`}
+                    to="/donor/find-requests" 
+                    className={`transition-colors duration-200 hover:text-oneblood-crimson ${location.pathname === '/donor/find-requests' ? 'text-oneblood-crimson' : 'text-slate-300'}`}
                   >
                     Find Requests
                   </Link>
@@ -205,6 +221,37 @@ const Layout = () => {
             <div className="hidden md:flex items-center space-x-4">
               {isAuthenticated ? (
                 <>
+                  {/* Role Toggle Switch */}
+                  {(user?.role === 'donor' || user?.role === 'patient') && (
+                    <div 
+                      onClick={handleRoleToggle}
+                      className="relative bg-slate-950/85 border border-white/10 rounded-full p-1 flex items-center h-8 w-32 cursor-pointer select-none mr-2"
+                    >
+                      {/* Active sliding background */}
+                      <div 
+                        className="absolute top-1 bottom-1 rounded-full bg-oneblood-crimson transition-all duration-300 ease-out"
+                        style={{
+                          left: user.role === 'patient' ? '4px' : 'calc(50% + 0px)',
+                          width: 'calc(50% - 4px)',
+                        }}
+                      />
+                      
+                      {/* Seeker Option */}
+                      <span className={`relative z-10 w-1/2 text-[10px] font-bold text-center transition-colors duration-300 ${
+                        user.role === 'patient' ? 'text-white' : 'text-slate-400'
+                      }`}>
+                        Seeker
+                      </span>
+
+                      {/* Donor Option */}
+                      <span className={`relative z-10 w-1/2 text-[10px] font-bold text-center transition-colors duration-300 ${
+                        user.role === 'donor' ? 'text-white' : 'text-slate-400'
+                      }`}>
+                        Donor
+                      </span>
+                    </div>
+                  )}
+
                   {/* Notifications Panel */}
                   <div className="relative" ref={notifRef}>
                     <button 
@@ -450,16 +497,32 @@ const Layout = () => {
                   </div>
                 </>
               ) : (
-                <div className="flex items-center space-x-3">
+                <div className="relative bg-slate-950/80 border border-white/5 rounded-full p-1 flex items-center h-10 w-44">
+                  {/* Sliding active red background */}
+                  <div 
+                    className="absolute top-1 bottom-1 rounded-full bg-oneblood-crimson transition-all duration-300 ease-out"
+                    style={{
+                      left: location.pathname === '/auth/login' ? '4px' : '88px',
+                      width: '84px',
+                    }}
+                  />
+                  
+                  {/* Login link */}
                   <Link 
                     to="/auth/login"
-                    className="text-xs font-semibold text-slate-300 hover:text-white px-4 py-2"
+                    className={`relative z-10 w-[84px] text-center text-xs font-bold transition-colors duration-300 ${
+                      location.pathname === '/auth/login' ? 'text-white' : 'text-slate-400 hover:text-white'
+                    }`}
                   >
                     Login
                   </Link>
+
+                  {/* Sign Up link */}
                   <Link 
                     to="/auth/signup"
-                    className="text-xs font-bold text-white bg-oneblood-crimson hover:bg-red-700 px-4 py-2.5 rounded-full transition-all hover:shadow-lg hover:shadow-red-700/30"
+                    className={`relative z-10 w-[84px] text-center text-xs font-bold transition-colors duration-300 ${
+                      location.pathname === '/auth/signup' || location.pathname !== '/auth/login' ? 'text-white' : 'text-slate-400 hover:text-white'
+                    }`}
                   >
                     Sign Up
                   </Link>
@@ -494,7 +557,7 @@ const Layout = () => {
               className="block px-3 py-2 rounded-lg hover:bg-white/5 text-slate-300 hover:text-white"
               onClick={() => setIsMenuOpen(false)}
             >
-              📋 Notice Board
+              📋 Requests Board
             </Link>
             {!isAuthenticated && (
               <Link 
@@ -508,7 +571,7 @@ const Layout = () => {
             {isAuthenticated && user?.role === 'donor' && (
               <>
                 <Link 
-                  to="/search" 
+                  to="/donor/find-requests" 
                   className="block px-3 py-2 rounded-lg hover:bg-white/5 text-slate-300 hover:text-white"
                   onClick={() => setIsMenuOpen(false)}
                 >
@@ -573,6 +636,39 @@ const Layout = () => {
                 <div className="px-3 py-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                   Account ({user.name})
                 </div>
+                {/* Mobile Role Toggle Switch */}
+                {(user?.role === 'donor' || user?.role === 'patient') && (
+                  <div className="px-3 py-2 flex items-center justify-between border-b border-white/5 pb-3">
+                    <span className="text-xs font-bold text-slate-400">View Mode</span>
+                    <div 
+                      onClick={handleRoleToggle}
+                      className="relative bg-slate-950/85 border border-white/10 rounded-full p-1 flex items-center h-8 w-32 cursor-pointer select-none"
+                    >
+                      {/* Active sliding background */}
+                      <div 
+                        className="absolute top-1 bottom-1 rounded-full bg-oneblood-crimson transition-all duration-300 ease-out"
+                        style={{
+                          left: user.role === 'patient' ? '4px' : 'calc(50% + 0px)',
+                          width: 'calc(50% - 4px)',
+                        }}
+                      />
+                      
+                      {/* Seeker Option */}
+                      <span className={`relative z-10 w-1/2 text-[10px] font-bold text-center transition-colors duration-300 ${
+                        user.role === 'patient' ? 'text-white' : 'text-slate-400'
+                      }`}>
+                        Seeker
+                      </span>
+
+                      {/* Donor Option */}
+                      <span className={`relative z-10 w-1/2 text-[10px] font-bold text-center transition-colors duration-300 ${
+                        user.role === 'donor' ? 'text-white' : 'text-slate-400'
+                      }`}>
+                        Donor
+                      </span>
+                    </div>
+                  </div>
+                )}
                 {user.onebloodId && (
                   <div className="mx-3 mb-1 flex items-center gap-1.5 bg-black/30 border border-[#C0152A]/30 rounded-lg px-2.5 py-1.5">
                     <span className="font-mono text-[11px] font-bold text-[#C0152A] tracking-wider">{user.onebloodId}</span>

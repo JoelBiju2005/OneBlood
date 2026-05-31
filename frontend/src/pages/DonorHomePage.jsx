@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import api from '../utils/api';
+import api, { ASSETS_URL } from '../utils/api';
 import useAuthStore from '../store/authStore';
 import useNotificationStore from '../store/notificationStore';
 import toast from 'react-hot-toast';
@@ -8,7 +8,7 @@ import { HeartPulse, Award, Calendar, ToggleLeft, ToggleRight, ShieldAlert, Navi
 import HallOfFameSection from '../components/shared/HallOfFameSection';
 
 const DonorHomePage = () => {
-  const { user, switchRole } = useAuthStore();
+  const { user } = useAuthStore();
   const { socket } = useNotificationStore();
   const navigate = useNavigate();
 
@@ -41,16 +41,6 @@ const DonorHomePage = () => {
       toast.error('Failed to load donor profile details.');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleSwitchToSeeker = async () => {
-    try {
-      await switchRole();
-      toast.success('Switched to Seeker Dashboard!');
-      navigate('/home/seeker');
-    } catch (err) {
-      toast.error('Failed to switch to Seeker Dashboard.');
     }
   };
 
@@ -182,12 +172,6 @@ const DonorHomePage = () => {
                     📋
                   </button>
                 </span>
-                <button
-                  onClick={handleSwitchToSeeker}
-                  className="text-[10px] bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5"
-                >
-                  🔍 Looking for blood? Switch to Seeker
-                </button>
               </div>
               <h1 className="text-3xl font-extrabold text-white">
                 Hey {profile.name} 👋
@@ -302,7 +286,7 @@ const DonorHomePage = () => {
                               <>
                                 <span>Prescription:</span>
                                 <a 
-                                  href={req.doctorLetterUrl.startsWith('http') || req.doctorLetterUrl.startsWith('blob:') ? req.doctorLetterUrl : `http://localhost:5000${req.doctorLetterUrl}`}
+                                  href={req.doctorLetterUrl.startsWith('http') || req.doctorLetterUrl.startsWith('blob:') ? req.doctorLetterUrl : `${ASSETS_URL}${req.doctorLetterUrl}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="text-oneblood-crimson hover:underline font-bold"

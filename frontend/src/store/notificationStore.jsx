@@ -1,9 +1,9 @@
 import { create } from 'zustand';
 import { io } from 'socket.io-client';
-import api from '../utils/api';
+import api, { ASSETS_URL } from '../utils/api';
 import toast from 'react-hot-toast';
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || ASSETS_URL;
 
 const useNotificationStore = create((set, get) => ({
   notifications: [],

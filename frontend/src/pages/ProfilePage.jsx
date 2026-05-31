@@ -43,44 +43,48 @@ const ProfilePage = () => {
       try {
         if (user.role === 'donor') {
           const res = await api.get('/donors/profile');
-          setProfileData(res.data.donor);
-          if (res.data.donor.location?.coordinates) {
-            const [lng, lat] = res.data.donor.location.coordinates;
-            setCoords([lat, lng]);
-            reset({
-              name: user.name,
-              phone: user.phone,
-              bio: user.bio || '',
-              age: res.data.donor.age,
-              weight: res.data.donor.weight,
-              address: res.data.donor.address,
-              city: res.data.donor.city,
-              pincode: res.data.donor.pincode,
-              preferredContactMethod: res.data.donor.preferredContactMethod,
-              lastDonated: res.data.donor.lastDonated ? res.data.donor.lastDonated.split('T')[0] : '',
-              medicalConditions: res.data.donor.medicalConditions ? res.data.donor.medicalConditions.join(', ') : ''
-            });
-          }
+          const donorData = res.data.donor;
+          setProfileData(donorData);
+          const latVal = donorData.location?.coordinates?.[1] ?? parseFloat(donorData.latitude ?? donorData.lat);
+          const lngVal = donorData.location?.coordinates?.[0] ?? parseFloat(donorData.longitude ?? donorData.lng);
+          const lat = isNaN(latVal) ? 12.9716 : latVal;
+          const lng = isNaN(lngVal) ? 77.5946 : lngVal;
+          setCoords([lat, lng]);
+          reset({
+            name: user.name,
+            phone: user.phone,
+            bio: user.bio || '',
+            age: donorData.age,
+            weight: donorData.weight,
+            address: donorData.address,
+            city: donorData.city,
+            pincode: donorData.pincode,
+            preferredContactMethod: donorData.preferredContactMethod,
+            lastDonated: donorData.lastDonated ? donorData.lastDonated.split('T')[0] : '',
+            medicalConditions: donorData.medicalConditions ? donorData.medicalConditions.join(', ') : ''
+          });
         } else if (user.role === 'blood_bank') {
           const res = await api.get('/banks/profile');
-          setProfileData(res.data.bank);
-          if (res.data.bank.location?.coordinates) {
-            const [lng, lat] = res.data.bank.location.coordinates;
-            setCoords([lat, lng]);
-            reset({
-              name: user.name,
-              phone: user.phone,
-              bio: user.bio || '',
-              bankName: res.data.bank.name,
-              registrationNumber: res.data.bank.registrationNumber,
-              licenseNumber: res.data.bank.licenseNumber,
-              address: res.data.bank.address,
-              city: res.data.bank.city,
-              district: res.data.bank.district,
-              pincode: res.data.bank.pincode,
-              is24x7: res.data.bank.operatingHours?.is24x7
-            });
-          }
+          const bankData = res.data.bank;
+          setProfileData(bankData);
+          const latVal = bankData.location?.coordinates?.[1] ?? parseFloat(bankData.latitude ?? bankData.lat);
+          const lngVal = bankData.location?.coordinates?.[0] ?? parseFloat(bankData.longitude ?? bankData.lng);
+          const lat = isNaN(latVal) ? 12.9716 : latVal;
+          const lng = isNaN(lngVal) ? 77.5946 : lngVal;
+          setCoords([lat, lng]);
+          reset({
+            name: user.name,
+            phone: user.phone,
+            bio: user.bio || '',
+            bankName: bankData.name,
+            registrationNumber: bankData.registrationNumber,
+            licenseNumber: bankData.licenseNumber,
+            address: bankData.address,
+            city: bankData.city,
+            district: bankData.district,
+            pincode: bankData.pincode,
+            is24x7: bankData.operatingHours?.is24x7
+          });
         } else {
           // Patient or Admin
           reset({

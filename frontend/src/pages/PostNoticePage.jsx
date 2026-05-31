@@ -50,7 +50,7 @@ export default function PostNoticePage() {
         <div className="space-y-4 text-center">
           <h1 className="text-3xl font-heading text-white">📋 Post a Blood Need</h1>
           <p className="text-slate-400 font-body text-xs md:text-sm">
-            Your request will appear on the public notice board. A doctor's letter adds credibility and priority.
+            Your request will appear on the public requests board. A doctor's letter adds credibility and priority.
           </p>
           
           <div className="flex justify-center items-center space-x-2 pt-2">
@@ -187,7 +187,7 @@ export default function PostNoticePage() {
             <div className="space-y-5 text-left">
               <h2 className="text-xl font-bold text-white mb-2">How Urgent Is This?</h2>
               <p className="text-xs text-slate-400 leading-relaxed mb-4">
-                This sets the priority badge on your notice board post. Be accurate — it helps donors prioritize.
+                This sets the priority badge on your requests board post. Be accurate — it helps donors prioritize.
               </p>
               
               <div className="space-y-3">
@@ -262,7 +262,7 @@ export default function PostNoticePage() {
               </div>
 
               <p className="text-[11px] text-slate-500 italic text-center pt-2">
-                You can skip this upload, but your notice board post will be displayed as "Unverified".
+                You can skip this upload, but your requests board post will be displayed as "Unverified".
               </p>
 
               {error && (
@@ -283,7 +283,7 @@ export default function PostNoticePage() {
                   onClick={handleSubmit} 
                   disabled={submitting}
                 >
-                  {submitting ? 'Posting…' : '🩸 Post to Notice Board'}
+                  {submitting ? 'Posting…' : '🩸 Post to Requests Board'}
                 </button>
               </div>
             </div>

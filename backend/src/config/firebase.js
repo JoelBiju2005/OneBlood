@@ -7,7 +7,10 @@ let firebaseApp;
 const serviceAccountPath = path.join(__dirname, '../../firebase-service-account.json');
 
 try {
-  if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+  if (process.env.FUNCTIONS_EMULATOR || process.env.FIREBASE_CONFIG || process.env.FUNCTION_NAME || process.env.FUNCTION_TARGET) {
+    firebaseApp = admin.initializeApp();
+    console.log('🔥 Firebase Admin initialized natively in Cloud Functions runtime.');
+  } else if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
     const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
     firebaseApp = admin.initializeApp({
       credential: admin.credential.cert(serviceAccount)

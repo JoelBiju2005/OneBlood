@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ASSETS_URL } from '../../utils/api';
 
 export default function NoticeBoardCard({ notice, viewerId, viewerRole, onRespond, urgencyColors }) {
   const [showResponses, setShowResponses] = useState(false);
@@ -83,7 +84,7 @@ export default function NoticeBoardCard({ notice, viewerId, viewerRole, onRespon
 
         {notice.doctorLetterUrl ? (
           <a 
-            href={notice.doctorLetterUrl.startsWith('http') || notice.doctorLetterUrl.startsWith('blob:') ? notice.doctorLetterUrl : `http://localhost:5000${notice.doctorLetterUrl}`} 
+            href={notice.doctorLetterUrl.startsWith('http') || notice.doctorLetterUrl.startsWith('blob:') ? notice.doctorLetterUrl : `${ASSETS_URL}${notice.doctorLetterUrl}`} 
             target="_blank" 
             rel="noreferrer" 
             className="inline-flex items-center text-xs font-bold text-emerald-400 hover:text-emerald-300 mb-4 transition-colors"

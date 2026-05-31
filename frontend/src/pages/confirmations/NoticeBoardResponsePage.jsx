@@ -54,7 +54,7 @@ export default function NoticeBoardResponsePage() {
             onClick={() => navigate('/noticeboard')}
             className="py-3 px-4 bg-oneblood-crimson hover:bg-red-700 text-white font-bold text-xs rounded-xl transition-all duration-200 cursor-pointer shadow-lg shadow-red-700/15"
           >
-            Back to Notice Board
+            Back to Requests Board
           </button>
           <button 
             onClick={() => navigate('/home/donor')}

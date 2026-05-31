@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useDropzone } from 'react-dropzone';
-import api from '../utils/api';
+import api, { ASSETS_URL } from '../utils/api';
 import toast from 'react-hot-toast';
 import { 
   ShieldCheck, FileText, CheckCircle, AlertTriangle, Landmark, Heart, Loader2, 
@@ -551,7 +551,7 @@ const NewRequestPage = () => {
                         <div className="p-2 bg-slate-950 rounded-lg border border-white/10 flex items-center justify-between text-[10px]">
                           <span className="text-slate-300 truncate max-w-[150px]">{uploadedUrl.split('/').pop()}</span>
                           <a 
-                            href={uploadedUrl.startsWith('http') || uploadedUrl.startsWith('blob:') ? uploadedUrl : `http://localhost:5000${uploadedUrl}`} 
+                            href={uploadedUrl.startsWith('http') || uploadedUrl.startsWith('blob:') ? uploadedUrl : `${ASSETS_URL}${uploadedUrl}`} 
                             target="_blank" 
                             rel="noopener noreferrer"
                             className="text-red-500 hover:underline font-bold"
@@ -562,12 +562,12 @@ const NewRequestPage = () => {
                       ) : (
                         <div className="relative rounded-lg overflow-hidden border border-white/10 max-h-32 flex flex-col items-center justify-center bg-slate-950 p-1">
                           <img 
-                            src={uploadedUrl.startsWith('http') || uploadedUrl.startsWith('blob:') ? uploadedUrl : `http://localhost:5000${uploadedUrl}`} 
+                            src={uploadedUrl.startsWith('http') || uploadedUrl.startsWith('blob:') ? uploadedUrl : `${ASSETS_URL}${uploadedUrl}`} 
                             alt="Uploaded prescription letter" 
                             className="object-contain max-h-24 w-full rounded"
                           />
                           <a 
-                            href={uploadedUrl.startsWith('http') || uploadedUrl.startsWith('blob:') ? uploadedUrl : `http://localhost:5000${uploadedUrl}`} 
+                            href={uploadedUrl.startsWith('http') || uploadedUrl.startsWith('blob:') ? uploadedUrl : `${ASSETS_URL}${uploadedUrl}`} 
                             target="_blank" 
                             rel="noopener noreferrer"
                             className="text-[9px] text-red-500 hover:underline font-bold mt-1"

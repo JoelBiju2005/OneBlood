@@ -14,13 +14,14 @@ const checkChatAccess = async (requestId, userId) => {
     return { allowed: true, request, role: 'seeker' };
   }
 
-  // Check if User is accepted Donor
+  // Check if User is accepted or notified Donor
   const donor = await Donor.findOne({ userId });
   if (donor) {
     const acceptedResponse = request.responses.find(
       (r) => r.responderId.toString() === donor._id.toString() && r.status === 'accepted'
     );
-    if (acceptedResponse) {
+    const isNotified = request.notifiedDonors && request.notifiedDonors.some(id => id.toString() === donor._id.toString());
+    if (acceptedResponse || isNotified) {
       return { allowed: true, request, role: 'donor', donorId: donor._id };
     }
   }
@@ -88,10 +89,18 @@ const sendMessage = async (req, res, next) => {
     let receiverId;
     if (access.role === 'seeker') {
       const acceptedResponse = request.responses.find((r) => r.status === 'accepted');
-      if (!acceptedResponse) {
-        return res.status(400).json({ message: 'No accepted donor found for this request' });
+      let targetDonorId = null;
+      if (acceptedResponse) {
+        targetDonorId = acceptedResponse.responderId;
+      } else if (request.notifiedDonors && request.notifiedDonors.length > 0) {
+        targetDonorId = request.notifiedDonors[0];
       }
-      const donorObj = await Donor.findById(acceptedResponse.responderId);
+
+      if (!targetDonorId) {
+        return res.status(400).json({ message: 'No donor associated with this request' });
+      }
+
+      const donorObj = await Donor.findById(targetDonorId);
       if (!donorObj) {
         return res.status(400).json({ message: 'Donor profile not found' });
       }
@@ -170,12 +179,15 @@ const getChatRooms = async (req, res, next) => {
     const userId = req.user._id;
 
     // Find all blood requests where user is requester
-    // OR donor is accepted
+    // OR donor is accepted or targeted
     const donor = await Donor.findOne({ userId });
     const query = {
       $or: [
         { requesterId: userId },
-        ...(donor ? [{ 'responses.responderId': donor._id, 'responses.status': 'accepted' }] : [])
+        ...(donor ? [
+          { 'responses.responderId': donor._id, 'responses.status': 'accepted' },
+          { notifiedDonors: donor._id.toString() }
+        ] : [])
       ]
     };
 
@@ -202,10 +214,17 @@ const getChatRooms = async (req, res, next) => {
       let otherPartyBlood = reqObj.bloodGroup;
 
       if (reqObj.requesterId._id.toString() === userId.toString()) {
-        // Seeker is current user, find accepted donor
+        // Seeker is current user, find accepted donor or targeted donor
         const accepted = reqObj.responses.find(r => r.status === 'accepted');
+        let targetId = null;
         if (accepted) {
-          const donorObj = await Donor.findById(accepted.responderId);
+          targetId = accepted.responderId;
+        } else if (reqObj.notifiedDonors && reqObj.notifiedDonors.length > 0) {
+          targetId = reqObj.notifiedDonors[0];
+        }
+
+        if (targetId) {
+          const donorObj = await Donor.findById(targetId);
           if (donorObj) {
             otherPartyName = donorObj.name;
             otherPartyBlood = donorObj.bloodGroup;

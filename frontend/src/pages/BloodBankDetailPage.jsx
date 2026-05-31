@@ -46,7 +46,10 @@ const BloodBankDetailPage = () => {
     );
   }
 
-  const [lng, lat] = bank.location?.coordinates || [77.5946, 12.9716];
+  const latVal = bank.location?.coordinates?.[1] ?? parseFloat(bank.latitude ?? bank.lat);
+  const lngVal = bank.location?.coordinates?.[0] ?? parseFloat(bank.longitude ?? bank.lng);
+  const lat = isNaN(latVal) ? 12.9716 : latVal;
+  const lng = isNaN(lngVal) ? 77.5946 : lngVal;
 
   const bloodGroups = ['Apos', 'Aneg', 'Bpos', 'Bneg', 'ABpos', 'ABneg', 'Opos', 'Oneg'];
   const groupLabelMap = {
@@ -126,7 +129,7 @@ const BloodBankDetailPage = () => {
           <div className="md:col-span-7 space-y-6">
             
             {/* Inventory spreadsheet */}
-            <div className="bg-slate-900/60 border border-white/5 backdrop-blur-xl p-6 rounded-2xl shadow-xl space-y-4">
+            <div id="inventory" className="bg-slate-900/60 border border-white/5 backdrop-blur-xl p-6 rounded-2xl shadow-xl space-y-4 scroll-mt-24">
               <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400 border-b border-white/5 pb-2">Blood Inventory Stock</h2>
               
               <div className="overflow-x-auto">

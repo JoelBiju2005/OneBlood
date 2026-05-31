@@ -14,6 +14,7 @@ const useAuthStore = create((set, get) => ({
   oneblood_token: null, // access token stored in memory only
   isAuthenticated: false,
   isLoading: true, // starts loading to check silent session
+  isInitialized: false,
   error: null,
 
   initializeAuth: async () => {
@@ -27,11 +28,11 @@ const useAuthStore = create((set, get) => ({
       const res = await api.get('/auth/me');
       const { user } = res.data;
       localStorage.setItem('user', JSON.stringify(user));
-      set({ user, oneblood_token: accessToken, isAuthenticated: true, isLoading: false });
+      set({ user, oneblood_token: accessToken, isAuthenticated: true, isLoading: false, isInitialized: true });
     } catch (err) {
       setAccessToken(null);
       localStorage.removeItem('user');
-      set({ user: null, oneblood_token: null, isAuthenticated: false, isLoading: false });
+      set({ user: null, oneblood_token: null, isAuthenticated: false, isLoading: false, isInitialized: true });
     }
   },
 

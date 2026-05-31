@@ -36,6 +36,34 @@ const convertTimestampsToDates = (obj) => {
   return copy;
 };
 
+const matchValue = (itemVal, queryVal) => {
+  if (queryVal instanceof RegExp) {
+    return queryVal.test(itemVal);
+  }
+  
+  if (queryVal && typeof queryVal === 'object' && !Array.isArray(queryVal)) {
+    const isObjectId = queryVal._bsontype === 'ObjectID' || 
+                       queryVal.constructor?.name === 'ObjectId' || 
+                       queryVal.constructor?.name === 'ObjectID';
+    if (isObjectId) {
+      return itemVal?.toString() === queryVal.toString();
+    }
+    
+    if (queryVal.$in && Array.isArray(queryVal.$in)) {
+      return queryVal.$in.includes(itemVal);
+    }
+    
+    if (queryVal.$gt !== undefined && !(itemVal > queryVal.$gt)) return false;
+    if (queryVal.$gte !== undefined && !(itemVal >= queryVal.$gte)) return false;
+    if (queryVal.$lt !== undefined && !(itemVal < queryVal.$lt)) return false;
+    if (queryVal.$lte !== undefined && !(itemVal <= queryVal.$lte)) return false;
+    
+    return true;
+  }
+  
+  return itemVal === queryVal || itemVal?.toString() === queryVal?.toString();
+};
+
 const matchQuery = (item, query) => {
   for (const key in query) {
     if (key === '$or' && Array.isArray(query.$or)) {
@@ -45,44 +73,20 @@ const matchQuery = (item, query) => {
     }
     
     if (key === 'location') continue;
+    
+    let itemVal;
     if (key.includes('.')) {
       const parts = key.split('.');
-      let val = item;
+      itemVal = item;
       for (const part of parts) {
-        val = val?.[part];
+        itemVal = itemVal?.[part];
       }
-      const qVal = query[key];
-      if (qVal && typeof qVal === 'object' && qVal.$gte !== undefined) {
-        if (!(val >= qVal.$gte)) return false;
-      } else if (val !== qVal) {
-        return false;
-      }
-      continue;
+    } else {
+      itemVal = item[key];
     }
-
-    const itemVal = item[key];
+    
     const queryVal = query[key];
-
-    if (queryVal instanceof RegExp) {
-      if (!queryVal.test(itemVal)) return false;
-    } else if (queryVal && typeof queryVal === 'object' && !Array.isArray(queryVal)) {
-      const isObjectId = queryVal._bsontype === 'ObjectID' || 
-                         queryVal.constructor?.name === 'ObjectId' || 
-                         queryVal.constructor?.name === 'ObjectID';
-      if (isObjectId) {
-        if (itemVal?.toString() !== queryVal.toString()) return false;
-      } else if (queryVal.$in && Array.isArray(queryVal.$in)) {
-        if (!queryVal.$in.includes(itemVal)) return false;
-      } else if (queryVal.$gte !== undefined) {
-        if (!(itemVal >= queryVal.$gte)) return false;
-      } else if (queryVal.$gt !== undefined) {
-        if (!(itemVal > queryVal.$gt)) return false;
-      } else if (queryVal.$lte !== undefined) {
-        if (!(itemVal <= queryVal.$lte)) return false;
-      } else if (queryVal.$lt !== undefined) {
-        if (!(itemVal < queryVal.$lt)) return false;
-      }
-    } else if (itemVal?.toString() !== queryVal?.toString()) {
+    if (!matchValue(itemVal, queryVal)) {
       return false;
     }
   }
@@ -107,6 +111,13 @@ const convertMongoQueryToFirestore = (query, collectionRef) => {
       memoryFilters.push((item) => {
         return val.some(q => matchQuery(item, q));
       });
+      continue;
+    }
+
+    // Force dotted paths (nested fields) to be filtered in-memory
+    // This avoids requiring complex Firestore composite indexes
+    if (key.includes('.')) {
+      memoryFilters.push((item) => matchQuery(item, { [key]: val }));
       continue;
     }
 
@@ -270,8 +281,16 @@ class FirestoreQueryBuilder {
       const maxDist = this.query.location.$near.$maxDistance || 1000000;
       results = results
         .map(item => {
-          if (!item.latitude || !item.longitude) return { item, distance: Infinity };
-          const distKm = getHaversineDistance(lat, lng, item.latitude, item.longitude);
+          let latVal = item.latitude || parseFloat(item.lat);
+          let lngVal = item.longitude || parseFloat(item.lng);
+          if (item.location && Array.isArray(item.location.coordinates)) {
+            lngVal = item.location.coordinates[0];
+            latVal = item.location.coordinates[1];
+          }
+          if (latVal === undefined || lngVal === undefined || isNaN(latVal) || isNaN(lngVal)) {
+            return { item, distanceMeters: Infinity };
+          }
+          const distKm = getHaversineDistance(lat, lng, latVal, lngVal);
           return { item, distanceMeters: distKm * 1000 };
         })
         .filter(e => e.distanceMeters <= maxDist)

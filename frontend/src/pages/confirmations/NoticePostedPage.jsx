@@ -18,7 +18,7 @@ export default function NoticePostedPage() {
         <div className="space-y-2">
           <h1 className="text-3xl font-heading text-white">Your Need Is Now Live!</h1>
           <p className="text-slate-400 text-sm font-body leading-relaxed">
-            Your blood request for <strong className="text-white">{notice?.patientName || 'the patient'}</strong> has been successfully posted to the OneBlood Notice Board.
+            Your blood request for <strong className="text-white">{notice?.patientName || 'the patient'}</strong> has been successfully posted to the OneBlood Requests Board.
           </p>
         </div>
 
@@ -53,7 +53,7 @@ export default function NoticePostedPage() {
             onClick={() => navigate('/noticeboard')}
             className="py-3 px-4 bg-oneblood-crimson hover:bg-red-700 text-white font-bold text-xs rounded-xl transition-all duration-200 cursor-pointer shadow-lg shadow-red-700/15"
           >
-            View Notice Board
+            View Requests Board
           </button>
           <button 
             onClick={() => navigate('/home/seeker')}

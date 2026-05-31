@@ -367,7 +367,7 @@ const AdminMonitoringPage = () => {
                                     <div className="space-y-1.5">
                                       <div className="font-bold text-slate-500 uppercase tracking-wider text-[9px]">Account Coordinates</div>
                                       <div className="font-mono text-slate-300">
-                                        Lng: {u.location?.coordinates[0] || 'N/A'}, Lat: {u.location?.coordinates[1] || 'N/A'}
+                                        Lng: {u.location?.coordinates?.[0] ?? u.longitude ?? u.lng ?? 'N/A'}, Lat: {u.location?.coordinates?.[1] ?? u.latitude ?? u.lat ?? 'N/A'}
                                       </div>
                                     </div>
                                     <div className="space-y-1.5">

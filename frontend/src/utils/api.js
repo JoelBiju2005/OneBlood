@@ -73,5 +73,7 @@ api.interceptors.response.use(
   }
 );
 
+const ASSETS_URL = API_URL.replace(/\/api\/?$/, '') || 'http://localhost:5000';
+
 export default api;
-export { API_URL };
+export { API_URL, ASSETS_URL };

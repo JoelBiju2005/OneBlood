@@ -69,7 +69,7 @@ export default function NoticeBoardPage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6 border-b border-white/5">
           <div className="space-y-2">
             <h1 className="text-4xl md:text-5xl font-heading text-white flex items-center gap-3">
-              <span>🩸 Notice Board</span>
+              <span>🩸 Requests Board</span>
             </h1>
             <p className="text-slate-400 font-body max-w-xl text-sm md:text-base leading-relaxed">
               Open emergency calls for blood from patients across the platform. Every post is pre-screened and prioritized.

@@ -11,10 +11,10 @@ const FullPageSpinner = () => (
 );
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
-  const { user, oneblood_token, isLoading } = useAuthStore();
+  const { user, oneblood_token, isInitialized } = useAuthStore();
   const location = useLocation();
 
-  if (isLoading) return <FullPageSpinner />;
+  if (!isInitialized) return <FullPageSpinner />;
 
   if (!oneblood_token || !user) {
     return <Navigate to="/auth/login" state={{ from: location }} replace />;

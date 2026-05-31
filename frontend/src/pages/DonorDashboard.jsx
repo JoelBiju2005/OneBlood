@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import api from '../utils/api';
+import api, { ASSETS_URL } from '../utils/api';
 import useAuthStore from '../store/authStore';
 import toast from 'react-hot-toast';
 import { HeartPulse, Award, Calendar, ToggleLeft, ToggleRight, ShieldAlert, Navigation, Phone, CheckCircle } from 'lucide-react';
@@ -238,7 +238,7 @@ const DonorDashboard = () => {
                         {req.doctorLetterUrl && (
                           <div className="mt-2.5">
                             <a 
-                              href={req.doctorLetterUrl.startsWith('http') || req.doctorLetterUrl.startsWith('blob:') ? req.doctorLetterUrl : `http://localhost:5000${req.doctorLetterUrl}`}
+                              href={req.doctorLetterUrl.startsWith('http') || req.doctorLetterUrl.startsWith('blob:') ? req.doctorLetterUrl : `${ASSETS_URL}${req.doctorLetterUrl}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-[10px] text-oneblood-crimson hover:underline font-bold inline-flex items-center space-x-1"

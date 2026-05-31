@@ -10,7 +10,7 @@ import NoticeBoardCard from '../components/shared/NoticeBoardCard';
 const URGENCY_COLORS = { critical: '#dc2626', urgent: '#f97316', moderate: '#eab308', planned: '#22c55e' };
 
 const SeekerHomePage = () => {
-  const { user, switchRole } = useAuthStore();
+  const { user } = useAuthStore();
   const { socket } = useNotificationStore();
   const navigate = useNavigate();
 
@@ -75,20 +75,6 @@ const SeekerHomePage = () => {
       console.error('Failed to fetch nearby blood banks:', err.message);
     } finally {
       setBanksLoading(false);
-    }
-  };
-
-  const handleSwitchToDonor = async () => {
-    try {
-      const updatedUser = await switchRole();
-      toast.success('Switched to Donor Dashboard!');
-      if (!updatedUser.donorProfileComplete) {
-        navigate('/donor/register');
-      } else {
-        navigate('/home/donor');
-      }
-    } catch (err) {
-      toast.error('Failed to switch to Donor Dashboard.');
     }
   };
 
@@ -173,12 +159,6 @@ const SeekerHomePage = () => {
                 📋
               </button>
             </span>
-            <button
-              onClick={handleSwitchToDonor}
-              className="text-[10px] bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5"
-            >
-              🩸 Want to donate? Switch to Donor
-            </button>
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white">
             Need blood urgently?
@@ -291,7 +271,7 @@ const SeekerHomePage = () => {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
               </span>
-              <span>My Active Notice Board Posts</span>
+              <span>My Active Requests Board Posts</span>
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

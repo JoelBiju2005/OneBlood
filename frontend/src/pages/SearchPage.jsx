@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline } from 'react-leaflet';
 import { useDropzone } from 'react-dropzone';
 import L from 'leaflet';
-import api from '../utils/api';
+import api, { ASSETS_URL } from '../utils/api';
 import useAuthStore from '../store/authStore';
 import useNotificationStore from '../store/notificationStore';
 import toast from 'react-hot-toast';
 import { 
   Search as SearchIcon, MapPin, Landmark, Heart, Phone, Mail, 
   Clock, ShieldCheck, HeartPulse, Upload, FileText, CheckCircle2, 
-  AlertTriangle, Navigation, Sliders, ChevronRight, Eye, Send, X, Plus, Minus, Loader2
+  AlertTriangle, Navigation, Sliders, ChevronRight, Eye, Send, X, Plus, Minus, Loader2, ExternalLink
 } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 
@@ -85,6 +85,18 @@ function decodePolyline(str) {
   return coordinates;
 }
 
+const getItemCoords = (item) => {
+  if (!item) return null;
+  let lat = parseFloat(item.latitude || item.lat);
+  let lng = parseFloat(item.longitude || item.lng);
+  if (item.location && Array.isArray(item.location.coordinates)) {
+    lng = item.location.coordinates[0];
+    lat = item.location.coordinates[1];
+  }
+  if (isNaN(lat) || isNaN(lng)) return null;
+  return [lat, lng];
+};
+
 const CardDirections = ({ item, userLocation, centerIcon, bankIcon, donorIcon }) => {
   const [loading, setLoading] = useState(true);
   const [routeData, setRouteData] = useState(null);
@@ -93,7 +105,9 @@ const CardDirections = ({ item, userLocation, centerIcon, bankIcon, donorIcon })
   useEffect(() => {
     const fetchDirections = async () => {
       try {
-        const [destLng, destLat] = item.location.coordinates;
+        const coords = getItemCoords(item);
+        if (!coords) return;
+        const [destLat, destLng] = coords;
         const res = await api.get('/directions', {
           params: {
             fromLat: userLocation[0],
@@ -109,7 +123,8 @@ const CardDirections = ({ item, userLocation, centerIcon, bankIcon, donorIcon })
           setPolylineCoords([[userLocation[0], userLocation[1]], [destLat, destLng]]);
         }
       } catch (err) {
-        const [destLng, destLat] = item.location.coordinates;
+        const coords = getItemCoords(item);
+        const [destLat, destLng] = coords || [userLocation[0], userLocation[1]];
         setRouteData({ distanceKm: "3.5", etaMinutes: 12 });
         setPolylineCoords([[userLocation[0], userLocation[1]], [destLat, destLng]]);
       } finally {
@@ -128,7 +143,8 @@ const CardDirections = ({ item, userLocation, centerIcon, bankIcon, donorIcon })
     );
   }
 
-  const [destLng, destLat] = item.location.coordinates;
+  const coords = getItemCoords(item) || [userLocation[0], userLocation[1]];
+  const [destLat, destLng] = coords;
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
   const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${userLocation[0]},${userLocation[1]}&destination=${destLat},${destLng}&travelmode=driving`;
   const appleMapsUrl = `maps://maps.apple.com/?daddr=${destLat},${destLng}`;
@@ -239,6 +255,10 @@ const SearchPage = () => {
 
   // Mobile layout toggles
   const [mobileShowMap, setMobileShowMap] = useState(false);
+
+  // Refs for scrolling selected card to top of list
+  const listContainerRef = useRef(null);
+  const selectedCardRef = useRef(null);
 
   // Smart Search OCR states
   const [ocrStatus, setOcrStatus] = useState('idle'); // idle, reading, group, doctor, done, error
@@ -397,11 +417,47 @@ const SearchPage = () => {
     multiple: false
   });
 
-  // Calculate route overlays on selection
+  // Calculate route overlays on selection — also bubbles item to top of list
   const handleItemClick = async (item) => {
     setSelectedItem(item);
     setExpandedCardId(item._id); // Auto expand this card!
-    const [destLng, destLat] = item.location.coordinates;
+
+    // Reliably detect bank vs donor by checking if _id exists in current banks array
+    const isBank = banks.some(b => b._id === item._id);
+
+    if (isBank) {
+      setBanks(prev => {
+        const idx = prev.findIndex(b => b._id === item._id);
+        if (idx <= 0) return prev; // already at top
+        const reordered = [...prev];
+        reordered.splice(idx, 1);
+        reordered.unshift(item);
+        return reordered;
+      });
+    } else {
+      setDonors(prev => {
+        const idx = prev.findIndex(d => d._id === item._id);
+        if (idx <= 0) return prev; // already at top
+        const reordered = [...prev];
+        reordered.splice(idx, 1);
+        reordered.unshift(item);
+        return reordered;
+      });
+    }
+
+    // Switch to list view on mobile so user sees the reordered card
+    if (mobileShowMap) setMobileShowMap(false);
+
+    // Scroll after React re-renders the reordered list (150ms gives enough time)
+    setTimeout(() => {
+      if (listContainerRef.current) {
+        listContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }, 150);
+
+    const coords = getItemCoords(item);
+    if (!coords) return;
+    const [destLat, destLng] = coords;
     
     try {
       const res = await api.get('/directions', {
@@ -505,7 +561,7 @@ const SearchPage = () => {
     <div className="min-h-[calc(100vh-80px)] flex flex-col md:flex-row relative bg-oneblood-midnight overflow-hidden">
       
       {/* 1. Left Sidebar: Interactive Filters & Listings */}
-      <div className={`w-full md:w-5/12 h-[calc(100vh-80px)] overflow-y-auto bg-slate-950 border-r border-white/5 flex flex-col relative z-20 ${mobileShowMap ? 'hidden md:flex' : 'flex'}`}>
+      <div ref={listContainerRef} className={`w-full md:w-5/12 h-[calc(100vh-80px)] overflow-y-auto bg-slate-950 border-r border-white/5 flex flex-col relative z-20 ${mobileShowMap ? 'hidden md:flex' : 'flex'}`}>
         
         {/* Pulsing Emergency Banner */}
         <div className="bg-oneblood-crimson/15 border-b border-oneblood-crimson/25 p-3 flex items-center justify-between animate-pulse">
@@ -723,18 +779,26 @@ const SearchPage = () => {
                 return (
                   <div 
                     key={bank._id}
+                    ref={isSelected ? selectedCardRef : null}
                     onClick={() => handleItemClick(bank)}
-                    className={`p-4 rounded-xl border text-left cursor-pointer transition-all duration-200 ${isSelected ? 'bg-slate-900 border-blue-500 shadow-xl' : 'bg-slate-900/40 border-white/5 hover:border-white/10'}`}
+                    className={`p-4 rounded-xl border text-left cursor-pointer transition-all duration-200 ${isSelected ? 'bg-slate-900 border-blue-500 shadow-xl shadow-blue-900/20 ring-1 ring-blue-500/30' : 'bg-slate-900/40 border-white/5 hover:border-white/10'}`}
                   >
+                    {/* Selected indicator */}
+                    {isSelected && (
+                      <div className="flex items-center space-x-1.5 mb-2 text-[10px] font-bold text-blue-400 animate-pulse">
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-400"/>
+                        <span>Selected on map</span>
+                      </div>
+                    )}
                     <div className="flex justify-between items-start">
-                      <div>
+                      <div className="flex-1 min-w-0 pr-2">
                         <h4 className="font-bold text-sm text-white flex items-center space-x-1.5">
-                          <Landmark className="w-4 h-4 text-blue-400" />
-                          <span>{bank.name}</span>
+                          <Landmark className="w-4 h-4 text-blue-400 shrink-0" />
+                          <span className="truncate">{bank.name}</span>
                         </h4>
                         <p className="text-[11px] text-slate-400 mt-1">{bank.address}</p>
                       </div>
-                      <span className={`text-[10px] font-black px-2 py-0.5 rounded border ${qty >= 5 ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : qty > 0 ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-red-500/20 text-red-400 border-red-500/30'}`}>
+                      <span className={`text-[10px] font-black px-2 py-0.5 rounded border shrink-0 ${qty >= 5 ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : qty > 0 ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-red-500/20 text-red-400 border-red-500/30'}`}>
                         {qty} Units
                       </span>
                     </div>
@@ -751,6 +815,14 @@ const SearchPage = () => {
                         >
                           Call
                         </a>
+                        <Link
+                          to={`/blood-bank/${bank._id}#inventory`}
+                          className="px-3 py-1.5 bg-blue-600/10 border border-blue-500/20 hover:bg-blue-600/20 text-blue-400 font-bold rounded-lg text-xs flex items-center space-x-1"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          <span>Details</span>
+                        </Link>
                         <button
                           onClick={() => {
                             if (isExpanded) {
@@ -788,18 +860,26 @@ const SearchPage = () => {
                 return (
                   <div 
                     key={donor._id}
+                    ref={isSelected ? selectedCardRef : null}
                     onClick={() => handleItemClick(donor)}
-                    className={`p-4 rounded-xl border text-left cursor-pointer transition-all duration-200 ${isSelected ? 'bg-slate-900 border-oneblood-crimson shadow-xl' : 'bg-slate-900/40 border-white/5 hover:border-white/10'}`}
+                    className={`p-4 rounded-xl border text-left cursor-pointer transition-all duration-200 ${isSelected ? 'bg-slate-900 border-oneblood-crimson shadow-xl shadow-red-900/20 ring-1 ring-red-500/30' : 'bg-slate-900/40 border-white/5 hover:border-white/10'}`}
                   >
+                    {/* Selected indicator */}
+                    {isSelected && (
+                      <div className="flex items-center space-x-1.5 mb-2 text-[10px] font-bold text-oneblood-crimson animate-pulse">
+                        <span className="w-1.5 h-1.5 rounded-full bg-oneblood-crimson"/>
+                        <span>Selected on map</span>
+                      </div>
+                    )}
                     <div className="flex justify-between items-start">
-                      <div>
+                      <div className="flex-1 min-w-0 pr-2">
                         <h4 className="font-bold text-sm text-white flex items-center space-x-1.5">
-                          <HeartPulse className="w-4 h-4 text-oneblood-crimson animate-pulse" />
-                          <span>{donor.name}</span>
+                          <HeartPulse className="w-4 h-4 text-oneblood-crimson animate-pulse shrink-0" />
+                          <span className="truncate">{donor.name}</span>
                         </h4>
                         <p className="text-[11px] text-slate-400 mt-1">{donor.city}</p>
                       </div>
-                      <span className="text-xs font-black px-2.5 py-0.5 bg-oneblood-crimson/20 border border-oneblood-crimson/30 text-oneblood-crimson rounded-full">
+                      <span className="text-xs font-black px-2.5 py-0.5 bg-oneblood-crimson/20 border border-oneblood-crimson/30 text-oneblood-crimson rounded-full shrink-0">
                         {donor.bloodGroup}
                       </span>
                     </div>
@@ -880,11 +960,12 @@ const SearchPage = () => {
 
           {/* Blood Banks markers */}
           {banks.map(bank => {
-            const [lng, lat] = bank.location.coordinates;
+            const coords = getItemCoords(bank);
+            if (!coords) return null;
             return (
               <Marker 
                 key={bank._id} 
-                position={[lat, lng]} 
+                position={coords} 
                 icon={bankIcon}
                 eventHandlers={{ click: () => handleItemClick(bank) }}
               >
@@ -900,11 +981,12 @@ const SearchPage = () => {
 
           {/* Donors markers */}
           {donors.map(donor => {
-            const [lng, lat] = donor.location.coordinates;
+            const coords = getItemCoords(donor);
+            if (!coords) return null;
             return (
               <Marker 
                 key={donor._id} 
-                position={[lat, lng]} 
+                position={coords} 
                 icon={donorIcon}
                 eventHandlers={{ click: () => handleItemClick(donor) }}
               >
@@ -1025,7 +1107,7 @@ const SearchPage = () => {
                       <div className="p-2 bg-slate-950 rounded-lg border border-white/10 flex items-center justify-between">
                         <span className="text-[10px] text-slate-300 truncate max-w-[200px]">{uploadedLetterUrl.split('/').pop()}</span>
                         <a 
-                          href={uploadedLetterUrl.startsWith('http') || uploadedLetterUrl.startsWith('blob:') ? uploadedLetterUrl : `http://localhost:5000${uploadedLetterUrl}`} 
+                          href={uploadedLetterUrl.startsWith('http') || uploadedLetterUrl.startsWith('blob:') ? uploadedLetterUrl : `${ASSETS_URL}${uploadedLetterUrl}`} 
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="text-oneblood-crimson hover:underline font-bold"
@@ -1036,12 +1118,12 @@ const SearchPage = () => {
                     ) : (
                       <div className="relative rounded-lg overflow-hidden border border-white/10 max-h-36 flex flex-col items-center justify-center bg-slate-950 p-1">
                         <img 
-                          src={uploadedLetterUrl.startsWith('http') || uploadedLetterUrl.startsWith('blob:') ? uploadedLetterUrl : `http://localhost:5000${uploadedLetterUrl}`} 
+                          src={uploadedLetterUrl.startsWith('http') || uploadedLetterUrl.startsWith('blob:') ? uploadedLetterUrl : `${ASSETS_URL}${uploadedLetterUrl}`} 
                           alt="Uploaded prescription letter" 
                           className="object-contain max-h-32 w-full rounded"
                         />
                         <a 
-                          href={uploadedLetterUrl.startsWith('http') || uploadedLetterUrl.startsWith('blob:') ? uploadedLetterUrl : `http://localhost:5000${uploadedLetterUrl}`} 
+                          href={uploadedLetterUrl.startsWith('http') || uploadedLetterUrl.startsWith('blob:') ? uploadedLetterUrl : `${ASSETS_URL}${uploadedLetterUrl}`} 
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="text-[9px] text-oneblood-crimson hover:underline font-bold mt-1.5"
