@@ -145,12 +145,21 @@ const Layout = () => {
               >
                 Home
               </Link>
-              <Link 
-                to="/noticeboard" 
-                className={`transition-colors duration-200 hover:text-oneblood-crimson ${location.pathname === '/noticeboard' ? 'text-oneblood-crimson' : 'text-slate-300'}`}
-              >
-                📋 Requests Board
-              </Link>
+              {isAuthenticated && user?.role === 'admin' ? (
+                <Link 
+                  to="/admin-portal" 
+                  className={`transition-colors duration-200 hover:text-oneblood-crimson ${location.pathname === '/admin-portal' ? 'text-oneblood-crimson' : 'text-slate-300'}`}
+                >
+                  Admin Console
+                </Link>
+              ) : (
+                <Link 
+                  to="/noticeboard" 
+                  className={`transition-colors duration-200 hover:text-oneblood-crimson ${location.pathname === '/noticeboard' ? 'text-oneblood-crimson' : 'text-slate-300'}`}
+                >
+                  📋 Requests Board
+                </Link>
+              )}
               {!isAuthenticated && (
                 <Link 
                   to="/how-it-works" 
@@ -199,22 +208,7 @@ const Layout = () => {
                   My Dashboard
                 </Link>
               )}
-              {isAuthenticated && user?.role === 'admin' && (
-                <>
-                  <Link 
-                    to="/admin" 
-                    className={`transition-colors duration-200 hover:text-oneblood-crimson ${location.pathname === '/admin' ? 'text-oneblood-crimson' : 'text-slate-300'}`}
-                  >
-                    Admin Panel
-                  </Link>
-                  <Link 
-                    to="/admin/monitoring" 
-                    className={`transition-colors duration-200 hover:text-oneblood-crimson ${location.pathname === '/admin/monitoring' ? 'text-oneblood-crimson' : 'text-slate-300'}`}
-                  >
-                    Monitoring
-                  </Link>
-                </>
-              )}
+              {/* Legacy admin links removed */}
             </nav>
 
             {/* Desktop Auth Controls */}
@@ -552,13 +546,23 @@ const Layout = () => {
             >
               Home
             </Link>
-            <Link 
-              to="/noticeboard" 
-              className="block px-3 py-2 rounded-lg hover:bg-white/5 text-slate-300 hover:text-white"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              📋 Requests Board
-            </Link>
+            {isAuthenticated && user?.role === 'admin' ? (
+              <Link 
+                to="/admin-portal" 
+                className="block px-3 py-2 rounded-lg hover:bg-white/5 text-slate-300 hover:text-white"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Admin Console
+              </Link>
+            ) : (
+              <Link 
+                to="/noticeboard" 
+                className="block px-3 py-2 rounded-lg hover:bg-white/5 text-slate-300 hover:text-white"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                📋 Requests Board
+              </Link>
+            )}
             {!isAuthenticated && (
               <Link 
                 to="/how-it-works" 
@@ -613,24 +617,7 @@ const Layout = () => {
                 My Dashboard
               </Link>
             )}
-            {isAuthenticated && user?.role === 'admin' && (
-              <>
-                <Link 
-                  to="/admin" 
-                  className="block px-3 py-2 rounded-lg hover:bg-white/5 text-slate-300 hover:text-white"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Admin Panel
-                </Link>
-                <Link 
-                  to="/admin/monitoring" 
-                  className="block px-3 py-2 rounded-lg hover:bg-white/5 text-slate-300 hover:text-white"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Monitoring
-                </Link>
-              </>
-            )}
+            {/* Legacy admin links removed */}
             {isAuthenticated ? (
               <div className="space-y-1.5 pt-2 border-t border-white/5">
                 <div className="px-3 py-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
