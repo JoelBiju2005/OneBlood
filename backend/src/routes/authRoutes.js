@@ -5,6 +5,7 @@ const { protect } = require('../middleware/auth');
 
 router.post('/register', authController.register);
 router.post('/login', authController.login);
+router.post('/admin-portal-login', authController.adminPortalLogin);
 router.post('/google', authController.googleLogin);
 router.post('/logout', protect, authController.logout);
 router.post('/refresh', authController.refreshToken);

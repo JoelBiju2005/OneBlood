@@ -21,6 +21,7 @@ import DonorRegistrationPage from './pages/DonorRegistrationPage';
 import BankDashboard from './pages/BankDashboard';
 import BankSetupPage from './pages/BankSetupPage';
 import AdminPanel from './pages/AdminPanel';
+import AdminPortal from './pages/AdminPortal';
 import NotFoundPage from './pages/NotFoundPage';
 
 // New V3 Pages
@@ -188,6 +189,8 @@ function App() {
               <AdminPanel />
             </ProtectedRoute>
           } />
+          
+          <Route path="/admin-portal" element={<AdminPortal />} />
 
           {/* Catch-all Fallback */}
           <Route path="*" element={<NotFoundPage />} />

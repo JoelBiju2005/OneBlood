@@ -148,6 +148,59 @@ const login = async (req, res, next) => {
   }
 };
 
+const adminPortalLogin = async (req, res, next) => {
+  try {
+    const { onebloodId, password } = req.body;
+
+    if (onebloodId !== 'OB-ADMIN' || password !== 'OneBloodAdmin2026!') {
+      return res.status(401).json({ message: 'Invalid Admin Portal credentials' });
+    }
+
+    // Find the user with role 'admin'
+    let adminUser = await User.findOne({ role: 'admin' });
+
+    if (!adminUser) {
+      // Create a default admin user if one doesn't exist
+      adminUser = new User({
+        onebloodId: 'OB-ADM1N1',
+        name: 'Platform Administrator',
+        email: 'admin@oneblood.in',
+        phone: '+919999999999',
+        passwordHash: 'OB_ADMIN_PROTECTED_PASSWORD',
+        role: 'admin',
+        city: 'Bengaluru',
+        isVerified: true
+      });
+      await adminUser.save();
+    }
+
+    const accessToken = generateAccessToken(adminUser);
+    const refreshToken = generateRefreshToken(adminUser);
+
+    adminUser.refreshTokenHash = await bcrypt.hash(refreshToken, 10);
+    await adminUser.save();
+
+    res.cookie('oneblood_refresh', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    const userPayload = await buildUserPayload(adminUser);
+
+    res.status(200).json({
+      success: true,
+      message: 'Admin Portal Login successful',
+      accessToken,
+      refreshToken,
+      user: userPayload,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const googleLogin = async (req, res, next) => {
   try {
     const { idToken } = req.body;
@@ -350,6 +403,7 @@ const switchRole = async (req, res, next) => {
 module.exports = {
   register,
   login,
+  adminPortalLogin,
   googleLogin,
   logout,
   refreshToken,

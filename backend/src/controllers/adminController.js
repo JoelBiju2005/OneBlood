@@ -141,6 +141,101 @@ const getStats = async (req, res, next) => {
   }
 };
 
+// PUT /api/admin/users/:id — Edit a user profile
+const updateUser = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { name, email, phone, role, city, isVerified } = req.body;
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (name) user.name = name;
+    if (email) user.email = email.toLowerCase().trim();
+    if (phone) user.phone = phone;
+    if (role) user.role = role;
+    if (city) user.city = city;
+    if (isVerified !== undefined) user.isVerified = isVerified;
+
+    await user.save();
+
+    res.status(200).json({ success: true, message: 'User updated successfully', user });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// DELETE /api/admin/users/:id — Delete a user and their sub-profiles
+const deleteUser = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Delete associated donor profile
+    await Donor.findOneAndDelete({ userId: id });
+
+    // Delete associated blood bank profile
+    await BloodBank.findOneAndDelete({ adminUserId: id });
+
+    // Delete the user itself
+    await User.findByIdAndDelete(id);
+
+    res.status(200).json({ success: true, message: 'User and all associated profiles deleted successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// DELETE /api/admin/donors/:id — Delete only a donor profile
+const deleteDonor = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const donor = await Donor.findById(id);
+    if (!donor) {
+      return res.status(404).json({ message: 'Donor profile not found' });
+    }
+
+    // Update user flag
+    await User.findByIdAndUpdate(donor.userId, { donorProfileComplete: false, role: 'patient' });
+
+    // Delete the donor profile
+    await Donor.findByIdAndDelete(id);
+
+    res.status(200).json({ success: true, message: 'Donor profile deleted successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// DELETE /api/admin/banks/:id — Delete only a blood bank profile
+const deleteBank = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const bank = await BloodBank.findById(id);
+    if (!bank) {
+      return res.status(404).json({ message: 'Blood bank profile not found' });
+    }
+
+    // Update user flag
+    await User.findByIdAndUpdate(bank.adminUserId, { bankProfileComplete: false, role: 'patient' });
+
+    // Delete the bank profile
+    await BloodBank.findByIdAndDelete(id);
+
+    res.status(200).json({ success: true, message: 'Blood bank profile deleted successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getUsers,
   getDonors,
@@ -148,4 +243,8 @@ module.exports = {
   getRequests,
   getMessages,
   getStats,
+  updateUser,
+  deleteUser,
+  deleteDonor,
+  deleteBank,
 };

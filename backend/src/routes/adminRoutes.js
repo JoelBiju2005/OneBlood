@@ -13,4 +13,9 @@ router.get('/requests', adminController.getRequests);
 router.get('/messages', adminController.getMessages);
 router.get('/stats', adminController.getStats);
 
+router.put('/users/:id', adminController.updateUser);
+router.delete('/users/:id', adminController.deleteUser);
+router.delete('/donors/:id', adminController.deleteDonor);
+router.delete('/banks/:id', adminController.deleteBank);
+
 module.exports = router;
