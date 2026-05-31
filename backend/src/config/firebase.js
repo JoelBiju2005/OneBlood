@@ -34,13 +34,7 @@ try {
   console.error('🔴 Firebase Admin Initialization Error:', error.message);
 }
 
-const db = admin.firestore();
-
-// Set setting to ignore undefined values to prevent crash when writing empty fields
-db.settings({ ignoreUndefinedProperties: true });
-
 module.exports = {
-  db,
   admin,
   firebaseApp
 };
