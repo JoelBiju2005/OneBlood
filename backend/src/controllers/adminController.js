@@ -96,41 +96,64 @@ const getMessages = async (req, res, next) => {
   }
 };
 
-// GET /api/admin/stats — Aggregated platform statistics
+// GET /api/admin/stats — Aggregated platform statistics (In-memory aggregate)
 const getStats = async (req, res, next) => {
   try {
-    // Users by role
-    const usersByRole = await User.aggregate([
-      { $group: { _id: '$role', count: { $sum: 1 } } },
-    ]);
+    const users = await User.find() || [];
+    const donors = await Donor.find() || [];
+    const requests = await BloodRequest.find() || [];
+    const banks = await BloodBank.find() || [];
+    const messages = await Message.find() || [];
 
-    // Requests by status
-    const requestsByStatus = await BloodRequest.aggregate([
-      { $group: { _id: '$status', count: { $sum: 1 } } },
-    ]);
+    // Group users by role in memory
+    const roleCounts = {};
+    users.forEach(u => {
+      if (u && u.role) {
+        roleCounts[u.role] = (roleCounts[u.role] || 0) + 1;
+      }
+    });
+    const usersByRole = Object.keys(roleCounts).map(role => ({ _id: role, count: roleCounts[role] }));
 
-    // Donors by city
-    const donorsByCity = await Donor.aggregate([
-      { $group: { _id: '$city', count: { $sum: 1 } } },
-      { $sort: { count: -1 } },
-      { $limit: 10 },
-    ]);
+    // Group requests by status in memory
+    const statusCounts = {};
+    requests.forEach(r => {
+      if (r && r.status) {
+        statusCounts[r.status] = (statusCounts[r.status] || 0) + 1;
+      }
+    });
+    const requestsByStatus = Object.keys(statusCounts).map(status => ({ _id: status, count: statusCounts[status] }));
 
-    // Blood group distribution
-    const bloodGroupDist = await Donor.aggregate([
-      { $group: { _id: '$bloodGroup', count: { $sum: 1 } } },
-      { $sort: { count: -1 } },
-    ]);
+    // Group donors by city in memory
+    const cityCounts = {};
+    donors.forEach(d => {
+      if (d && d.city) {
+        cityCounts[d.city] = (cityCounts[d.city] || 0) + 1;
+      }
+    });
+    const donorsByCity = Object.keys(cityCounts)
+      .map(city => ({ _id: city, count: cityCounts[city] }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
 
-    // Total counts
-    const totalUsers = await User.countDocuments();
-    const totalDonors = await Donor.countDocuments();
-    const totalBanks = await BloodBank.countDocuments();
-    const totalRequests = await BloodRequest.countDocuments();
-    const totalMessages = await Message.countDocuments();
+    // Group donors by blood group in memory
+    const groupCounts = {};
+    donors.forEach(d => {
+      if (d && d.bloodGroup) {
+        groupCounts[d.bloodGroup] = (groupCounts[d.bloodGroup] || 0) + 1;
+      }
+    });
+    const bloodGroupDist = Object.keys(groupCounts)
+      .map(bg => ({ _id: bg, count: groupCounts[bg] }))
+      .sort((a, b) => b.count - a.count);
 
     res.status(200).json({
-      totals: { totalUsers, totalDonors, totalBanks, totalRequests, totalMessages },
+      totals: {
+        totalUsers: users.length,
+        totalDonors: donors.length,
+        totalBanks: banks.length,
+        totalRequests: requests.length,
+        totalMessages: messages.length
+      },
       usersByRole,
       requestsByStatus,
       donorsByCity,
