@@ -7,8 +7,12 @@ const connectDB = async () => {
     console.log('🟢 Firebase Firestore connection established and verified successfully.');
   } catch (error) {
     console.error(`🔴 Firebase Connection/Verification Error: ${error.message}`);
-    console.error('Fatal Server Startup Failure: Firebase Firestore connection is required.');
-    process.exit(1);
+    if (error.message.includes('Quota exceeded') || error.code === 8) {
+      console.warn('⚠️ WARNING: Firebase daily quota is exhausted. Database operations will fail, but starting server anyway to allow auto-recovery once daily quota resets.');
+    } else {
+      console.error('Fatal Server Startup Failure: Firebase Firestore connection is required.');
+      process.exit(1);
+    }
   }
 };
 

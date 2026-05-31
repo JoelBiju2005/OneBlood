@@ -96,9 +96,18 @@ const getMessages = async (req, res, next) => {
   }
 };
 
-// GET /api/admin/stats — Aggregated platform statistics (In-memory aggregate)
+let cachedStats = null;
+let lastStatsFetch = 0;
+const STATS_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// GET /api/admin/stats — Aggregated platform statistics (In-memory aggregate with cache)
 const getStats = async (req, res, next) => {
   try {
+    const now = Date.now();
+    if (cachedStats && (now - lastStatsFetch < STATS_CACHE_DURATION)) {
+      return res.status(200).json(cachedStats);
+    }
+
     const users = await User.find() || [];
     const donors = await Donor.find() || [];
     const requests = await BloodRequest.find() || [];
@@ -146,7 +155,7 @@ const getStats = async (req, res, next) => {
       .map(bg => ({ _id: bg, count: groupCounts[bg] }))
       .sort((a, b) => b.count - a.count);
 
-    res.status(200).json({
+    cachedStats = {
       totals: {
         totalUsers: users.length,
         totalDonors: donors.length,
@@ -158,7 +167,10 @@ const getStats = async (req, res, next) => {
       requestsByStatus,
       donorsByCity,
       bloodGroupDist,
-    });
+    };
+    lastStatsFetch = now;
+
+    res.status(200).json(cachedStats);
   } catch (error) {
     next(error);
   }

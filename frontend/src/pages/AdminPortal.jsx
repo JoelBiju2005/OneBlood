@@ -65,23 +65,26 @@ const AdminPortal = () => {
     toast.success('Logged out of Admin Portal.');
   };
 
-  // 2. Fetch all collections data from Firestore
-  const fetchAllData = async () => {
+  // 2. Fetch specific tab data from Firestore
+  const fetchDataForTab = async (tab) => {
     setLoading(true);
     try {
-      const [statsRes, usersRes, donorsRes, banksRes, requestsRes] = await Promise.all([
-        api.get('/admin/stats'),
-        api.get('/admin/users?limit=200'),
-        api.get('/admin/donors'),
-        api.get('/admin/banks'),
-        api.get('/admin/requests')
-      ]);
-
-      setStats(statsRes.data);
-      setUsers(usersRes.data.users || []);
-      setDonors(donorsRes.data.donors || []);
-      setBanks(banksRes.data.banks || []);
-      setRequests(requestsRes.data.requests || []);
+      if (tab === 'overview') {
+        const res = await api.get('/admin/stats');
+        setStats(res.data);
+      } else if (tab === 'users') {
+        const res = await api.get('/admin/users?limit=200');
+        setUsers(res.data.users || []);
+      } else if (tab === 'donors') {
+        const res = await api.get('/admin/donors');
+        setDonors(res.data.donors || []);
+      } else if (tab === 'banks') {
+        const res = await api.get('/admin/banks');
+        setBanks(res.data.banks || []);
+      } else if (tab === 'requests') {
+        const res = await api.get('/admin/requests');
+        setRequests(res.data.requests || []);
+      }
     } catch (err) {
       toast.error('Failed to load portal logs');
       console.error(err);
@@ -91,10 +94,10 @@ const AdminPortal = () => {
   };
 
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchAllData();
+    if (isAuthenticated || isAuthorizedAdmin) {
+      fetchDataForTab(activeTab);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isAuthorizedAdmin, activeTab]);
 
   // 3. User operations (Edit/Delete)
   const openEditModal = (user) => {
@@ -119,7 +122,7 @@ const AdminPortal = () => {
       // Update state locally
       setUsers(prev => prev.map(u => u._id === editingUser._id ? { ...u, ...editForm } : u));
       setEditingUser(null);
-      fetchAllData(); // Refresh stats
+      fetchDataForTab(activeTab); // Refresh stats
     } catch (err) {
       toast.error('Failed to update user record');
     } finally {
@@ -135,7 +138,7 @@ const AdminPortal = () => {
       await api.delete(`/admin/users/${userId}`);
       toast.success('User permanently deleted');
       setUsers(prev => prev.filter(u => u._id !== userId));
-      fetchAllData();
+      fetchDataForTab(activeTab);
     } catch (err) {
       toast.error('Failed to delete user');
     } finally {
@@ -149,7 +152,7 @@ const AdminPortal = () => {
     try {
       await api.delete(`/admin/donors/${donorId}`);
       toast.success('Donor profile deleted');
-      fetchAllData();
+      fetchDataForTab(activeTab);
     } catch (err) {
       toast.error('Failed to delete donor profile');
     } finally {
@@ -163,7 +166,7 @@ const AdminPortal = () => {
     try {
       await api.delete(`/admin/banks/${bankId}`);
       toast.success('Blood bank profile deleted');
-      fetchAllData();
+      fetchDataForTab(activeTab);
     } catch (err) {
       toast.error('Failed to delete bank profile');
     } finally {
@@ -176,7 +179,7 @@ const AdminPortal = () => {
     try {
       await api.put(`/banks/${bankId}`, { isVerified: !currentStatus });
       toast.success(currentStatus ? 'Verification revoked' : 'Blood bank verified');
-      fetchAllData();
+      fetchDataForTab(activeTab);
     } catch (err) {
       toast.error('Failed to toggle verification');
     } finally {
@@ -191,7 +194,7 @@ const AdminPortal = () => {
       await api.delete(`/requests/${reqId}`);
       toast.success('Emergency request deleted');
       setRequests(prev => prev.filter(r => r._id !== reqId));
-      fetchAllData();
+      fetchDataForTab(activeTab);
     } catch (err) {
       toast.error('Failed to delete request');
     } finally {
@@ -299,7 +302,7 @@ const AdminPortal = () => {
               return (
                 <button
                   key={tab.id}
-                  onClick={() => { setActiveTab(tab.id); fetchAllData(); }}
+                  onClick={() => setActiveTab(tab.id)}
                   className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-bold text-left transition-all cursor-pointer ${activeTab === tab.id ? 'bg-oneblood-crimson text-white shadow-lg shadow-red-950/20' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
                 >
                   <Icon className="w-4.5 h-4.5" />
