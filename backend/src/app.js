@@ -23,18 +23,21 @@ const noticeBoardRoutes = require('./routes/noticeBoardRoutes');
 
 const app = express();
 
+// Trust proxy settings (required for Render/Heroku to get real client IPs)
+app.set('trust proxy', 1);
+
 const isDev = process.env.NODE_ENV !== 'production';
 
 // Rate limiters
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 min
-  max: isDev ? 10000 : 100,
+  max: isDev ? 10000 : 500, // Increased to 500 to prevent false limits on production
   message: { error: 'Too many requests. Try again in 15 minutes.' }
 });
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: isDev ? 10000 : 10,
+  max: isDev ? 10000 : 100, // Increased to 100 to allow normal navigation/refresh cycles
   message: { error: 'Too many requests. Try again in 15 minutes.' }
 });
 
