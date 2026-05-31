@@ -1,19 +1,14 @@
-const { db } = require('./firebase');
+const mongoose = require('mongoose');
 
 const connectDB = async () => {
   try {
-    // Attempt to access a collection to check connectivity
-    await db.collection('users').limit(1).get();
-    console.log('🟢 Firebase Firestore connection established and verified successfully.');
+    const conn = await mongoose.connect(process.env.MONGODB_URI);
+    console.log(`🟢 MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
-    console.error(`🔴 Firebase Connection/Verification Error: ${error.message}`);
-    if (error.message.includes('Quota exceeded') || error.code === 8) {
-      console.warn('⚠️ WARNING: Firebase daily quota is exhausted. Database operations will fail, but starting server anyway to allow auto-recovery once daily quota resets.');
-    } else {
-      console.error('Fatal Server Startup Failure: Firebase Firestore connection is required.');
-      process.exit(1);
-    }
+    console.error(`🔴 MongoDB Connection Error: ${error.message}`);
+    process.exit(1);
   }
 };
 
 module.exports = connectDB;
+
