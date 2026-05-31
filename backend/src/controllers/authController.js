@@ -88,6 +88,7 @@ const register = async (req, res, next) => {
       success: true,
       message: 'Registration successful',
       accessToken,
+      refreshToken,
       user: userPayload,
     });
   } catch (error) {
@@ -139,6 +140,7 @@ const login = async (req, res, next) => {
     res.status(200).json({
       message: 'Login successful',
       accessToken,
+      refreshToken,
       user: userPayload,
     });
   } catch (error) {
@@ -197,6 +199,7 @@ const googleLogin = async (req, res, next) => {
       success: true,
       message: 'Login successful',
       accessToken,
+      refreshToken,
       user: userPayload,
     });
   } catch (error) {
@@ -227,7 +230,7 @@ const logout = async (req, res, next) => {
 
 const refreshToken = async (req, res, next) => {
   try {
-    const token = req.cookies.oneblood_refresh;
+    const token = req.cookies.oneblood_refresh || req.body.refreshToken || req.headers['x-refresh-token'];
     if (!token) {
       return res.status(400).json({ message: 'Refresh token is required' });
     }
@@ -336,6 +339,7 @@ const switchRole = async (req, res, next) => {
       success: true,
       message: `Successfully switched role to ${user.role}`,
       accessToken,
+      refreshToken,
       user: userPayload,
     });
   } catch (error) {

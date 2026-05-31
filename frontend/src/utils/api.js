@@ -50,10 +50,10 @@ api.interceptors.response.use(
       }
 
       originalRequest._retry = true;
-      
       try {
-        // Call auth refresh endpoint (cookie is automatically sent)
-        const res = await axios.post(`${API_URL}/auth/refresh`, {}, { withCredentials: true });
+        // Call auth refresh endpoint (cookie is automatically sent, body sent as localStorage fallback)
+        const storedRefreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
+        const res = await axios.post(`${API_URL}/auth/refresh`, { refreshToken: storedRefreshToken }, { withCredentials: true });
         const { accessToken: newAccessToken } = res.data;
 
         setAccessToken(newAccessToken);
