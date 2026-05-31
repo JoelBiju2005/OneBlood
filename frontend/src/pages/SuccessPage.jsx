@@ -76,14 +76,14 @@ const SuccessPage = () => {
   // Primary CTA route mapping
   const getPrimaryRoute = () => {
     if (!isNewUser) return '/home';
-    if (role === 'donor') return '/home';
+    if (role === 'donor') return '/donor/register';
     if (role === 'patient') return '/search';
     if (role === 'blood_bank') return '/home';
     return '/home';
   };
 
   const getPrimaryLabel = () => {
-    if (role === 'donor') return 'Go to Dashboard';
+    if (role === 'donor') return 'Complete Setup';
     if (role === 'patient') return 'Find blood near me';
     if (role === 'blood_bank') return 'Go to Dashboard';
     return 'Go to Home';
@@ -91,21 +91,9 @@ const SuccessPage = () => {
 
   // Countdown timer logic
   useEffect(() => {
-    if (timerCancelled || !isNewUser) return;
-
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          navigate(getPrimaryRoute(), { replace: true });
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [timerCancelled, isNewUser, navigate, role]);
+    // Disabled auto-redirect to let new user stay on welcome page to see OneBlood ID and complete setup
+    return;
+  }, []);
 
   // Auto-redirect for logged-in user welcome back
   useEffect(() => {
@@ -340,14 +328,7 @@ const SuccessPage = () => {
             </div>
           </div>
 
-          {/* Auto-redirect countdown */}
-          {!timerCancelled && (
-            <div className="text-center mt-6">
-              <p className="text-[11px] text-slate-500 font-mono">
-                Continuing in {countdown} seconds...
-              </p>
-            </div>
-          )}
+          {/* Auto-redirect countdown disabled */}
 
         </div>
       </div>

@@ -38,7 +38,9 @@ const DonorHomePage = () => {
       );
       setActiveRequests(matching);
     } catch (err) {
-      toast.error('Failed to load donor profile details.');
+      if (err.response?.status !== 404) {
+        toast.error('Failed to load donor profile details.');
+      }
     } finally {
       setLoading(false);
     }
