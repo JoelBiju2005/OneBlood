@@ -9,7 +9,7 @@ const noticeBoardSchema = new mongoose.Schema({
   city: { type: String },
   phone: { type: String },
   reason: { type: String },
-  status: { type: String, default: 'active' }
+  status: { type: String, default: 'open', enum: ['open', 'fulfilled', 'closed', 'active'] }
 }, {
   timestamps: true,
   strict: false

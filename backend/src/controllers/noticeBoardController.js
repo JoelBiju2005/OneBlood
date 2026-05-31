@@ -3,8 +3,9 @@ const { uploadFile } = require('../services/storageService');
 
 exports.getAllNotices = async (req, res) => {
   try {
-    const { urgency, bloodGroup, city, status = 'open' } = req.query;
-    const filter = { status };
+    const { urgency, bloodGroup, city } = req.query;
+    // Support both 'open' (new) and 'active' (legacy) statuses
+    const filter = { status: { $in: ['open', 'active'] } };
     if (urgency) filter.urgency = urgency;
     if (bloodGroup) filter.bloodGroup = bloodGroup;
     if (city) filter.city = new RegExp(city, 'i');
@@ -35,12 +36,15 @@ exports.createNotice = async (req, res) => {
       bloodGroup,
       component: component || 'Whole Blood',
       unitsNeeded: parseInt(unitsNeeded, 10) || 1,
+      unitsRequired: parseInt(unitsNeeded, 10) || 1,
       hospital,
+      hospitalName: hospital,
       city,
       contactNumber,
       urgency,
       message,
       doctorLetterUrl,
+      status: 'open',
     });
 
     res.status(201).json(notice);
@@ -142,7 +146,11 @@ exports.respondToNotice = async (req, res) => {
 
 exports.getMyNotices = async (req, res) => {
   try {
-    const notices = await NoticeBoard.find({ seekerId: req.user._id }).sort({ createdAt: -1 });
+    // Include both 'open' and 'active' (legacy) statuses
+    const notices = await NoticeBoard.find({
+      seekerId: req.user._id,
+      status: { $in: ['open', 'active'] }
+    }).sort({ createdAt: -1 });
     res.json(notices);
   } catch (err) {
     res.status(500).json({ message: 'Failed to fetch your notices.' });

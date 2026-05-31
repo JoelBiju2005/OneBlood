@@ -177,42 +177,54 @@ const createRequest = async (req, res, next) => {
     // 1. Get compatible donor blood groups
     const compatibleGroups = getCompatibleDonors(bloodGroup, bloodComponent);
 
-    // 2. Query donors matching compatible blood groups within proximity radius
-    const donorQuery = {
-      isAvailable: true,
-      bloodGroup: { $in: compatibleGroups },
-      location: {
-        $near: {
-          $geometry: {
-            type: 'Point',
-            coordinates: [parseFloat(lng), parseFloat(lat)],
-          },
-          $maxDistance: radius * 1000 // radius in meters
-        }
-      }
-    };
+    // 2 & 3. Query donors and banks — wrapped in try-catch so geo failures don't block request creation
+    let nearbyDonors = [];
+    let nearbyBanks = [];
 
-    // If critical urgency level, broadcast to any compatible donor regardless of active availability settings in 25km radius
-    if (urgencyLevel === 'critical') {
-      delete donorQuery.isAvailable;
+    try {
+      const donorQuery = {
+        isAvailable: true,
+        bloodGroup: { $in: compatibleGroups },
+        location: {
+          $near: {
+            $geometry: {
+              type: 'Point',
+              coordinates: [parseFloat(lng), parseFloat(lat)],
+            },
+            $maxDistance: radius * 1000
+          }
+        }
+      };
+
+      if (urgencyLevel === 'critical') {
+        delete donorQuery.isAvailable;
+      }
+
+      nearbyDonors = await Donor.find(donorQuery);
+    } catch (geoErr) {
+      console.warn('[createRequest] Donor geo-query failed (non-fatal):', geoErr.message);
+      nearbyDonors = [];
     }
 
-    const nearbyDonors = await Donor.find(donorQuery);
-    const donorIds = nearbyDonors.map(d => d._id);
-
-    // 3. Find nearby blood banks in the same radius
-    const nearbyBanks = await BloodBank.find({
-      isActive: true,
-      location: {
-        $near: {
-          $geometry: {
-            type: 'Point',
-            coordinates: [parseFloat(lng), parseFloat(lat)],
-          },
-          $maxDistance: radius * 1000
+    try {
+      nearbyBanks = await BloodBank.find({
+        isActive: true,
+        location: {
+          $near: {
+            $geometry: {
+              type: 'Point',
+              coordinates: [parseFloat(lng), parseFloat(lat)],
+            },
+            $maxDistance: radius * 1000
+          }
         }
-      }
-    });
+      });
+    } catch (geoErr) {
+      console.warn('[createRequest] Bank geo-query failed (non-fatal):', geoErr.message);
+      nearbyBanks = [];
+    }
+
+    const donorIds = nearbyDonors.map(d => d._id);
     const bankIds = nearbyBanks.map(b => b._id);
 
     // Update request with notified entities
@@ -263,11 +275,12 @@ const createRequest = async (req, res, next) => {
     });
 
     // Socket broadcast event to active rooms
-    compatibleGroups.forEach((group) => {
-      // room: donor:Bpos:hubli
-      const cityRoom = `donor:${group}:${newRequest.hospitalAddress.split(',').pop().trim().toLowerCase()}`;
-      socketService.broadcastToRoom(cityRoom, 'new_blood_request', newRequest);
-    });
+    if (newRequest.hospitalAddress) {
+      compatibleGroups.forEach((group) => {
+        const cityRoom = `donor:${group}:${newRequest.hospitalAddress.split(',').pop().trim().toLowerCase()}`;
+        socketService.broadcastToRoom(cityRoom, 'new_blood_request', newRequest);
+      });
+    }
 
     res.status(201).json({
       message: 'Blood request dispatched successfully',
@@ -280,6 +293,7 @@ const createRequest = async (req, res, next) => {
     next(error);
   }
 };
+
 
 const getRequests = async (req, res, next) => {
   try {
@@ -514,8 +528,12 @@ const targetDonor = async (req, res, next) => {
         isRead: false
       });
       
-      // Email notification via Resend
-      await emailService.sendRequestAlertEmail(donorUser.email, donor.name, request);
+      // Email notification via Resend (non-fatal)
+      try {
+        await emailService.sendRequestAlertEmail(donorUser.email, donor.name, request);
+      } catch (emailErr) {
+        console.warn('[targetDonor] Email notification failed (non-fatal):', emailErr.message);
+      }
     }
 
     res.status(200).json({ success: true, message: 'Direct request sent to donor' });

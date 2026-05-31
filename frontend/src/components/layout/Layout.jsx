@@ -169,12 +169,14 @@ const Layout = () => {
                   </Link>
                 </>
               ) : (
-                <Link 
-                  to="/noticeboard" 
-                  className={`transition-colors duration-200 hover:text-oneblood-crimson ${location.pathname === '/noticeboard' ? 'text-oneblood-crimson' : 'text-slate-300'}`}
-                >
-                  📋 Requests Board
-                </Link>
+                isAuthenticated && (
+                  <Link 
+                    to="/noticeboard" 
+                    className={`transition-colors duration-200 hover:text-oneblood-crimson ${location.pathname === '/noticeboard' ? 'text-oneblood-crimson' : 'text-slate-300'}`}
+                  >
+                    📋 Requests Board
+                  </Link>
+                )
               )}
               {!isAuthenticated && (
                 <Link 
@@ -592,13 +594,15 @@ const Layout = () => {
                 </Link>
               </>
             ) : (
-              <Link 
-                to="/noticeboard" 
-                className="block px-3 py-2 rounded-lg hover:bg-white/5 text-slate-300 hover:text-white"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                📋 Requests Board
-              </Link>
+              isAuthenticated && (
+                <Link 
+                  to="/noticeboard" 
+                  className="block px-3 py-2 rounded-lg hover:bg-white/5 text-slate-300 hover:text-white"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  📋 Requests Board
+                </Link>
+              )
             )}
             {!isAuthenticated && (
               <Link 

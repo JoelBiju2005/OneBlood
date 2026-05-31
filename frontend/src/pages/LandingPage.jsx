@@ -89,51 +89,20 @@ const LandingPage = () => {
       <div className="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-red-600/10 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-amber-500/5 blur-[120px] pointer-events-none" />
 
-      {/* ── Logo Symbolism Banner ── */}
+
+      {/* ── Full Width Bold Tagline ── */}
       <motion.div
-        initial={{ opacity: 0, y: -16 }}
+        initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="relative z-10 border-b border-white/5 bg-gradient-to-r from-red-950/25 via-slate-950 to-slate-950 px-4 sm:px-8 py-5"
+        transition={{ duration: 0.5 }}
+        className="relative z-10 w-full bg-gradient-to-r from-red-950/30 via-slate-950 to-slate-950 border-b border-white/5 py-5 px-4"
       >
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center gap-5 sm:gap-10">
-          {/* Logo large */}
-          <div className="flex-shrink-0 flex flex-col items-center gap-1.5">
-            <Logo size="lg" showText={false} />
-            <p className="text-[9px] font-black uppercase tracking-[3px] text-red-500/60">OneBlood</p>
-          </div>
-
-          {/* Symbolism pillars */}
-          <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-            <div className="bg-white/3 border border-white/7 rounded-2xl p-3 text-center hover:border-red-500/30 transition-all duration-300 group cursor-default">
-              <div className="text-xl mb-1 group-hover:scale-110 transition-transform duration-200">🩸</div>
-              <p className="text-[10px] font-bold text-white">Blood Drop</p>
-              <p className="text-[9px] text-slate-500 mt-0.5 leading-snug hidden sm:block">Unified ecosystem around life-saving blood</p>
-            </div>
-            <div className="bg-white/3 border border-white/7 rounded-2xl p-3 text-center hover:border-slate-400/30 transition-all duration-300 group cursor-default">
-              <div className="text-xl mb-1 group-hover:scale-110 transition-transform duration-200">1️⃣</div>
-              <p className="text-[10px] font-bold text-white">The "1"</p>
-              <p className="text-[9px] text-slate-500 mt-0.5 leading-snug hidden sm:block">One platform · one network · one response</p>
-            </div>
-            <div className="bg-white/3 border border-white/7 rounded-2xl p-3 text-center hover:border-amber-500/30 transition-all duration-300 group cursor-default">
-              <div className="text-xl mb-1 group-hover:scale-110 transition-transform duration-200">🕯️</div>
-              <p className="text-[10px] font-bold text-white">The Flame</p>
-              <p className="text-[9px] text-slate-500 mt-0.5 leading-snug hidden sm:block">Hope · Life · Urgency in emergencies</p>
-            </div>
-            <div className="bg-white/3 border border-white/7 rounded-2xl p-3 text-center hover:border-emerald-500/30 transition-all duration-300 group cursor-default">
-              <div className="text-xl mb-1 group-hover:scale-110 transition-transform duration-200">🤲</div>
-              <p className="text-[10px] font-bold text-white">The Hand</p>
-              <p className="text-[9px] text-slate-500 mt-0.5 leading-snug hidden sm:block">Human care · donors · protecting hope</p>
-            </div>
-          </div>
-
-          {/* Brand tagline — desktop only */}
-          <div className="hidden xl:flex flex-col items-end text-right flex-shrink-0 border-l border-white/8 pl-8">
-            <p className="text-sm font-black text-white leading-tight">One Need.</p>
-            <p className="text-sm font-black text-white leading-tight">One Response.</p>
-            <p className="text-sm font-black text-red-500 leading-tight">One Life.</p>
-          </div>
-        </div>
+        <p className="text-center text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight leading-tight w-full">
+          <span className="text-red-500">One Need.</span>{' '}
+          <span className="text-white">One Response.</span>{' '}
+          <span className="text-red-500">One Life.</span>{' '}
+          <span className="text-white">One Platform.</span>
+        </p>
       </motion.div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative z-10 w-full font-sans">
@@ -223,13 +192,13 @@ const LandingPage = () => {
             </motion.div>
           </div>
 
-          {/* Right Column: Logo Symbolism Card */}
+          {/* Right Column: Live Stats Visual */}
           <div className="lg:col-span-5 relative flex flex-col items-center">
             <motion.div
               initial={{ opacity: 0, scale: 0.85 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3, type: "spring", stiffness: 80 }}
-              className="relative w-full bg-gradient-to-br from-slate-900 via-red-950/20 to-slate-900 border border-red-500/20 rounded-3xl p-8 flex flex-col gap-5 shadow-2xl overflow-hidden group hover:border-red-500/40 transition-all duration-300"
+              className="relative w-full bg-gradient-to-br from-slate-900 via-red-950/20 to-slate-900 border border-red-500/20 rounded-3xl p-8 flex flex-col gap-6 shadow-2xl overflow-hidden group hover:border-red-500/40 transition-all duration-300"
             >
               {/* Glow effects */}
               <div className="absolute top-0 right-0 w-40 h-40 rounded-full bg-red-600/8 blur-[60px] pointer-events-none" />
@@ -238,41 +207,29 @@ const LandingPage = () => {
               {/* Header */}
               <div className="flex items-center justify-between relative z-10">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[3px] text-red-500/80">Brand Story</p>
-                  <h3 className="text-lg font-extrabold text-white mt-0.5">What Our Logo Says</h3>
+                  <p className="text-[10px] font-black uppercase tracking-[3px] text-red-500/80">Live Network</p>
+                  <h3 className="text-lg font-extrabold text-white mt-0.5">OneBlood at a Glance</h3>
                 </div>
                 <Logo size="md" showText={false} />
               </div>
 
-              {/* Symbolism items */}
-              <div className="space-y-2.5 relative z-10">
-                <div className="flex items-start gap-3 p-3 rounded-xl bg-white/4 border border-white/6 hover:border-red-500/25 transition-all">
-                  <span className="text-xl flex-shrink-0">🩸</span>
-                  <div>
-                    <p className="text-xs font-bold text-white">The Blood Drop</p>
-                    <p className="text-[10px] text-slate-400 leading-snug mt-0.5">A unified ecosystem around the life-saving resource — blood donation, availability, and emergency response.</p>
-                  </div>
+              {/* Stats grid */}
+              <div className="grid grid-cols-2 gap-4 relative z-10">
+                <div className="bg-white/4 border border-white/6 rounded-2xl p-4 text-center hover:border-red-500/25 transition-all">
+                  <p className="text-3xl font-black text-red-500"><AnimatedNumber value={stats.totalDonors} suffix="+" /></p>
+                  <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wider font-semibold">Donors Active</p>
                 </div>
-                <div className="flex items-start gap-3 p-3 rounded-xl bg-white/4 border border-white/6 hover:border-white/20 transition-all">
-                  <span className="text-xl flex-shrink-0">1️⃣</span>
-                  <div>
-                    <p className="text-xs font-bold text-white">The "1" — OneBlood</p>
-                    <p className="text-[10px] text-slate-400 leading-snug mt-0.5">One platform · one network · one response. The "One" literally sits at the center of everything.</p>
-                  </div>
+                <div className="bg-white/4 border border-white/6 rounded-2xl p-4 text-center hover:border-blue-500/25 transition-all">
+                  <p className="text-3xl font-black text-blue-400"><AnimatedNumber value={stats.totalBanks} /></p>
+                  <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wider font-semibold">Blood Banks</p>
                 </div>
-                <div className="flex items-start gap-3 p-3 rounded-xl bg-white/4 border border-white/6 hover:border-amber-500/25 transition-all">
-                  <span className="text-xl flex-shrink-0">🕯️</span>
-                  <div>
-                    <p className="text-xs font-bold text-white">The Flame — Hope</p>
-                    <p className="text-[10px] text-slate-400 leading-snug mt-0.5">The "1" becomes a candle: hope for those waiting, urgency in every second, life and remembrance.</p>
-                  </div>
+                <div className="bg-white/4 border border-white/6 rounded-2xl p-4 text-center hover:border-amber-500/25 transition-all">
+                  <p className="text-3xl font-black text-amber-500"><AnimatedNumber value={stats.requestsFulfilled} /></p>
+                  <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wider font-semibold">Requests Fulfilled</p>
                 </div>
-                <div className="flex items-start gap-3 p-3 rounded-xl bg-white/4 border border-white/6 hover:border-emerald-500/25 transition-all">
-                  <span className="text-xl flex-shrink-0">🤲</span>
-                  <div>
-                    <p className="text-xs font-bold text-white">The Hand — Human Care</p>
-                    <p className="text-[10px] text-slate-400 leading-snug mt-0.5">A donor giving. Human support and protection — the hand holds the candle of hope steady.</p>
-                  </div>
+                <div className="bg-white/4 border border-white/6 rounded-2xl p-4 text-center hover:border-emerald-500/25 transition-all">
+                  <p className="text-3xl font-black text-emerald-400"><AnimatedNumber value={stats.livesHelped} suffix="+" /></p>
+                  <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wider font-semibold">Lives Helped</p>
                 </div>
               </div>
 
