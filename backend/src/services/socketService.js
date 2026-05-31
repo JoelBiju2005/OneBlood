@@ -7,6 +7,13 @@ const init = (io) => {
   io.on('connection', (socket) => {
     console.log(`🔌 New client connected: ${socket.id}`);
 
+    // Auto join user room for authenticated connections
+    if (socket.userId) {
+      userSockets.set(socket.userId, socket.id);
+      socket.join(`user_${socket.userId}`);
+      console.log(`👤 Authenticated user auto-registered: user_${socket.userId} on socket ${socket.id}`);
+    }
+
     // Register user to track direct notifications
     socket.on('register_user', (userId) => {
       if (userId) {

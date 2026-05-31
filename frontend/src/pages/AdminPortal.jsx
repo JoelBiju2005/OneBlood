@@ -8,7 +8,8 @@ import {
 } from 'lucide-react';
 
 const AdminPortal = () => {
-  const { logout: normalLogout } = useAuthStore();
+  const { logout: normalLogout, user, isAuthenticated: isGloballyAuthenticated } = useAuthStore();
+  const isAuthorizedAdmin = isGloballyAuthenticated && user?.role === 'admin';
   
   // Auth state
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -207,7 +208,7 @@ const AdminPortal = () => {
   );
 
   // --- LOGIN INTERFACE ---
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !isAuthorizedAdmin) {
     return (
       <div className="min-h-[calc(100vh-80px)] bg-slate-950 text-white flex items-center justify-center px-4 relative overflow-hidden font-sans">
         <div className="absolute top-[-10%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-red-600/5 blur-[130px] pointer-events-none" />

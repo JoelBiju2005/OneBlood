@@ -139,19 +139,35 @@ const Layout = () => {
 
             {/* Desktop Navigation Links */}
             <nav className="hidden md:flex space-x-8 text-sm font-medium">
-              <Link 
-                to="/" 
-                className={`transition-colors duration-200 hover:text-oneblood-crimson ${location.pathname === '/' ? 'text-oneblood-crimson' : 'text-slate-300'}`}
-              >
-                Home
-              </Link>
-              {isAuthenticated && user?.role === 'admin' ? (
+              {user?.role !== 'admin' && (
                 <Link 
-                  to="/admin-portal" 
-                  className={`transition-colors duration-200 hover:text-oneblood-crimson ${location.pathname === '/admin-portal' ? 'text-oneblood-crimson' : 'text-slate-300'}`}
+                  to="/" 
+                  className={`transition-colors duration-200 hover:text-oneblood-crimson ${location.pathname === '/' ? 'text-oneblood-crimson' : 'text-slate-300'}`}
                 >
-                  Admin Console
+                  Home
                 </Link>
+              )}
+              {isAuthenticated && user?.role === 'admin' ? (
+                <>
+                  <Link 
+                    to="/admin-portal" 
+                    className={`transition-colors duration-200 hover:text-oneblood-crimson ${location.pathname === '/admin-portal' ? 'text-oneblood-crimson' : 'text-slate-300'}`}
+                  >
+                    Admin Console
+                  </Link>
+                  <Link 
+                    to="/admin" 
+                    className={`transition-colors duration-200 hover:text-oneblood-crimson ${location.pathname.startsWith('/admin') && location.pathname !== '/admin-portal' && location.pathname !== '/admin/monitoring' ? 'text-oneblood-crimson' : 'text-slate-300'}`}
+                  >
+                    Admin Panel
+                  </Link>
+                  <Link 
+                    to="/admin/monitoring" 
+                    className={`transition-colors duration-200 hover:text-oneblood-crimson ${location.pathname === '/admin/monitoring' ? 'text-oneblood-crimson' : 'text-slate-300'}`}
+                  >
+                    Monitoring
+                  </Link>
+                </>
               ) : (
                 <Link 
                   to="/noticeboard" 
@@ -308,19 +324,19 @@ const Layout = () => {
                     )}
                   </div>
 
-                  {/* V3 Chat Drawer Panel */}
-                  <div className="relative" ref={chatRef}>
-                    <button 
-                      onClick={() => setIsChatOpen(!isChatOpen)}
-                      className="p-2.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-200 relative group"
-                    >
-                      <MessageCircle className="w-5 h-5 text-slate-300 group-hover:text-oneblood-white" />
-                      {totalUnreadChats > 0 && (
-                        <span className="absolute top-1 right-1 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center text-[10px] font-bold animate-pulse text-white">
-                          {totalUnreadChats}
-                        </span>
-                      )}
-                    </button>
+                  {user?.role !== 'admin' && (
+                    <div className="relative" ref={chatRef}>
+                      <button 
+                        onClick={() => setIsChatOpen(!isChatOpen)}
+                        className="p-2.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-200 relative group"
+                      >
+                        <MessageCircle className="w-5 h-5 text-slate-300 group-hover:text-oneblood-white" />
+                        {totalUnreadChats > 0 && (
+                          <span className="absolute top-1 right-1 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center text-[10px] font-bold animate-pulse text-white">
+                            {totalUnreadChats}
+                          </span>
+                        )}
+                      </button>
 
                     {/* Chat Rooms Dropdown */}
                     {isChatOpen && (
@@ -375,6 +391,7 @@ const Layout = () => {
                       </div>
                     )}
                   </div>
+                  )}
 
                   {/* Profile Menu Dropdown */}
                   <div className="relative" ref={profileRef}>
@@ -423,14 +440,16 @@ const Layout = () => {
                           <User className="w-4 h-4 text-slate-400" />
                           <span>My Profile</span>
                         </Link>
-                        <Link 
-                          to="/home"
-                          className="flex items-center space-x-2.5 px-3 py-2 text-xs rounded-lg hover:bg-white/5 transition-colors"
-                          onClick={() => setIsProfileOpen(false)}
-                        >
-                          <Home className="w-4 h-4 text-slate-400" />
-                          <span>Home</span>
-                        </Link>
+                        {user?.role !== 'admin' && (
+                          <Link 
+                            to="/home"
+                            className="flex items-center space-x-2.5 px-3 py-2 text-xs rounded-lg hover:bg-white/5 transition-colors"
+                            onClick={() => setIsProfileOpen(false)}
+                          >
+                            <Home className="w-4 h-4 text-slate-400" />
+                            <span>Home</span>
+                          </Link>
+                        )}
                         {user.role === 'patient' && (
                           <Link 
                             to="/home/seeker"
@@ -539,21 +558,39 @@ const Layout = () => {
         {/* Mobile Navigation Drawer */}
         {isMenuOpen && (
           <div className="md:hidden bg-slate-900 border-b border-white/5 px-4 py-4 space-y-3 text-left">
-            <Link 
-              to="/" 
-              className="block px-3 py-2 rounded-lg hover:bg-white/5 text-slate-300 hover:text-white"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Home
-            </Link>
-            {isAuthenticated && user?.role === 'admin' ? (
+            {user?.role !== 'admin' && (
               <Link 
-                to="/admin-portal" 
+                to="/" 
                 className="block px-3 py-2 rounded-lg hover:bg-white/5 text-slate-300 hover:text-white"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Admin Console
+                Home
               </Link>
+            )}
+            {isAuthenticated && user?.role === 'admin' ? (
+              <>
+                <Link 
+                  to="/admin-portal" 
+                  className="block px-3 py-2 rounded-lg hover:bg-white/5 text-slate-300 hover:text-white"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Admin Console
+                </Link>
+                <Link 
+                  to="/admin" 
+                  className="block px-3 py-2 rounded-lg hover:bg-white/5 text-slate-300 hover:text-white"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Admin Panel
+                </Link>
+                <Link 
+                  to="/admin/monitoring" 
+                  className="block px-3 py-2 rounded-lg hover:bg-white/5 text-slate-300 hover:text-white"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Monitoring
+                </Link>
+              </>
             ) : (
               <Link 
                 to="/noticeboard" 
@@ -677,14 +714,16 @@ const Layout = () => {
                   <User className="w-4 h-4 text-slate-400" />
                   <span>My Profile</span>
                 </Link>
-                <Link 
-                  to="/home"
-                  className="flex items-center space-x-2.5 px-3 py-2 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-white/5"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <Home className="w-4 h-4 text-slate-400" />
-                  <span>Home</span>
-                </Link>
+                {user?.role !== 'admin' && (
+                  <Link 
+                    to="/home"
+                    className="flex items-center space-x-2.5 px-3 py-2 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-white/5"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Home className="w-4 h-4 text-slate-400" />
+                    <span>Home</span>
+                  </Link>
+                )}
                 {user.role === 'patient' && (
                   <Link 
                     to="/home/seeker"

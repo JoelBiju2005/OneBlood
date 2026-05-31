@@ -26,6 +26,7 @@ const useNotificationStore = create((set, get) => ({
 
     socket.on('connect', () => {
       console.log('🔌 Connected to OneBlood Socket Server');
+      socket.emit('register_user', userId);
     });
 
     // Listen to unified server notifications
