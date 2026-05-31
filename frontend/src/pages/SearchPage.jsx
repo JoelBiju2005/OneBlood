@@ -46,13 +46,21 @@ const centerIcon = L.divIcon({
   iconAnchor: [20, 20]
 });
 
-const ChangeMapView = ({ center }) => {
+const ChangeMapView = ({ center, triggerInvalidate }) => {
   const map = useMap();
   useEffect(() => {
     if (center) {
       map.setView(center, 13);
     }
   }, [center, map]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [triggerInvalidate, map]);
+
   return null;
 };
 
@@ -558,10 +566,15 @@ const SearchPage = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-80px)] flex flex-col md:flex-row relative bg-oneblood-midnight overflow-hidden">
+    <div className="h-[calc(100vh-80px)] flex flex-col md:flex-row relative bg-oneblood-midnight overflow-hidden">
       
       {/* 1. Left Sidebar: Interactive Filters & Listings */}
-      <div ref={listContainerRef} className={`w-full md:w-5/12 h-[calc(100vh-80px)] overflow-y-auto bg-slate-950 border-r border-white/5 flex flex-col relative z-20 ${mobileShowMap ? 'hidden md:flex' : 'flex'}`}>
+      <div 
+        ref={listContainerRef} 
+        className={`w-full md:w-5/12 bg-slate-950 border-t md:border-t-0 md:border-r border-white/5 flex flex-col relative z-20 overflow-y-auto order-2 md:order-1 transition-all duration-300 ${
+          mobileShowMap ? 'h-[35%] md:h-full' : 'h-[70%] md:h-full'
+        }`}
+      >
         
         {/* Pulsing Emergency Banner */}
         <div className="bg-oneblood-crimson/15 border-b border-oneblood-crimson/25 p-3 flex items-center justify-between animate-pulse">
@@ -942,13 +955,17 @@ const SearchPage = () => {
       </div>
 
       {/* 2. Right Panel: Stunning Map Overlay */}
-      <div className={`w-full md:w-7/12 h-[calc(100vh-80px)] relative ${mobileShowMap ? 'flex' : 'hidden md:flex'}`}>
+      <div 
+        className={`w-full md:w-7/12 relative order-1 md:order-2 transition-all duration-300 ${
+          mobileShowMap ? 'h-[65%] md:h-full' : 'h-[30%] md:h-full'
+        }`}
+      >
         <MapContainer center={userLocation} zoom={12} className="w-full h-full z-10">
           <TileLayer
             attribution='&copy; <a href="https://carto.com/">CARTO</a>'
             url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
           />
-          <ChangeMapView center={userLocation} />
+          <ChangeMapView center={userLocation} triggerInvalidate={mobileShowMap} />
 
           {/* Current Search Center */}
           <Marker position={userLocation} icon={centerIcon} />
@@ -1001,22 +1018,14 @@ const SearchPage = () => {
           })}
         </MapContainer>
 
-        {mobileShowMap && (
-          <button 
-            onClick={() => setMobileShowMap(false)}
-            className="absolute top-4 left-4 z-20 bg-slate-900 border border-white/10 px-4 py-2 rounded-xl text-xs font-bold text-white shadow-xl flex items-center space-x-1"
-          >
-            <span>← Back to List</span>
-          </button>
-        )}
       </div>
 
-      {/* Mobile Floating Toggle Map button */}
+      {/* Mobile Floating Resize Map/List Toggle */}
       <button 
         onClick={() => setMobileShowMap(!mobileShowMap)}
-        className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-30 bg-oneblood-crimson hover:bg-red-700 text-white font-bold text-xs px-5 py-3 rounded-full shadow-2xl flex items-center space-x-1.5 cursor-pointer"
+        className="md:hidden fixed bottom-4 right-4 z-30 bg-oneblood-crimson hover:bg-red-700 text-white font-bold text-xs px-4 py-2.5 rounded-full shadow-2xl flex items-center space-x-1.5 cursor-pointer"
       >
-        <span>{mobileShowMap ? 'Show List View 📋' : 'Show Map View 🗺'}</span>
+        <span>{mobileShowMap ? 'Show More List 📋' : 'Maximize Map 🗺'}</span>
       </button>
 
       {/* 3. Send Request Gated modal */}
