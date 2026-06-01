@@ -72,6 +72,10 @@ const BANKS = [
   { name:'SMS Hospital Blood Bank – Jaipur', registrationNumber:'RJ-BB-001', address:'Jawaharlal Nehru Marg, Sanganer', city:'Jaipur', district:'Jaipur', state:'Rajasthan', pincode:'302004', location:{type:'Point',coordinates:[75.7873,26.9124]}, phone:'01412518888', email:'bloodbank@smshospital.gov.in', facilities:['24x7','Government Hospital','Component Separation'], operatingHours:{is24x7:true}, inventory:fullInventory(1.4) },
 ];
 
+router.get('/status', (req, res) => {
+  res.json({ version: '2026-06-01-v2', banksInSeed: BANKS.length });
+});
+
 router.post('/seed-blood-banks', async (req, res) => {
   try {
     const { key } = req.body;
@@ -84,7 +88,7 @@ router.post('/seed-blood-banks', async (req, res) => {
     // Remove old seed records
     const del = await BloodBank.deleteMany({ adminUserId: SEED_ADMIN_ID });
 
-    // Insert all
+    // Insert all — collect errors separately
     const toInsert = BANKS.map(b => ({
       ...b,
       adminUserId: SEED_ADMIN_ID,
@@ -95,7 +99,20 @@ router.post('/seed-blood-banks', async (req, res) => {
       acceptsOnlineRequest: true,
     }));
 
-    const inserted = await BloodBank.insertMany(toInsert, { ordered: false });
+    let inserted = [];
+    let errors = [];
+
+    try {
+      inserted = await BloodBank.insertMany(toInsert, { ordered: false, rawResult: false });
+    } catch (bulkErr) {
+      // BulkWriteError — partial success
+      if (bulkErr.insertedDocs) {
+        inserted = bulkErr.insertedDocs;
+      }
+      errors = (bulkErr.writeErrors || []).map(e => e.errmsg || e.message || String(e));
+      console.error('[SeedBloodBanks] Bulk write errors:', errors.slice(0, 3));
+    }
+
     const total = await BloodBank.countDocuments({ isActive: true });
 
     const byCities = await BloodBank.aggregate([
@@ -107,14 +124,17 @@ router.post('/seed-blood-banks', async (req, res) => {
     res.json({
       success: true,
       deleted: del.deletedCount,
-      inserted: inserted.length,
+      attempted: toInsert.length,
+      inserted: Array.isArray(inserted) ? inserted.length : 0,
       totalActive: total,
-      byCity: byCities
+      byCity: byCities,
+      errors: errors.slice(0, 5)
     });
   } catch (err) {
     console.error('[SeedBloodBanks]', err);
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: err.message, stack: err.stack?.split('\n').slice(0, 5) });
   }
 });
+
 
 module.exports = router;
