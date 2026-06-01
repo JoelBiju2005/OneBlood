@@ -593,12 +593,13 @@ const acceptRequest = async (req, res, next) => {
       return res.status(400).json({ message: 'No registered donor profile found for current user' });
     }
 
-    // Find and update existing response or push a new one
-    const existingIndex = request.responses.findIndex(
-      (r) => r.responderId.toString() === donor._id.toString()
+    // Safely handle responses (may be undefined on older documents)
+    const existingResponses = Array.isArray(request.responses) ? request.responses : [];
+    const existingIndex = existingResponses.findIndex(
+      (r) => r.responderId && r.responderId.toString() === donor._id.toString()
     );
 
-    const updatedResponses = [...request.responses];
+    const updatedResponses = [...existingResponses];
     if (existingIndex > -1) {
       updatedResponses[existingIndex].status = 'accepted';
       updatedResponses[existingIndex].respondedAt = new Date();
@@ -611,22 +612,25 @@ const acceptRequest = async (req, res, next) => {
       });
     }
     request.responses = updatedResponses;
-    request.changed('responses', true);
+    request.markModified('responses');
 
     request.status = 'accepted';
     await request.save();
 
     // Create DonorContactReveal record to unlock details
-    await DonorContactReveal.findOneAndUpdate(
-      { requestId: id, donorId: donor._id, unlockedFor: request.requesterId },
-      { revealedAt: new Date() },
-      { upsert: true, new: true }
-    );
+    try {
+      await DonorContactReveal.findOneAndUpdate(
+        { requestId: id, donorId: donor._id, unlockedFor: request.requesterId },
+        { revealedAt: new Date() },
+        { upsert: true, new: true }
+      );
+    } catch (revealErr) {
+      console.warn('[acceptRequest] DonorContactReveal update failed (non-fatal):', revealErr.message);
+    }
 
     // Get requester details
     const requesterUser = await User.findById(request.requesterId);
     if (requesterUser) {
-      // Dispatches socket notification
       const responsePayload = {
         responderName: donor.name,
         responderType: 'donor',
@@ -636,35 +640,49 @@ const acceptRequest = async (req, res, next) => {
         respondedAt: new Date()
       };
 
-      socketService.sendToUser(request.requesterId, 'donor_responded', responsePayload);
+      // Socket notification (non-fatal)
+      try {
+        socketService.sendToUser(request.requesterId, 'donor_responded', responsePayload);
+      } catch (sockErr) {
+        console.warn('[acceptRequest] Socket emit failed (non-fatal):', sockErr.message);
+      }
 
-      // Create persistent notification for patient
-      await createNotification({
-        recipientId: request.requesterId,
-        type: 'donor_response',
-        title: `❤️ Request Accepted by ${donor.name}`,
-        message: `${donor.name} has accepted your request. Contact: ${donor.phone}`,
-        data: {
-          requestId: request._id,
-          response: responsePayload
-        }
-      });
+      // Persistent notification (non-fatal)
+      try {
+        await createNotification({
+          recipientId: request.requesterId,
+          type: 'donor_response',
+          title: `❤️ Request Accepted by ${donor.name}`,
+          message: `${donor.name} has accepted your request. Contact: ${donor.phone}`,
+          data: {
+            requestId: request._id,
+            response: responsePayload
+          }
+        });
+      } catch (notifErr) {
+        console.warn('[acceptRequest] Notification failed (non-fatal):', notifErr.message);
+      }
 
-      // Send contact details email via Resend
-      await emailService.sendRequestAcceptedEmail(
-        requesterUser.email, 
-        requesterUser.name, 
-        donor.name, 
-        { phone: donor.phone, email: donor.email, preferredContactMethod: donor.preferredContactMethod, donorId: donor._id }, 
-        request
-      );
+      // Email (non-fatal)
+      try {
+        await emailService.sendRequestAcceptedEmail(
+          requesterUser.email,
+          requesterUser.name,
+          donor.name,
+          { phone: donor.phone, email: donor.email, preferredContactMethod: donor.preferredContactMethod, donorId: donor._id },
+          request
+        );
+      } catch (emailErr) {
+        console.warn('[acceptRequest] Email failed (non-fatal):', emailErr.message);
+      }
     }
 
-    res.status(200).json({ 
-      success: true, 
-      message: 'Request accepted, contact details unlocked and shared.' 
+    res.status(200).json({
+      success: true,
+      message: 'Request accepted, contact details unlocked and shared.'
     });
   } catch (error) {
+    console.error('[acceptRequest] Error:', error.message, error);
     next(error);
   }
 };
@@ -682,12 +700,13 @@ const declineRequest = async (req, res, next) => {
       return res.status(400).json({ message: 'No registered donor profile found for current user' });
     }
 
-    // Find and update existing response or push a new one
-    const existingIndex = request.responses.findIndex(
-      (r) => r.responderId.toString() === donor._id.toString()
+    // Safely handle responses (may be undefined on older documents)
+    const existingResponses = Array.isArray(request.responses) ? request.responses : [];
+    const existingIndex = existingResponses.findIndex(
+      (r) => r.responderId && r.responderId.toString() === donor._id.toString()
     );
 
-    const updatedResponses = [...request.responses];
+    const updatedResponses = [...existingResponses];
     if (existingIndex > -1) {
       updatedResponses[existingIndex].status = 'declined';
       updatedResponses[existingIndex].respondedAt = new Date();
@@ -700,12 +719,13 @@ const declineRequest = async (req, res, next) => {
       });
     }
     request.responses = updatedResponses;
-    request.changed('responses', true);
+    request.markModified('responses');
 
     await request.save();
 
     res.status(200).json({ success: true, message: 'Request declined' });
   } catch (error) {
+    console.error('[declineRequest] Error:', error.message, error);
     next(error);
   }
 };
