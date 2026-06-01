@@ -66,7 +66,7 @@ exports.respondToNotice = async (req, res) => {
     if (!notice) {
       return res.status(404).json({ message: 'Notice not found.' });
     }
-    if (notice.status !== 'open') {
+    if (notice.status !== 'open' && notice.status !== 'active') {
       return res.status(400).json({ message: 'This need is no longer open.' });
     }
 
@@ -75,8 +75,11 @@ exports.respondToNotice = async (req, res) => {
     const donorProfileIdStr = donorProfile ? donorProfile._id.toString() : '';
     const userIdStr = req.user._id.toString();
 
+    // Safely handle responses (may be undefined on old documents)
+    const existingResponses = Array.isArray(notice.responses) ? notice.responses : [];
+
     // Prevent duplicate response of same action by same donor
-    const alreadyResponded = notice.responses.some(
+    const alreadyResponded = existingResponses.some(
       r => r.donorId && (r.donorId.toString() === userIdStr || r.donorId.toString() === donorProfileIdStr) && r.action === action
     );
     if (alreadyResponded) {
@@ -102,9 +105,10 @@ exports.respondToNotice = async (req, res) => {
       responseObj.referralBloodGroup = req.body.referralBloodGroup || '';
     }
 
-    notice.responses = [...notice.responses, responseObj];
-    notice.changed('responses', true);
+    notice.responses = [...existingResponses, responseObj];
+    notice.markModified('responses');
     await notice.save();
+
 
     // Send Notification to Seeker
     try {

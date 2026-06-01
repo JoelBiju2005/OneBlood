@@ -136,39 +136,60 @@ const createRequest = async (req, res, next) => {
       urgencyLevel,
       requiredBy,
       doctorLetterUrl,
-      doctorLetterVerification, // Output from /verify-letter
+      doctorLetterVerification,
       lat,
       lng,
       searchRadius
     } = req.body;
 
+    // Validate required fields early with clear messages
+    if (!patientName) return res.status(400).json({ message: 'Patient name is required.' });
+    if (!bloodGroup) return res.status(400).json({ message: 'Blood group is required.' });
+    if (!hospitalName) return res.status(400).json({ message: 'Hospital name is required.' });
+    if (!unitsRequired) return res.status(400).json({ message: 'Units required is missing.' });
+    if (!lat || !lng) return res.status(400).json({ message: 'Location coordinates are required.' });
+
+    const parsedLat = parseFloat(lat);
+    const parsedLng = parseFloat(lng);
+
+    if (isNaN(parsedLat) || isNaN(parsedLng)) {
+      return res.status(400).json({ message: 'Invalid location coordinates.' });
+    }
+
     const requesterId = req.user._id;
 
     // Create the blood request
     const radius = parseFloat(searchRadius) || (urgencyLevel === 'critical' ? 25 : 10);
-    const newRequest = await BloodRequest.create({
-      requesterId,
-      patientName,
-      patientAge: parseInt(patientAge, 10),
-      patientGender,
-      hospitalName,
-      hospitalAddress,
-      doctorName,
-      doctorContact,
-      bloodGroup,
-      bloodComponent,
-      unitsRequired: parseInt(unitsRequired, 10),
-      urgencyLevel,
-      requiredBy: new Date(requiredBy),
-      doctorLetterUrl: doctorLetterUrl || '',
-      doctorLetterVerification: doctorLetterVerification || { isVerified: false },
-      location: {
-        type: 'Point',
-        coordinates: [parseFloat(lng), parseFloat(lat)],
-      },
-      searchRadius: radius,
-      status: 'active'
-    });
+
+    let newRequest;
+    try {
+      newRequest = await BloodRequest.create({
+        requesterId,
+        patientName,
+        patientAge: parseInt(patientAge, 10) || 0,
+        patientGender: patientGender || 'unknown',
+        hospitalName,
+        hospitalAddress: hospitalAddress || hospitalName,
+        doctorName: doctorName || '',
+        doctorContact: doctorContact || '',
+        bloodGroup,
+        bloodComponent: bloodComponent || 'whole_blood',
+        unitsRequired: parseInt(unitsRequired, 10) || 1,
+        urgencyLevel: urgencyLevel || 'urgent',
+        requiredBy: requiredBy ? new Date(requiredBy) : new Date(Date.now() + 24 * 60 * 60 * 1000),
+        doctorLetterUrl: doctorLetterUrl || '',
+        doctorLetterVerification: doctorLetterVerification || { isVerified: false },
+        location: {
+          type: 'Point',
+          coordinates: [parsedLng, parsedLat],
+        },
+        searchRadius: radius,
+        status: 'active'
+      });
+    } catch (createErr) {
+      console.error('[createRequest] BloodRequest.create failed:', createErr.message, createErr);
+      return res.status(500).json({ message: 'Failed to create blood request: ' + createErr.message });
+    }
 
     // ----------------------------------------------------
     // REAL-TIME NOTIFICATION DISPATCH (Donors & Banks)
@@ -230,7 +251,10 @@ const createRequest = async (req, res, next) => {
     // Update request with notified entities
     newRequest.notifiedDonors = donorIds;
     newRequest.notifiedBanks = bankIds;
+    newRequest.markModified('notifiedDonors');
+    newRequest.markModified('notifiedBanks');
     await newRequest.save();
+
 
     // 4. Dispatch Notifications in background
     // To Donors:
@@ -486,6 +510,7 @@ const getMyRequests = async (req, res, next) => {
 const targetDonor = async (req, res, next) => {
   try {
     const { id, donorId } = req.params;
+
     const request = await BloodRequest.findById(id);
     if (!request) {
       return res.status(404).json({ message: 'Request not found' });
@@ -496,39 +521,50 @@ const targetDonor = async (req, res, next) => {
       return res.status(404).json({ message: 'Donor not found' });
     }
 
-    // Add to notified list if not already there
-    if (!request.notifiedDonors.includes(donor._id)) {
-      request.notifiedDonors.push(donor._id);
+    // Safely handle notifiedDonors (may be undefined on older documents)
+    const notifiedList = Array.isArray(request.notifiedDonors) ? request.notifiedDonors : [];
+    const alreadyNotified = notifiedList.some(id => id.toString() === donor._id.toString());
+    if (!alreadyNotified) {
+      request.notifiedDonors = [...notifiedList, donor._id];
+      request.markModified('notifiedDonors');
       await request.save();
     }
 
     const donorUser = await User.findById(donor.userId);
     if (donorUser) {
       // Create persistent notification
-      await createNotification({
-        recipientId: donorUser._id,
-        type: 'blood_request',
-        title: `🚨 Targeted Blood Request Needed`,
-        message: `${request.patientName} directly requested your help with ${request.unitsRequired} unit(s) of ${request.bloodGroup} at ${request.hospitalName}.`,
-        priority: 'high',
-        email: donorUser.email,
-        recipientName: donorUser.name,
-        data: {
-          requestId: request._id,
-          request
-        }
-      });
+      try {
+        await createNotification({
+          recipientId: donorUser._id,
+          type: 'blood_request',
+          title: `🚨 Targeted Blood Request Needed`,
+          message: `${request.patientName} directly requested your help with ${request.unitsRequired} unit(s) of ${request.bloodGroup} at ${request.hospitalName}.`,
+          priority: 'high',
+          email: donorUser.email,
+          recipientName: donorUser.name,
+          data: {
+            requestId: request._id,
+            request
+          }
+        });
+      } catch (notifErr) {
+        console.warn('[targetDonor] Notification failed (non-fatal):', notifErr.message);
+      }
 
-      // Emit Socket notification
-      socketService.sendToUser(donorUser._id, 'notification', {
-        title: `🚨 Targeted Request for ${request.bloodGroup}`,
-        message: `${request.patientName} directly requested your help. Check dashboard.`,
-        type: 'emergency',
-        createdAt: new Date(),
-        isRead: false
-      });
+      // Emit Socket notification (non-fatal)
+      try {
+        socketService.sendToUser(donorUser._id, 'notification', {
+          title: `🚨 Targeted Request for ${request.bloodGroup}`,
+          message: `${request.patientName} directly requested your help. Check dashboard.`,
+          type: 'emergency',
+          createdAt: new Date(),
+          isRead: false
+        });
+      } catch (sockErr) {
+        console.warn('[targetDonor] Socket emit failed (non-fatal):', sockErr.message);
+      }
       
-      // Email notification via Resend (non-fatal)
+      // Email notification (non-fatal)
       try {
         await emailService.sendRequestAlertEmail(donorUser.email, donor.name, request);
       } catch (emailErr) {
@@ -538,9 +574,11 @@ const targetDonor = async (req, res, next) => {
 
     res.status(200).json({ success: true, message: 'Direct request sent to donor' });
   } catch (error) {
+    console.error('[targetDonor] Error:', error.message, error);
     next(error);
   }
 };
+
 
 const acceptRequest = async (req, res, next) => {
   try {

@@ -202,7 +202,7 @@ export default function NoticeBoardCard({ notice, viewerId, viewerRole, onRespon
           </div>
         )}
 
-        {viewerRole === 'donor' && notice.status === 'open' && (
+        {viewerRole === 'donor' && (notice.status === 'open' || notice.status === 'active') && (
           <div className="grid grid-cols-2 gap-2">
             {donorActions.map(da => (
               <button 
@@ -309,7 +309,7 @@ export default function NoticeBoardCard({ notice, viewerId, viewerRole, onRespon
         )}
 
         {/* If the viewer is the seeker who posted this notice */}
-        {viewerId && notice.seekerId && notice.seekerId.toString() === viewerId.toString() && notice.status === 'open' && (
+        {viewerId && notice.seekerId && notice.seekerId.toString() === viewerId.toString() && (notice.status === 'open' || notice.status === 'active') && (
           <button 
             className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all duration-200 flex items-center justify-center space-x-1.5 cursor-pointer shadow-lg shadow-emerald-700/20"
             onClick={() => onRespond(notice._id, 'close')}
