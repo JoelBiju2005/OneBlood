@@ -37,22 +37,35 @@ const ChatPage = () => {
 
       // Determine who the other user is
       if (requestData) {
-        if (requestData.requesterId._id === user.id || requestData.requesterId === user.id) {
-          // Current user is seeker. Let's find the accepted donor user
-          const acceptedResponse = requestData.responses.find(r => r.status === 'accepted');
+        // requesterId is populated as an object; compare using .toString()
+        const requesterId = requestData.requesterId?._id?.toString() || requestData.requesterId?.toString();
+        const isSeeker = requesterId === user.id;
+
+        if (isSeeker) {
+          // Current user is seeker. Find the accepted donor
+          const acceptedResponse = requestData.responses?.find(r => r.status === 'accepted');
           if (acceptedResponse) {
-            // Fetch donor profile or public details
-            const donorProfileRes = await api.get(`/donors/${acceptedResponse.responderId}`);
-            setOtherUser({
-              name: donorProfileRes.data?.donor?.name || 'Donor Partner',
-              bloodGroup: donorProfileRes.data?.donor?.bloodGroup || ''
-            });
+            try {
+              const donorProfileRes = await api.get(`/donors/${acceptedResponse.responderId}`);
+              setOtherUser({
+                name: donorProfileRes.data?.donor?.name || 'Donor Partner',
+                bloodGroup: donorProfileRes.data?.donor?.bloodGroup || ''
+              });
+            } catch {
+              setOtherUser({ name: 'Donor Partner', bloodGroup: requestData.bloodGroup || '' });
+            }
+          } else {
+            setOtherUser({ name: 'Donor Partner', bloodGroup: requestData.bloodGroup || '' });
           }
         } else {
-          // Current user is donor. Other user is the requester (seeker)
-          const seekerRes = await api.get(`/auth/me`); // Or fetch user by id
+          // Current user is donor. Other user is the requester (seeker/coordinator)
+          const seekerName = requestData.requesterId?.name
+            ? `Patient Coordinator (${requestData.patientName || requestData.requesterId.name})`
+            : requestData.patientName
+              ? `Patient Coordinator (${requestData.patientName})`
+              : 'Patient Coordinator';
           setOtherUser({
-            name: requestData.patientName ? `Patient Coordinator (${requestData.patientName})` : 'Patient Coordinator',
+            name: seekerName,
             bloodGroup: requestData.bloodGroup || ''
           });
         }
