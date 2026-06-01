@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ASSETS_URL } from '../../utils/api';
 
-export default function NoticeBoardCard({ notice, viewerId, viewerRole, onRespond, urgencyColors }) {
+export default function NoticeBoardCard({ notice, viewerId, viewerRole, onRespond, urgencyColors, isOwner }) {
   const [showResponses, setShowResponses] = useState(false);
   const [isReferralOpen, setIsReferralOpen] = useState(false);
   const [refName, setRefName] = useState('');
@@ -100,7 +100,7 @@ export default function NoticeBoardCard({ notice, viewerId, viewerRole, onRespon
 
       <div className="pt-4 border-t border-white/5 space-y-3">
         {/* ── Response section ── */}
-        {viewerId && notice.seekerId && notice.seekerId.toString() === viewerId.toString() ? (
+        {isOwner ? (
           // Seeker view: expandable with full donor details
           <div className="space-y-2">
             <button
@@ -335,7 +335,7 @@ export default function NoticeBoardCard({ notice, viewerId, viewerRole, onRespon
         )}
 
         {/* If the viewer is the seeker who posted this notice */}
-        {viewerId && notice.seekerId && notice.seekerId.toString() === viewerId.toString() && (notice.status === 'open' || notice.status === 'active') && (
+        {isOwner && (notice.status === 'open' || notice.status === 'active') && (
           <button 
             className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all duration-200 flex items-center justify-center space-x-1.5 cursor-pointer shadow-lg shadow-emerald-700/20"
             onClick={() => onRespond(notice._id, 'close')}

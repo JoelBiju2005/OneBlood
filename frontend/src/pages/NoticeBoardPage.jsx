@@ -181,16 +181,26 @@ export default function NoticeBoardPage() {
                 <p className="text-slate-500 text-xs">Verify your search criteria or post a new request from your dashboard.</p>
               </div>
             ) : (
-              notices.map(notice => (
-                <NoticeBoardCard
-                  key={notice._id}
-                  notice={notice}
-                  viewerId={user?.id}
-                  viewerRole={user?.role}
-                  onRespond={handleRespond}
-                  urgencyColors={URGENCY_COLORS}
-                />
-              ))
+            notices.map(notice => {
+                // Compute ownership here, safely, where user is always in scope
+                const isOwner = !!(
+                  user?.id &&
+                  notice.seekerId &&
+                  String(notice.seekerId) === String(user.id)
+                );
+                return (
+                  <NoticeBoardCard
+                    key={notice._id}
+                    notice={notice}
+                    viewerId={user?.id}
+                    viewerRole={user?.role}
+                    onRespond={handleRespond}
+                    urgencyColors={URGENCY_COLORS}
+                    isOwner={isOwner}
+                  />
+                );
+              })
+
             )}
           </div>
         )}
