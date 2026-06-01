@@ -20,6 +20,7 @@ const searchRoutes = require('./routes/searchRoutes');
 const chatRoutes = require('./routes/chatRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const noticeBoardRoutes = require('./routes/noticeBoardRoutes');
+const hubliSeedRoute = require('./routes/hubliSeedRoute');
 
 const app = express();
 
@@ -98,6 +99,7 @@ app.use('/api/search', searchRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/noticeboard', noticeBoardRoutes);
+app.use('/api/seed-hubli', hubliSeedRoute);
 app.get('/api/stats/public', require('./controllers/analyticsController').getPublicStats);
 app.get('/api/directions', require('./controllers/searchController').getDirections);
 
