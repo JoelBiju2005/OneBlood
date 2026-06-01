@@ -493,8 +493,8 @@ const getMyRequests = async (req, res, next) => {
         responsesWithDetails.push({
           ...resp,
           responderName: details.name,
-          contactPhone: resp.status === 'confirmed' ? details.phone : 'Hidden',
-          contactEmail: resp.status === 'confirmed' ? details.email : 'Hidden',
+          contactPhone: (resp.status === 'confirmed' || resp.status === 'accepted' || resp.status === 'need_transport' || resp.status === 'donate_tomorrow') ? details.phone : 'Hidden',
+          contactEmail: (resp.status === 'confirmed' || resp.status === 'accepted' || resp.status === 'need_transport' || resp.status === 'donate_tomorrow') ? details.email : 'Hidden',
         });
       }
       reqDoc.responses = responsesWithDetails;
