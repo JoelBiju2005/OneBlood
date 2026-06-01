@@ -268,8 +268,24 @@ const deleteBank = async (req, res, next) => {
     res.status(200).json({ success: true, message: 'Blood bank profile deleted successfully' });
   } catch (error) {
     next(error);
+// DELETE /api/admin/requests/:id — Delete a blood request
+const deleteRequest = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const request = await BloodRequest.findById(id);
+    if (!request) {
+      return res.status(404).json({ message: 'Request not found' });
+    }
+
+    await BloodRequest.findByIdAndDelete(id);
+
+    res.status(200).json({ success: true, message: 'Emergency request deleted successfully' });
+  } catch (error) {
+    next(error);
   }
 };
+
 
 module.exports = {
   getUsers,
@@ -282,4 +298,5 @@ module.exports = {
   deleteUser,
   deleteDonor,
   deleteBank,
+  deleteRequest,
 };

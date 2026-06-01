@@ -63,7 +63,7 @@ const AdminPanel = () => {
   const handleDeleteRequest = async (reqId) => {
     setActionLoading(reqId);
     try {
-      await api.delete(`/requests/${reqId}`);
+      await api.delete(`/admin/requests/${reqId}`);
       toast.success('Request deleted successfully');
       setRequests(requests.filter(r => r._id !== reqId));
       setStats(prev => ({ ...prev, requests: prev.requests - 1 }));

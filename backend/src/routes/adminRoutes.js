@@ -17,5 +17,6 @@ router.put('/users/:id', adminController.updateUser);
 router.delete('/users/:id', adminController.deleteUser);
 router.delete('/donors/:id', adminController.deleteDonor);
 router.delete('/banks/:id', adminController.deleteBank);
+router.delete('/requests/:id', adminController.deleteRequest);
 
 module.exports = router;

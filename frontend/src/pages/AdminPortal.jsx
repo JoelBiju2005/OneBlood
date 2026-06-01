@@ -191,7 +191,7 @@ const AdminPortal = () => {
     if (!window.confirm('Permanently delete this emergency request?')) return;
     setActionLoading(reqId);
     try {
-      await api.delete(`/requests/${reqId}`);
+      await api.delete(`/admin/requests/${reqId}`);
       toast.success('Emergency request deleted');
       setRequests(prev => prev.filter(r => r._id !== reqId));
       fetchDataForTab(activeTab);
