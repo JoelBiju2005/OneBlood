@@ -304,7 +304,7 @@ const DonorHomePage = () => {
                               onClick={() => handleAcceptRequest(req._id)}
                               className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all"
                             >
-                              Accept & Chat
+                              Accept Request
                             </button>
                             <button
                               onClick={() => handleDeclineRequest(req._id)}

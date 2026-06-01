@@ -240,19 +240,75 @@ const SeekerHomePage = () => {
                       </p>
                     </div>
 
-                    {acceptedRes && (
-                      <div className="pt-4 border-t border-white/5 flex items-center justify-between gap-4">
-                        <span className="text-xs text-emerald-400 font-semibold">
-                          Donor responded!
+                    {req.responses && req.responses.length > 0 && (
+                      <div className="pt-4 border-t border-white/5 space-y-3">
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+                          Donor Responses ({req.responses.length})
                         </span>
-                        <div className="flex space-x-2">
-                          <Link
-                            to={`/chat/${req._id}`}
-                            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5"
-                          >
-                            <MessageSquare className="w-4 h-4" />
-                            <span>Open Chat</span>
-                          </Link>
+                        <div className="space-y-3">
+                          {req.responses.map((resp, idx) => {
+                            const isAccepted = resp.status === 'accepted';
+                            const isDeclined = resp.status === 'declined';
+                            const isTransport = resp.status === 'need_transport';
+                            const isTomorrow = resp.status === 'donate_tomorrow';
+                            
+                            let badgeStyle = "bg-amber-500/10 text-amber-500 border border-amber-500/20";
+                            let statusText = resp.status;
+                            if (isAccepted) {
+                              badgeStyle = "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+                              statusText = "Accepted";
+                            } else if (isDeclined) {
+                              badgeStyle = "bg-red-500/10 text-red-400 border border-red-500/20";
+                              statusText = "Declined";
+                            } else if (isTransport) {
+                              badgeStyle = "bg-blue-500/10 text-blue-400 border border-blue-500/20";
+                              statusText = "Need Transport";
+                            } else if (isTomorrow) {
+                              badgeStyle = "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20";
+                              statusText = "Will Donate Tomorrow";
+                            }
+
+                            return (
+                              <div key={idx} className="bg-slate-950/40 border border-white/5 rounded-xl p-3 space-y-2 text-left">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-xs font-bold text-white">
+                                    {resp.responderName}
+                                  </span>
+                                  <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${badgeStyle}`}>
+                                    {statusText}
+                                  </span>
+                                </div>
+                                
+                                {resp.message && (
+                                  <p className="text-[10px] text-slate-400 italic">
+                                    "{resp.message}"
+                                  </p>
+                                )}
+
+                                {!isDeclined && (resp.contactPhone !== 'Hidden' || resp.contactEmail !== 'Hidden') && (
+                                  <div className="flex gap-2 pt-1">
+                                    {resp.contactPhone !== 'Hidden' && (
+                                      <a
+                                        href={`tel:${resp.contactPhone}`}
+                                        className="flex-1 py-1.5 px-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold text-center transition-all flex items-center justify-center space-x-1"
+                                      >
+                                        <Phone className="w-3 h-3" />
+                                        <span>Call ({resp.contactPhone})</span>
+                                      </a>
+                                    )}
+                                    {resp.contactEmail !== 'Hidden' && (
+                                      <a
+                                        href={`mailto:${resp.contactEmail}`}
+                                        className="flex-1 py-1.5 px-2 border border-white/10 hover:bg-white/5 text-slate-300 rounded-lg text-[10px] font-bold text-center transition-all flex items-center justify-center space-x-1"
+                                      >
+                                        <span>Email</span>
+                                      </a>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     )}

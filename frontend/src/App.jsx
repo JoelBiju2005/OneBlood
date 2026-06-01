@@ -28,7 +28,6 @@ import NotFoundPage from './pages/NotFoundPage';
 import DonorHomePage from './pages/DonorHomePage';
 import SeekerHomePage from './pages/SeekerHomePage';
 import HowItWorksPage from './pages/HowItWorksPage';
-import ChatPage from './pages/ChatPage';
 import SuccessPage from './pages/SuccessPage';
 import AdminMonitoringPage from './pages/AdminMonitoringPage';
 import DonorFindRequestsPage from './pages/DonorFindRequestsPage';
@@ -136,11 +135,6 @@ function App() {
           <Route path="/notifications" element={
             <ProtectedRoute>
               <NotificationsPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/chat/:requestId" element={
-            <ProtectedRoute>
-              <ChatPage />
             </ProtectedRoute>
           } />
 

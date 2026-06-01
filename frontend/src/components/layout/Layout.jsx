@@ -15,61 +15,20 @@ const Layout = () => {
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
-  // V3 Chat Drawer States
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [chatRooms, setChatRooms] = useState([]);
-  const [totalUnreadChats, setTotalUnreadChats] = useState(0);
-  
   const navigate = useNavigate();
   const location = useLocation();
   const notifRef = useRef(null);
   const profileRef = useRef(null);
-  const chatRef = useRef(null);
-
-  const fetchChatRooms = async () => {
-    if (!isAuthenticated) return;
-    try {
-      const res = await api.get('/chat/rooms');
-      const rooms = res.data?.rooms || [];
-      setChatRooms(rooms);
-      const totalUnread = rooms.reduce((sum, r) => sum + (r.unreadCount || 0), 0);
-      setTotalUnreadChats(totalUnread);
-    } catch (err) {
-      console.error('Failed to fetch chat rooms:', err.message);
-    }
-  };
 
   // Initialize socket connections on login
   useEffect(() => {
     if (isAuthenticated && user && oneblood_token) {
       initSocket(user.id, oneblood_token);
       fetchNotifications();
-      fetchChatRooms();
     } else {
       disconnectSocket();
     }
   }, [isAuthenticated, user, oneblood_token]);
-
-  // Periodic poll + socket updates
-  useEffect(() => {
-    if (isAuthenticated) {
-      const interval = setInterval(fetchChatRooms, 15000);
-      return () => clearInterval(interval);
-    }
-  }, [isAuthenticated]);
-
-  useEffect(() => {
-    if (socket) {
-      socket.on('chat_notification', fetchChatRooms);
-      socket.on('new_message', fetchChatRooms);
-    }
-    return () => {
-      if (socket) {
-        socket.off('chat_notification', fetchChatRooms);
-        socket.off('new_message', fetchChatRooms);
-      }
-    };
-  }, [socket]);
 
   // Click outside to close dropdowns
   useEffect(() => {
@@ -79,9 +38,6 @@ const Layout = () => {
       }
       if (profileRef.current && !profileRef.current.contains(event.target)) {
         setIsProfileOpen(false);
-      }
-      if (chatRef.current && !chatRef.current.contains(event.target)) {
-        setIsChatOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -325,75 +281,6 @@ const Layout = () => {
                       </div>
                     )}
                   </div>
-
-                  {user?.role !== 'admin' && (
-                    <div className="relative" ref={chatRef}>
-                      <button 
-                        onClick={() => setIsChatOpen(!isChatOpen)}
-                        className="p-2.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-200 relative group"
-                      >
-                        <MessageCircle className="w-5 h-5 text-slate-300 group-hover:text-oneblood-white" />
-                        {totalUnreadChats > 0 && (
-                          <span className="absolute top-1 right-1 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center text-[10px] font-bold animate-pulse text-white">
-                            {totalUnreadChats}
-                          </span>
-                        )}
-                      </button>
-
-                    {/* Chat Rooms Dropdown */}
-                    {isChatOpen && (
-                      <div className="absolute right-0 mt-3 w-80 bg-slate-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
-                        <div className="p-4 border-b border-white/5 bg-slate-900/50 flex justify-between items-center">
-                          <span className="font-semibold text-sm text-white">💬 Messages</span>
-                          <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full font-bold">
-                            {chatRooms.length} active
-                          </span>
-                        </div>
-
-                        <div className="max-h-72 overflow-y-auto divide-y divide-white/5 bg-slate-900">
-                          {chatRooms.length === 0 ? (
-                            <div className="p-6 text-center text-slate-400 text-xs italic">
-                              No active chats. Complete requests to connect!
-                            </div>
-                          ) : (
-                            chatRooms.map((room) => (
-                              <Link
-                                key={room.requestId}
-                                to={`/chat/${room.requestId}`}
-                                onClick={() => setIsChatOpen(false)}
-                                className="block p-4 transition-colors hover:bg-white/5 relative text-left"
-                              >
-                                <div className="flex justify-between items-start">
-                                  <span className="font-bold text-xs text-white">
-                                    {room.otherPartyName}
-                                  </span>
-                                  {room.bloodGroup && (
-                                    <span className="text-[9px] bg-red-500/20 text-red-500 px-1.5 py-0.5 rounded font-black border border-red-500/25">
-                                      {room.bloodGroup}
-                                    </span>
-                                  )}
-                                </div>
-                                <p className="text-[10px] text-slate-400 truncate mt-1">
-                                  {room.latestMessage ? room.latestMessage.text : 'Opened coordination channel...'}
-                                </p>
-                                <div className="flex justify-between items-center mt-2 text-[9px] text-slate-500">
-                                  <span>
-                                    {room.latestMessage ? new Date(room.latestMessage.createdAt).toLocaleDateString() : ''}
-                                  </span>
-                                  {room.unreadCount > 0 && (
-                                    <span className="bg-emerald-500 text-white font-bold px-1.5 py-0.5 rounded-full text-[8px] animate-pulse">
-                                      🔴 {room.unreadCount} new
-                                    </span>
-                                  )}
-                                </div>
-                              </Link>
-                            ))
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  )}
 
                   {/* Profile Menu Dropdown */}
                   <div className="relative" ref={profileRef}>

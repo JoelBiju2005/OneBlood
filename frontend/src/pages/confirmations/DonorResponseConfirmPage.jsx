@@ -57,12 +57,12 @@ export default function DonorResponseConfirmPage() {
         <div className="space-y-3">
           <h1 className="text-3xl font-heading text-white">Emergency Request Accepted!</h1>
           <p className="text-slate-400 text-sm font-body leading-relaxed">
-            Thank you for volunteering! Your contact details have been unlocked for the patient, and you can now communicate directly via the chat coordinates.
+            Thank you for volunteering! Your contact details have been unlocked for the patient, and you can now see their contact details under Find Requests page.
           </p>
         </div>
 
         <div className="p-5 bg-black/40 border border-[#C0152A]/20 rounded-2xl text-xs text-slate-300 font-body leading-relaxed text-left space-y-2">
-          <p className="font-bold text-white uppercase tracking-wider text-[10px] text-red-500">Coordination Room Rules:</p>
+          <p className="font-bold text-white uppercase tracking-wider text-[10px] text-red-500">Coordination Rules:</p>
           <ul className="list-disc pl-4 space-y-1 text-slate-400">
             <li>Verify hospital requirements and timing before traveling.</li>
             <li>Maintain clear and polite communication with the requestor.</li>
@@ -71,16 +71,13 @@ export default function DonorResponseConfirmPage() {
         </div>
 
         <div className="flex flex-col space-y-3 pt-4">
-          {requestId && (
-            <button 
-              onClick={() => navigate(`/chat/${requestId}`)}
-              className="w-full py-4 bg-[#C0152A] hover:bg-red-700 text-white font-bold text-sm rounded-xl transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-red-700/25"
-            >
-              <MessageSquare className="w-4 h-4" />
-              <span>Open Coordinate Chat</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          )}
+          <button 
+            onClick={() => navigate(`/donor/find-requests`)}
+            className="w-full py-4 bg-[#C0152A] hover:bg-red-700 text-white font-bold text-sm rounded-xl transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-red-700/25"
+          >
+            <span>View Seeker Details</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
           <button 
             onClick={() => navigate('/home/donor')}
             className="w-full py-3.5 bg-white/5 hover:bg-white/10 text-slate-300 font-bold text-xs rounded-xl border border-white/5 transition-all duration-200 cursor-pointer"

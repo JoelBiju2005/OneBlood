@@ -1,372 +1,263 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import api from '../utils/api';
 import useAuthStore from '../store/authStore';
-import useNotificationStore from '../store/notificationStore';
 import toast from 'react-hot-toast';
-import { MessageSquare, Send, X, ArrowLeft, Clock, CheckCheck, Loader2, HeartPulse, User, CheckCircle2, ChevronRight, HelpCircle } from 'lucide-react';
+import { HeartPulse, MapPin, Phone, Mail, Loader2, CheckCircle2, XCircle, Clock, Truck, Calendar } from 'lucide-react';
 
 const DonorFindRequestsPage = () => {
-  const navigate = useNavigate();
-  const { user, oneblood_token } = useAuthStore();
-  const { socket } = useNotificationStore();
+  const { user } = useAuthStore();
+  const [profile, setProfile] = useState(null);
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [rooms, setRooms] = useState([]);
-  const [activeRoomId, setActiveRoomId] = useState(null);
-  const [messages, setMessages] = useState([]);
-  const [activeRoom, setActiveRoom] = useState(null);
-  const [request, setRequest] = useState(null);
-  
-  const [loadingRooms, setLoadingRooms] = useState(true);
-  const [loadingMessages, setLoadingMessages] = useState(false);
-  const [isOnline, setIsOnline] = useState(false);
-
-  const messagesEndRef = useRef(null);
-  const chatContainerRef = useRef(null);
-
-  // Quick reply options for the donor
-  const QUICK_PROMPTS = [
-    "I'm ready to donate.",
-    "Send more details.",
-    "Which hospital should I come to?",
-    "I will be there in an hour.",
-    "Can you arrange transportation?",
-    "Sorry, I am not available right now."
-  ];
-
-  const fetchRooms = async (autoSelectId = null) => {
+  const fetchData = async () => {
+    setLoading(true);
     try {
-      const res = await api.get('/chat/rooms');
-      const chatRooms = res.data?.rooms || [];
-      setRooms(chatRooms);
-      
-      if (autoSelectId) {
-        setActiveRoomId(autoSelectId);
-        const match = chatRooms.find(r => r.requestId === autoSelectId);
-        if (match) setActiveRoom(match);
-      } else if (chatRooms.length > 0 && !activeRoomId) {
-        // Optionally auto-select first room
-        setActiveRoomId(chatRooms[0].requestId);
-        setActiveRoom(chatRooms[0]);
-      }
+      // 1. Fetch donor profile
+      const profRes = await api.get('/donors/profile');
+      setProfile(profRes.data.donor);
+
+      // 2. Fetch all active requests
+      const reqsRes = await api.get('/requests');
+      setRequests(reqsRes.data?.requests || []);
     } catch (err) {
-      console.error('Failed to load chat rooms:', err.message);
+      console.error('Failed to load requests:', err.message);
+      toast.error('Failed to load active requests.');
     } finally {
-      setLoadingRooms(false);
-    }
-  };
-
-  const fetchMessages = async (requestId) => {
-    setLoadingMessages(true);
-    try {
-      const historyRes = await api.get(`/chat/${requestId}/messages`);
-      setMessages(historyRes.data?.messages || []);
-
-      const reqRes = await api.get(`/requests/${requestId}`);
-      setRequest(reqRes.data?.request);
-
-      await api.post(`/chat/${requestId}/read`);
-      // Update room read state in sidebar
-      setRooms(prev => prev.map(r => r.requestId === requestId ? { ...r, unreadCount: 0 } : r));
-    } catch (err) {
-      toast.error('Failed to load conversation history.');
-    } finally {
-      setLoadingMessages(false);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchRooms();
+    fetchData();
   }, []);
 
-  useEffect(() => {
-    if (activeRoomId) {
-      fetchMessages(activeRoomId);
-    }
-  }, [activeRoomId]);
-
-  // Handle Socket listeners
-  useEffect(() => {
-    if (!socket || !activeRoomId) return;
-
-    socket.emit('join_chat_room', { requestId: activeRoomId });
-
-    const handleNewMessage = (newMsg) => {
-      if (newMsg.requestId === activeRoomId) {
-        setMessages((prev) => {
-          if (prev.some(m => m._id === newMsg.messageId || m._id === newMsg._id)) return prev;
-          return [...prev, {
-            _id: newMsg.messageId || newMsg._id,
-            senderId: newMsg.senderId,
-            receiverId: newMsg.receiverId,
-            text: newMsg.text,
-            createdAt: newMsg.createdAt,
-            readAt: newMsg.readAt
-          }];
-        });
-        api.post(`/chat/${activeRoomId}/read`).catch(() => {});
-      }
-      fetchRooms(activeRoomId); // Refresh sidebar previews
-    };
-
-    const handlePresencePing = () => {
-      socket.emit('presence_pong', { requestId: activeRoomId });
-      setIsOnline(true);
-    };
-
-    const handlePresencePong = () => {
-      setIsOnline(true);
-    };
-
-    socket.on('new_message', handleNewMessage);
-    socket.on('presence_ping', handlePresencePing);
-    socket.on('presence_pong', handlePresencePong);
-
-    socket.emit('presence_ping', { requestId: activeRoomId });
-
-    const interval = setInterval(() => {
-      socket.emit('presence_ping', { requestId: activeRoomId });
-    }, 10000);
-
-    return () => {
-      socket.off('new_message', handleNewMessage);
-      socket.off('presence_ping', handlePresencePing);
-      socket.off('presence_pong', handlePresencePong);
-      clearInterval(interval);
-    };
-  }, [socket, activeRoomId]);
-
-  // Scroll to bottom on new message
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  const handleSendPrompt = async (promptText) => {
-    if (!activeRoomId || !request) return;
-
-    // Donor has to accept the request first before replying if they want to share contact info,
-    // but they can still chat to coordinate prior. We will send the message:
+  const handleAccept = async (requestId) => {
     try {
-      await api.post(`/chat/${activeRoomId}/send`, { text: promptText });
-      
-      // Update local state immediately
-      setMessages(prev => [
-        ...prev,
-        {
-          _id: Math.random().toString(),
-          senderId: user.id,
-          text: promptText,
-          createdAt: new Date().toISOString()
-        }
-      ]);
-
-      if (socket) {
-        socket.emit('send_message', { requestId: activeRoomId, text: promptText });
-      }
-      
-      // Update sidebar previews
-      fetchRooms(activeRoomId);
-    } catch (err) {
-      toast.error('Failed to deliver response prompt.');
-    }
-  };
-
-  const handleAcceptRequest = async () => {
-    if (!activeRoomId) return;
-    try {
-      await api.post(`/requests/${activeRoomId}/accept`);
-      toast.success('Donation request accepted! Contact details unlocked.');
-      fetchMessages(activeRoomId);
-      fetchRooms(activeRoomId);
+      await api.post(`/requests/${requestId}/accept`);
+      toast.success('Donation request accepted! Seeker contact details unlocked.');
+      fetchData();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to accept request.');
     }
   };
 
-  const getUrgencyBadgeColor = (urgency) => {
-    switch (urgency?.toLowerCase()) {
-      case 'critical': return 'bg-red-500/20 text-red-400 border border-red-500/35';
-      case 'urgent': return 'bg-amber-500/20 text-amber-500 border border-amber-500/35';
-      default: return 'bg-blue-500/20 text-blue-400 border border-blue-500/35';
+  const handleDecline = async (requestId) => {
+    try {
+      await api.post(`/requests/${requestId}/decline`);
+      toast.success('Request declined.');
+      fetchData();
+    } catch (err) {
+      toast.error('Failed to decline request.');
     }
   };
 
+  const handleCustomResponse = async (requestId, status, message) => {
+    try {
+      await api.post(`/requests/${requestId}/respond`, {
+        responderType: 'donor',
+        status,
+        message
+      });
+      toast.success('Response recorded successfully.');
+      fetchData();
+    } catch (err) {
+      toast.error('Failed to record response.');
+    }
+  };
+
+  const getMyResponse = (request) => {
+    if (!profile) return null;
+    return request.responses?.find(
+      (r) => r.responderId && r.responderId.toString() === profile._id.toString()
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-[calc(100vh-80px)] flex items-center justify-center bg-slate-950 text-slate-400">
+        <Loader2 className="w-10 h-10 text-oneblood-crimson animate-spin mr-3" />
+        <span>Finding emergency requests nearby...</span>
+      </div>
+    );
+  }
+
+  // Filter requests matching compatible blood group or general active ones
+  const activeRequests = requests.filter(r => r.status === 'active' || r.status === 'accepted');
+
   return (
-    <div className="min-h-[calc(100vh-80px)] flex flex-col md:flex-row bg-oneblood-midnight relative overflow-hidden font-sans">
+    <div className="min-h-[calc(100vh-80px)] bg-slate-950 py-8 px-4 sm:px-6 lg:px-8 space-y-8 text-left relative overflow-hidden">
       {/* Background gradients */}
       <div className="absolute top-[-10%] right-[-10%] w-[35vw] h-[35vw] rounded-full bg-oneblood-crimson/5 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[35vw] h-[35vw] rounded-full bg-oneblood-gold/5 blur-[120px] pointer-events-none" />
 
-      {/* 1. Left Sidebar - Chat Inbox List */}
-      <div className="w-full md:w-5/12 border-r border-white/5 bg-slate-950 flex flex-col h-[calc(100vh-80px)] relative z-20">
-        <div className="p-4 border-b border-white/5 bg-slate-900/30 text-left">
-          <h2 className="text-base font-bold text-white font-display tracking-wide flex items-center gap-2">
-            <MessageSquare className="w-5 h-5 text-oneblood-crimson" />
-            <span>Find Requests & Coordination Chats</span>
+      <div className="max-w-6xl mx-auto space-y-8 relative z-10">
+        <div className="flex items-center space-x-2">
+          <span className="relative flex h-3 w-3 mr-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
+          </span>
+          <h2 className="text-2xl font-extrabold text-white font-display tracking-wide">
+            Emergency Requests Nearby
           </h2>
-          <p className="text-[10px] text-slate-500 mt-1">Review emergency requests and message seekers directly.</p>
         </div>
 
-        <div className="flex-grow overflow-y-auto divide-y divide-white/5">
-          {loadingRooms ? (
-            <div className="p-8 text-center text-slate-500 text-xs flex flex-col items-center justify-center space-y-2 h-full">
-              <Loader2 className="w-7 h-7 text-oneblood-crimson animate-spin" />
-              <span>Fetching coordination rooms...</span>
+        {activeRequests.length === 0 ? (
+          <div className="flex flex-col items-center justify-center p-16 bg-slate-900/30 border border-white/5 rounded-3xl text-center space-y-4">
+            <div className="p-4 bg-slate-800/40 rounded-full text-slate-500">
+              <HeartPulse className="w-10 h-10" />
             </div>
-          ) : rooms.length === 0 ? (
-            <div className="p-12 text-center text-slate-500 text-xs space-y-3 h-full flex flex-col items-center justify-center">
-              <div className="p-3 bg-white/5 border border-white/5 rounded-full text-slate-400">
-                <HeartPulse className="w-8 h-8 text-slate-500" />
-              </div>
-              <p className="font-semibold text-slate-400">No active seeker requests found.</p>
-              <p className="text-[10px] text-slate-500 max-w-xs mx-auto leading-relaxed">
-                When a seeker directly requests your help or you match nearby emergencies, they will appear here as direct chat lines.
-              </p>
-            </div>
-          ) : (
-            rooms.map((room) => {
-              const isSelected = room.requestId === activeRoomId;
+            <p className="text-base font-semibold text-slate-400">No active emergency requests found nearby.</p>
+            <p className="text-xs text-slate-500 max-w-sm">
+              We will notify you immediately once a seeker submits a request matching your blood group ({profile?.bloodGroup || 'any'}).
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {activeRequests.map((req) => {
+              const myResp = getMyResponse(req);
+              
+              // Determine status badge
+              let statusBadge = (
+                <span className="flex items-center space-x-1 px-3 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-full text-[10px] font-bold">
+                  <Clock className="w-3.5 h-3.5 shrink-0 text-amber-400" />
+                  <span>Pending</span>
+                </span>
+              );
+
+              if (myResp) {
+                if (myResp.status === 'accepted') {
+                  statusBadge = (
+                    <span className="flex items-center space-x-1 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full text-[10px] font-bold">
+                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-400" />
+                      <span>Accepted</span>
+                    </span>
+                  );
+                } else if (myResp.status === 'declined') {
+                  statusBadge = (
+                    <span className="flex items-center space-x-1 px-3 py-1 bg-red-500/10 border border-red-500/20 text-red-400 rounded-full text-[10px] font-bold">
+                      <XCircle className="w-3.5 h-3.5 shrink-0 text-red-400" />
+                      <span>Declined</span>
+                    </span>
+                  );
+                } else if (myResp.status === 'need_transport') {
+                  statusBadge = (
+                    <span className="flex items-center space-x-1 px-3 py-1 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-full text-[10px] font-bold">
+                      <Truck className="w-3.5 h-3.5 shrink-0 text-blue-400" />
+                      <span>Need Transport</span>
+                    </span>
+                  );
+                } else if (myResp.status === 'donate_tomorrow') {
+                  statusBadge = (
+                    <span className="flex items-center space-x-1 px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-full text-[10px] font-bold">
+                      <Calendar className="w-3.5 h-3.5 shrink-0 text-indigo-400" />
+                      <span>Donate Tomorrow</span>
+                    </span>
+                  );
+                }
+              }
+
               return (
                 <div
-                  key={room.requestId}
-                  onClick={() => {
-                    setActiveRoomId(room.requestId);
-                    setActiveRoom(room);
-                  }}
-                  className={`p-4 text-left cursor-pointer transition-colors ${
-                    isSelected ? 'bg-white/5 border-l-2 border-oneblood-crimson' : 'hover:bg-white/5'
-                  }`}
+                  key={req._id}
+                  className="bg-slate-900 border border-white/5 rounded-2xl p-6 flex flex-col justify-between space-y-4 shadow-xl hover:border-white/10 transition-all"
                 >
-                  <div className="flex justify-between items-start">
-                    <div className="space-y-1">
-                      <span className="font-bold text-xs text-white block">
-                        {room.otherPartyName}
-                      </span>
-                      <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block">
-                        Patient: {room.patientName} &bull; {room.bloodGroup} Needed
-                      </span>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-bold text-base text-white">
+                          Patient: {req.patientName}
+                        </h4>
+                        <p className="text-xs text-slate-400 mt-1">
+                          {req.bloodGroup} &bull; {req.bloodComponent.replace('_', ' ').toUpperCase()} &bull; {req.unitsRequired} Units
+                        </p>
+                      </div>
+                      {statusBadge}
                     </div>
-                    {room.unreadCount > 0 && (
-                      <span className="bg-oneblood-crimson text-white font-bold text-[8px] px-2 py-0.5 rounded-full animate-pulse">
-                        {room.unreadCount} new
-                      </span>
-                    )}
+
+                    <p className="text-xs text-slate-400 bg-white/5 px-3 py-2 rounded-lg">
+                      📍 {req.hospitalName} ({req.hospitalAddress || req.city})
+                    </p>
                   </div>
 
-                  <p className="text-[10px] text-slate-400 truncate mt-2 font-medium">
-                    {room.latestMessage ? room.latestMessage.text : 'Opened conversation loop...'}
-                  </p>
-
-                  <div className="flex justify-between items-center text-[9px] text-slate-500 mt-2">
-                    <span>{room.latestMessage ? new Date(room.latestMessage.createdAt).toLocaleDateString() : ''}</span>
-                    <span className={`px-2 py-0.5 rounded-full font-bold uppercase ${
-                      room.status === 'accepted' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-oneblood-gold border border-oneblood-gold/20'
-                    }`}>
-                      {room.status}
-                    </span>
+                  {/* Actions / Response status */}
+                  <div className="pt-4 border-t border-white/5">
+                    {!myResp ? (
+                      <div className="space-y-3">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleAccept(req._id)}
+                            className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1"
+                          >
+                            <CheckCircle2 className="w-4 h-4" />
+                            <span>Accept Request</span>
+                          </button>
+                          <button
+                            onClick={() => handleDecline(req._id)}
+                            className="flex-1 py-2 bg-red-600/10 hover:bg-red-600/20 text-red-500 border border-red-500/20 rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1"
+                          >
+                            <XCircle className="w-4 h-4" />
+                            <span>Decline</span>
+                          </button>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleCustomResponse(req._id, 'need_transport', 'Interested, but need transportation arrangement.')}
+                            className="flex-1 py-2 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-400/20 rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1"
+                          >
+                            <Truck className="w-4 h-4" />
+                            <span>Need Transport</span>
+                          </button>
+                          <button
+                            onClick={() => handleCustomResponse(req._id, 'donate_tomorrow', 'Can donate tomorrow.')}
+                            className="flex-1 py-2 bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 border border-indigo-400/20 rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1"
+                          >
+                            <Calendar className="w-4 h-4" />
+                            <span>Donate Tomorrow</span>
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <p className="text-xs text-emerald-400 font-semibold">
+                          You responded: <span className="text-white capitalize">{myResp.status.replace('_', ' ')}</span>
+                        </p>
+                        
+                        {/* If accepted or cooperative, show seeker contact details */}
+                        {myResp.status !== 'declined' && (
+                          <div className="bg-white/5 rounded-xl p-3 space-y-2">
+                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">
+                              Seeker Contact Details
+                            </span>
+                            <div className="space-y-1">
+                              <p className="text-xs text-slate-300">
+                                <strong>Requester:</strong> {req.requesterId?.name || 'Patient Family'}
+                              </p>
+                              {req.phone && (
+                                <p className="text-xs text-slate-300 flex items-center gap-1.5">
+                                  <Phone className="w-3.5 h-3.5 text-emerald-400" />
+                                  <a href={`tel:${req.phone}`} className="hover:underline text-white font-semibold">
+                                    {req.phone}
+                                  </a>
+                                </p>
+                              )}
+                              {req.requesterId?.email && (
+                                <p className="text-xs text-slate-300 flex items-center gap-1.5">
+                                  <Mail className="w-3.5 h-3.5 text-blue-400" />
+                                  <a href={`mailto:${req.requesterId.email}`} className="hover:underline text-white font-semibold">
+                                    {req.requesterId.email}
+                                  </a>
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               );
-            })
-          )}
-        </div>
-      </div>
-
-      {/* 2. Right Pane - WhatsApp style Chat Area */}
-      <div className="flex-grow h-[calc(100vh-80px)] flex flex-col bg-slate-900/30 relative z-10">
-        {activeRoomId && request ? (
-          <>
-            {/* Chat Panel Header */}
-            <div className="p-4 border-b border-white/5 bg-slate-950/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-left">
-              <div>
-                <h3 className="font-bold text-white text-sm sm:text-base flex items-center gap-2">
-                  <span>{activeRoom?.otherPartyName || 'Seeker Coordination'}</span>
-                  <span className={`text-[9px] px-2 py-0.5 rounded font-black uppercase ${getUrgencyBadgeColor(request.urgencyLevel)}`}>
-                    {request.urgencyLevel}
-                  </span>
-                </h3>
-                <p className="text-[10px] text-slate-400 mt-1">
-                  <strong>Hospital:</strong> {request.hospitalName} &bull; <strong>Group Required:</strong> {request.bloodGroup} &bull; <strong>Component:</strong> {request.bloodComponent?.replace('_', ' ').toUpperCase()}
-                </p>
-              </div>
-
-              {/* Action Accept request Button */}
-              {request.status !== 'accepted' && (
-                <button
-                  onClick={handleAcceptRequest}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center space-x-1"
-                >
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>Accept Donation Request</span>
-                </button>
-              )}
-            </div>
-
-            {/* Chat message list area */}
-            <div 
-              ref={chatContainerRef}
-              className="flex-1 p-6 overflow-y-auto space-y-4 bg-slate-950/20 scrollbar-thin scrollbar-thumb-white/5 flex flex-col"
-            >
-              {messages.length === 0 ? (
-                <div className="m-auto text-center text-slate-500 space-y-2 flex flex-col items-center">
-                  <MessageSquare className="w-10 h-10 text-slate-600 animate-bounce" />
-                  <p className="text-xs font-medium">Chat is active. Choose a prompt response below to message the seeker.</p>
-                </div>
-              ) : (
-                messages.map((msg) => {
-                  const isMe = msg.senderId === user.id;
-                  return (
-                    <div
-                      key={msg._id}
-                      className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
-                    >
-                      <div
-                        className={`max-w-[70%] px-4 py-2.5 rounded-2xl text-xs leading-relaxed text-left ${
-                          isMe
-                            ? 'bg-oneblood-crimson text-white rounded-tr-none'
-                            : 'bg-slate-800 text-slate-100 rounded-tl-none border border-white/5'
-                        }`}
-                      >
-                        {msg.text}
-                      </div>
-                      <span className="text-[8px] text-slate-500 mt-1 px-1 font-mono">
-                        {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </div>
-                  );
-                })
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Prompt Selector Board */}
-            <div className="p-4 border-t border-white/5 bg-slate-950/40 space-y-3">
-              <div className="flex items-center space-x-1.5 text-left text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">
-                <HelpCircle className="w-3.5 h-3.5 text-oneblood-gold" />
-                <span>Limited Prompt Responses (Tap to send WhatsApp-style message)</span>
-              </div>
-              
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                {QUICK_PROMPTS.map((prompt) => (
-                  <button
-                    key={prompt}
-                    onClick={() => handleSendPrompt(prompt)}
-                    className="p-2.5 bg-slate-950 hover:bg-slate-900 border border-white/10 hover:border-white/20 text-slate-300 hover:text-white rounded-xl text-left text-[10px] font-medium transition-all transition-colors truncate focus:outline-none cursor-pointer"
-                    title={prompt}
-                  >
-                    💬 {prompt}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="m-auto text-center text-slate-500 space-y-3 p-8 flex flex-col items-center">
-            <HeartPulse className="w-12 h-12 text-oneblood-crimson/50 animate-pulse" />
-            <h3 className="text-base font-bold text-white font-display">No Coordination Selected</h3>
-            <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed">
-              Select one of the request cards on the left panel to review historical messages, accept tasks, and coordinate drop locations.
-            </p>
+            })}
           </div>
         )}
       </div>
