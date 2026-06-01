@@ -73,7 +73,7 @@ const BANKS = [
 ];
 
 router.get('/status', (req, res) => {
-  res.json({ version: '2026-06-01-v2', banksInSeed: BANKS.length });
+  res.json({ version: '2026-06-01-v3', banksInSeed: BANKS.length });
 });
 
 router.post('/seed-blood-banks', async (req, res) => {
