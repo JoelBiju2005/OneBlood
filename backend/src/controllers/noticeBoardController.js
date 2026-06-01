@@ -75,7 +75,7 @@ exports.respondToNotice = async (req, res) => {
     const donorProfileIdStr = donorProfile ? donorProfile._id.toString() : '';
     const userIdStr = req.user._id.toString();
 
-    // Safely handle responses (may be undefined on old documents)
+    // Safely read existing responses
     const existingResponses = Array.isArray(notice.responses) ? notice.responses : [];
 
     // Prevent duplicate response of same action by same donor
@@ -95,8 +95,8 @@ exports.respondToNotice = async (req, res) => {
     };
 
     if (action === 'can_donate') {
-      responseObj.donorPhone = req.user.phone;
-      responseObj.donorEmail = req.user.email;
+      responseObj.donorPhone = req.user.phone || '';
+      responseObj.donorEmail = req.user.email || '';
     }
 
     if (action === 'know_someone') {
@@ -105,17 +105,23 @@ exports.respondToNotice = async (req, res) => {
       responseObj.referralBloodGroup = req.body.referralBloodGroup || '';
     }
 
-    notice.responses = [...existingResponses, responseObj];
-    notice.markModified('responses');
-    await notice.save();
+    // Use $push directly — bypasses Mongoose change tracking, always reliable
+    const updatedNotice = await NoticeBoard.findByIdAndUpdate(
+      req.params.id,
+      { $push: { responses: responseObj } },
+      { new: true }
+    );
 
+    if (!updatedNotice) {
+      return res.status(500).json({ message: 'Failed to save response.' });
+    }
 
-    // Send Notification to Seeker
+    // Send Notification to Seeker (non-fatal)
     try {
       const { createNotification } = require('../services/notificationService');
       const User = require('../models/User');
       const seekerUser = await User.findById(notice.seekerId);
-      
+
       if (seekerUser) {
         const actionLabels = {
           can_donate: 'Volunteer Donor ("I Can Donate")',
@@ -123,9 +129,8 @@ exports.respondToNotice = async (req, res) => {
           contacted: 'Direct Contact ("I\'ve Contacted Them")',
           shared: 'Social Share ("I Shared This")'
         };
-        
         const actionLabel = actionLabels[action] || action;
-        
+
         await createNotification({
           recipientId: notice.seekerId,
           type: 'notice_board_response',
@@ -141,12 +146,13 @@ exports.respondToNotice = async (req, res) => {
       console.error('Failed to dispatch notification:', notifErr.message);
     }
 
-    res.json({ message: 'Response recorded.', notice });
+    res.json({ message: 'Response recorded.', notice: updatedNotice });
   } catch (err) {
     console.error('[NoticeBoard Respond]', err);
     res.status(500).json({ message: 'Failed to respond.' });
   }
 };
+
 
 exports.getMyNotices = async (req, res) => {
   try {
