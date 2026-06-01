@@ -99,13 +99,13 @@ const getPublicStats = async (req, res, next) => {
     const totalDonors = await Donor.countDocuments();
     const totalBanks = await BloodBank.countDocuments({ isActive: true });
     const requestsFulfilled = await BloodRequest.countDocuments({ status: 'fulfilled' });
-    const livesHelped = requestsFulfilled * 3 + 120; // 120 is seed offset for realism
+    const livesHelped = requestsFulfilled * 3;
 
     const existingStats = {
-      totalDonors: totalDonors + 1240, // offset to match UI examples
-      totalBanks: totalBanks + 30,
-      requestsFulfilled: requestsFulfilled + 890,
-      livesHelped: livesHelped + 2600
+      totalDonors: totalDonors,
+      totalBanks: totalBanks,
+      requestsFulfilled: requestsFulfilled,
+      livesHelped: livesHelped
     };
 
     const [totalDonationsCount, totalTransfusionsCount, livesSavedCount, citiesReachedCount] = await Promise.all([
@@ -115,10 +115,10 @@ const getPublicStats = async (req, res, next) => {
       Donor.distinct('city').then(arr => arr.length),
     ]);
 
-    const hofDonations = totalDonationsCount + 850;
-    const hofTransfusions = totalTransfusionsCount + 740;
+    const hofDonations = totalDonationsCount;
+    const hofTransfusions = totalTransfusionsCount;
     const hofLivesSaved = hofDonations * 3;
-    const hofCities = citiesReachedCount || 15; // default to 15 if database has none
+    const hofCities = citiesReachedCount || 0;
 
     res.status(200).json({
       ...existingStats,

@@ -90,26 +90,12 @@ const LandingPage = () => {
       <div className="absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-amber-500/5 blur-[120px] pointer-events-none" />
 
 
-      {/* ── Full Width Bold Tagline ── */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="relative z-10 w-full bg-gradient-to-r from-red-950/30 via-slate-950 to-slate-950 border-b border-white/5 py-5 px-4"
-      >
-        <p className="text-center text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight leading-tight w-full">
-          <span className="text-red-500">One Need.</span>{' '}
-          <span className="text-white">One Response.</span>{' '}
-          <span className="text-red-500">One Life.</span>{' '}
-          <span className="text-white">One Platform.</span>
-        </p>
-      </motion.div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative z-10 w-full font-sans">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      {/* Main Hero Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10 w-full font-sans">
+        <div className="flex flex-col items-center justify-center text-center space-y-10">
           
-          {/* Left Column: Heading and Tagline */}
-          <div className="lg:col-span-7 space-y-8 text-left">
+          {/* Heading and Tagline */}
+          <div className="space-y-8 flex flex-col items-center">
             <motion.div 
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -124,13 +110,13 @@ const LandingPage = () => {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.1, duration: 0.6 }}
-              className="space-y-4"
+              className="space-y-6"
             >
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-tight font-display">
+              <h1 className="text-5xl sm:text-7xl lg:text-8xl font-extrabold tracking-tight text-white leading-[1.1] font-display">
                 One Platform.<br />
                 <span className="text-red-500">Every Blood Need.</span>
               </h1>
-              <p className="text-sm sm:text-base text-slate-400 max-w-xl leading-relaxed">
+              <p className="text-base sm:text-xl lg:text-2xl text-slate-400 max-w-3xl mx-auto leading-relaxed">
                 Connect directly with active donors and local blood banks in South India. Request emergency units with instant AI letter validation and secure proximity alerts.
               </p>
             </motion.div>
@@ -140,108 +126,77 @@ const LandingPage = () => {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.6 }}
-              className="flex flex-wrap gap-4"
+              className="flex flex-wrap justify-center gap-6"
             >
               <Link 
                 to={user ? "/home" : "/auth/signup?role=patient"}
                 state={{ role: 'patient' }}
-                className="px-8 py-4 rounded-full bg-oneblood-crimson hover:bg-red-700 text-white font-bold hover:shadow-lg hover:shadow-red-700/30 transition-all duration-200 flex items-center space-x-2.5 group"
+                className="px-10 py-5 text-lg rounded-full bg-oneblood-crimson hover:bg-red-700 text-white font-bold hover:shadow-lg hover:shadow-red-700/30 transition-all duration-200 flex items-center space-x-2.5 group"
               >
                 <span>🩸 I Need Blood</span>
               </Link>
               <Link 
                 to={user ? "/noticeboard" : "/auth/signup?role=donor"}
                 state={{ role: 'donor' }}
-                className="px-8 py-4 rounded-full bg-oneblood-crimson hover:bg-red-700 text-white font-bold hover:shadow-lg hover:shadow-red-700/30 transition-all duration-200 flex items-center space-x-2.5 group"
+                className="px-10 py-5 text-lg rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-600 text-white font-bold hover:shadow-lg hover:shadow-slate-700/30 transition-all duration-200 flex items-center space-x-2.5 group"
               >
                 <span>💉 I Want to Donate</span>
               </Link>
             </motion.div>
-
-            {/* Quick stats row */}
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              className="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-6 border-t border-white/10 max-w-xl"
-            >
-              <div>
-                <p className="text-2xl font-bold text-red-500">
-                  <AnimatedNumber value={stats.totalDonors} suffix="+" />
-                </p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Donors</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-white">
-                  <AnimatedNumber value={stats.totalBanks} />
-                </p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Blood Banks</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-amber-500">
-                  <AnimatedNumber value={stats.requestsFulfilled} />
-                </p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Requests Fulfilled</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-emerald-500">
-                  <AnimatedNumber value={stats.livesHelped} suffix="+" />
-                </p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Lives Helped</p>
-              </div>
-            </motion.div>
           </div>
 
-          {/* Right Column: Live Stats Visual */}
-          <div className="lg:col-span-5 relative flex flex-col items-center">
+          {/* Stats Visual (OneBlood at a Glance) */}
+          <div className="w-full max-w-5xl mx-auto pt-12 relative flex flex-col items-center">
             <motion.div
-              initial={{ opacity: 0, scale: 0.85 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3, type: "spring", stiffness: 80 }}
-              className="relative w-full bg-gradient-to-br from-slate-900 via-red-950/20 to-slate-900 border border-red-500/20 rounded-3xl p-8 flex flex-col gap-6 shadow-2xl overflow-hidden group hover:border-red-500/40 transition-all duration-300"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, type: "spring", stiffness: 80 }}
+              className="relative w-full bg-gradient-to-br from-slate-900 via-red-950/20 to-slate-900 border border-red-500/20 rounded-3xl p-8 lg:p-12 flex flex-col gap-8 shadow-2xl overflow-hidden group hover:border-red-500/40 transition-all duration-300"
             >
               {/* Glow effects */}
-              <div className="absolute top-0 right-0 w-40 h-40 rounded-full bg-red-600/8 blur-[60px] pointer-events-none" />
-              <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full bg-amber-500/5 blur-[50px] pointer-events-none" />
+              <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-red-600/10 blur-[80px] pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full bg-amber-500/5 blur-[60px] pointer-events-none" />
 
               {/* Header */}
-              <div className="flex items-center justify-between relative z-10">
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-[3px] text-red-500/80">Live Network</p>
-                  <h3 className="text-lg font-extrabold text-white mt-0.5">OneBlood at a Glance</h3>
+              <div className="flex items-center justify-between relative z-10 border-b border-white/10 pb-6">
+                <div className="text-left">
+                  <p className="text-xs font-black uppercase tracking-[4px] text-red-500/80">Live Network</p>
+                  <h3 className="text-2xl font-extrabold text-white mt-1">OneBlood at a Glance</h3>
                 </div>
-                <Logo size="md" showText={false} />
+                <Logo size="lg" showText={false} />
               </div>
 
               {/* Stats grid */}
-              <div className="grid grid-cols-2 gap-4 relative z-10">
-                <div className="bg-white/4 border border-white/6 rounded-2xl p-4 text-center hover:border-red-500/25 transition-all">
-                  <p className="text-3xl font-black text-red-500"><AnimatedNumber value={stats.totalDonors} suffix="+" /></p>
-                  <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wider font-semibold">Donors Active</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 relative z-10">
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-center hover:border-red-500/40 transition-all">
+                  <p className="text-4xl lg:text-5xl font-black text-red-500"><AnimatedNumber value={stats.totalDonors} /></p>
+                  <p className="text-xs lg:text-sm text-slate-400 mt-2 uppercase tracking-wider font-semibold">Donors Active</p>
                 </div>
-                <div className="bg-white/4 border border-white/6 rounded-2xl p-4 text-center hover:border-blue-500/25 transition-all">
-                  <p className="text-3xl font-black text-blue-400"><AnimatedNumber value={stats.totalBanks} /></p>
-                  <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wider font-semibold">Blood Banks</p>
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-center hover:border-blue-500/40 transition-all">
+                  <p className="text-4xl lg:text-5xl font-black text-blue-400"><AnimatedNumber value={stats.totalBanks} /></p>
+                  <p className="text-xs lg:text-sm text-slate-400 mt-2 uppercase tracking-wider font-semibold">Blood Banks</p>
                 </div>
-                <div className="bg-white/4 border border-white/6 rounded-2xl p-4 text-center hover:border-amber-500/25 transition-all">
-                  <p className="text-3xl font-black text-amber-500"><AnimatedNumber value={stats.requestsFulfilled} /></p>
-                  <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wider font-semibold">Requests Fulfilled</p>
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-center hover:border-amber-500/40 transition-all">
+                  <p className="text-4xl lg:text-5xl font-black text-amber-500"><AnimatedNumber value={stats.requestsFulfilled} /></p>
+                  <p className="text-xs lg:text-sm text-slate-400 mt-2 uppercase tracking-wider font-semibold">Requests Fulfilled</p>
                 </div>
-                <div className="bg-white/4 border border-white/6 rounded-2xl p-4 text-center hover:border-emerald-500/25 transition-all">
-                  <p className="text-3xl font-black text-emerald-400"><AnimatedNumber value={stats.livesHelped} suffix="+" /></p>
-                  <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wider font-semibold">Lives Helped</p>
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-center hover:border-emerald-500/40 transition-all">
+                  <p className="text-4xl lg:text-5xl font-black text-emerald-400"><AnimatedNumber value={stats.livesHelped} /></p>
+                  <p className="text-xs lg:text-sm text-slate-400 mt-2 uppercase tracking-wider font-semibold">Lives Helped</p>
                 </div>
               </div>
 
               {/* Bottom tagline */}
-              <div className="border-t border-white/8 pt-4 text-center relative z-10">
-                <p className="text-[11px] italic text-slate-300 font-medium">
+              <div className="pt-4 text-center relative z-10">
+                <p className="text-sm italic text-slate-300 font-medium">
                   "Protecting hope through one coordinated blood network."
                 </p>
               </div>
             </motion.div>
           </div>
         </div>
+
+
 
         {/* Feature section cards */}
         <motion.div 
