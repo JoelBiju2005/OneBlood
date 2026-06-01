@@ -268,6 +268,9 @@ const deleteBank = async (req, res, next) => {
     res.status(200).json({ success: true, message: 'Blood bank profile deleted successfully' });
   } catch (error) {
     next(error);
+  }
+};
+
 // DELETE /api/admin/requests/:id — Delete a blood request
 const deleteRequest = async (req, res, next) => {
   try {
