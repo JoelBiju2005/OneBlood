@@ -2,17 +2,27 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import useAuthStore from '../store/authStore';
+import useNotificationStore from '../store/notificationStore';
 import NoticeBoardCard from '../components/shared/NoticeBoardCard';
+import toast from 'react-hot-toast';
 
 const URGENCY_ORDER = { critical: 0, urgent: 1, moderate: 2, planned: 3 };
 const URGENCY_COLORS = { critical: '#dc2626', urgent: '#f97316', moderate: '#eab308', planned: '#22c55e' };
 
 export default function NoticeBoardPage() {
   const { user } = useAuthStore();
+  const { socket } = useNotificationStore();
   const navigate = useNavigate();
   const [notices, setNotices] = useState([]);
   const [filters, setFilters] = useState({ bloodGroup: '', urgency: '', city: '' });
   const [loading, setLoading] = useState(true);
+
+  const sortNotices = (arr) =>
+    [...arr].sort((a, b) => {
+      const diff = URGENCY_ORDER[a.urgency] - URGENCY_ORDER[b.urgency];
+      if (diff !== 0) return diff;
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
 
   const fetchNotices = async () => {
     setLoading(true);
@@ -22,13 +32,7 @@ export default function NoticeBoardPage() {
       if (filters.urgency) params.set('urgency', filters.urgency);
       if (filters.city) params.set('city', filters.city);
       const { data } = await api.get(`/noticeboard?${params}`);
-      
-      // Sort: critical first, then newest
-      setNotices(data.sort((a, b) => {
-        const diff = URGENCY_ORDER[a.urgency] - URGENCY_ORDER[b.urgency];
-        if (diff !== 0) return diff;
-        return new Date(b.createdAt) - new Date(a.createdAt);
-      }));
+      setNotices(sortNotices(data));
     } catch (err) {
       console.error('Failed to load notices:', err);
     } finally {
@@ -39,6 +43,42 @@ export default function NoticeBoardPage() {
   useEffect(() => {
     fetchNotices();
   }, [filters]);
+
+  // ── Real-time socket: update notice card when a donor responds ──
+  useEffect(() => {
+    if (!socket || !user) return;
+
+    const handleNoticeBoardResponse = ({ noticeId, updatedNotice, responder }) => {
+      // Live-update the specific notice in the list
+      setNotices(prev =>
+        sortNotices(
+          prev.map(n => (n._id === noticeId ? { ...n, ...updatedNotice } : n))
+        )
+      );
+
+      // Show toast only to the seeker who owns this notice
+      toast.custom(
+        (t) => (
+          <div
+            className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-sm w-full bg-slate-900 border border-oneblood-crimson/40 shadow-xl rounded-2xl p-4 flex items-start space-x-3`}
+          >
+            <span className="text-2xl">🩸</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-white">New response on your notice!</p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                <span className="text-oneblood-crimson font-semibold">{responder?.name}</span>{' '}
+                responded: {responder?.actionLabel}
+              </p>
+            </div>
+          </div>
+        ),
+        { duration: 6000, position: 'top-right' }
+      );
+    };
+
+    socket.on('notice_board_response', handleNoticeBoardResponse);
+    return () => socket.off('notice_board_response', handleNoticeBoardResponse);
+  }, [socket, user]);
 
   const handleRespond = async (noticeId, action, note = '', referralData = null) => {
     try {
@@ -56,7 +96,7 @@ export default function NoticeBoardPage() {
         navigate(`/noticeboard/response-confirm`, { state: { action, noticeId } });
       }
     } catch (err) {
-      alert(err?.response?.data?.message || 'Failed to perform action.');
+      toast.error(err?.response?.data?.message || 'Failed to perform action.');
     }
   };
 
@@ -64,7 +104,7 @@ export default function NoticeBoardPage() {
     <div className="min-h-screen bg-slate-950 text-left py-12 px-4 sm:px-6 lg:px-8 relative font-sans">
       <div className="absolute top-0 right-0 w-[40vw] h-[40vw] rounded-full bg-red-600/5 blur-[120px] pointer-events-none" />
       <div className="max-w-7xl mx-auto space-y-10">
-        
+
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6 border-b border-white/5">
           <div className="space-y-2">
@@ -76,7 +116,7 @@ export default function NoticeBoardPage() {
             </p>
           </div>
           {user?.role === 'patient' && (
-            <button 
+            <button
               className="px-6 py-3.5 bg-oneblood-crimson hover:bg-red-700 text-white font-bold text-sm rounded-xl transition-all duration-200 shadow-lg shadow-red-700/20 hover:shadow-red-700/35 cursor-pointer"
               onClick={() => navigate('/noticeboard/post')}
             >
@@ -89,8 +129,8 @@ export default function NoticeBoardPage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-900/40 p-4 border border-white/5 rounded-2xl backdrop-blur-md">
           <div className="flex flex-col space-y-1">
             <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Blood Group</label>
-            <select 
-              value={filters.bloodGroup} 
+            <select
+              value={filters.bloodGroup}
               onChange={e => setFilters(f => ({ ...f, bloodGroup: e.target.value }))}
               className="bg-slate-950 border border-white/5 text-white text-xs font-semibold p-3 rounded-xl focus:border-oneblood-crimson/50 focus:outline-none"
             >
@@ -101,8 +141,8 @@ export default function NoticeBoardPage() {
 
           <div className="flex flex-col space-y-1">
             <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Urgency Level</label>
-            <select 
-              value={filters.urgency} 
+            <select
+              value={filters.urgency}
               onChange={e => setFilters(f => ({ ...f, urgency: e.target.value }))}
               className="bg-slate-950 border border-white/5 text-white text-xs font-semibold p-3 rounded-xl focus:border-oneblood-crimson/50 focus:outline-none"
             >
@@ -116,10 +156,10 @@ export default function NoticeBoardPage() {
 
           <div className="flex flex-col space-y-1">
             <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">City</label>
-            <input 
-              placeholder="Filter by city…" 
+            <input
+              placeholder="Filter by city…"
               value={filters.city}
-              onChange={e => setFilters(f => ({ ...f, city: e.target.value }))} 
+              onChange={e => setFilters(f => ({ ...f, city: e.target.value }))}
               className="bg-slate-950 border border-white/5 text-white text-xs font-semibold p-3 rounded-xl focus:border-oneblood-crimson/50 focus:outline-none"
             />
           </div>

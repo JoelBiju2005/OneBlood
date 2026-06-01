@@ -1,5 +1,7 @@
 const NoticeBoard = require('../models/NoticeBoard');
 const { uploadFile } = require('../services/storageService');
+const socketService = require('../services/socketService');
+
 
 exports.getAllNotices = async (req, res) => {
   try {
@@ -116,7 +118,7 @@ exports.respondToNotice = async (req, res) => {
       return res.status(500).json({ message: 'Failed to save response.' });
     }
 
-    // Send Notification to Seeker (non-fatal)
+    // Send real-time socket event AND persistent notification to Seeker (non-fatal)
     try {
       const { createNotification } = require('../services/notificationService');
       const User = require('../models/User');
@@ -124,18 +126,41 @@ exports.respondToNotice = async (req, res) => {
 
       if (seekerUser) {
         const actionLabels = {
-          can_donate: 'Volunteer Donor ("I Can Donate")',
-          know_someone: 'Referral ("Refer Someone")',
-          contacted: 'Direct Contact ("I\'ve Contacted Them")',
-          shared: 'Social Share ("I Shared This")'
+          can_donate: '🩸 Can Donate',
+          know_someone: '👥 Referred Someone',
+          contacted: '📞 Contacted',
+          shared: '🔗 Shared'
         };
         const actionLabel = actionLabels[action] || action;
 
+        // 1. Real-time socket — push the entire updated notice so the UI re-renders live
+        socketService.sendToUser(notice.seekerId, 'notice_board_response', {
+          noticeId: notice._id.toString(),
+          updatedNotice,
+          responder: {
+            name: req.user.name,
+            action,
+            actionLabel,
+          }
+        });
+
+        // 2. Toast-style notification event
+        socketService.sendToUser(notice.seekerId, 'notification', {
+          title: `New response on your notice`,
+          message: `${req.user.name} responded: ${actionLabel}`,
+          type: 'notice_board_response',
+          priority: action === 'can_donate' ? 'high' : 'normal',
+          data: { noticeId: notice._id },
+          createdAt: new Date(),
+          isRead: false
+        });
+
+        // 3. Persistent DB notification
         await createNotification({
           recipientId: notice.seekerId,
           type: 'notice_board_response',
-          title: `Response on notice for ${notice.patientName}`,
-          message: `${req.user.name} responded to your notice: "${actionLabel}".${note ? ` Details: "${note}"` : ''}`,
+          title: `New response on notice for ${notice.patientName}`,
+          message: `${req.user.name} responded: ${actionLabel}.${note ? ` Note: "${note}"` : ''}`,
           data: { noticeId: notice._id, action },
           priority: action === 'can_donate' ? 'high' : 'normal',
           email: seekerUser.email,
@@ -145,6 +170,7 @@ exports.respondToNotice = async (req, res) => {
     } catch (notifErr) {
       console.error('Failed to dispatch notification:', notifErr.message);
     }
+
 
     res.json({ message: 'Response recorded.', notice: updatedNotice });
   } catch (err) {

@@ -99,108 +99,134 @@ export default function NoticeBoardCard({ notice, viewerId, viewerRole, onRespon
       </div>
 
       <div className="pt-4 border-t border-white/5 space-y-3">
+        {/* ── Response section ── */}
         {viewerId && notice.seekerId && notice.seekerId.toString() === viewerId.toString() ? (
-          <button
-            onClick={() => setShowResponses(!showResponses)}
-            className="w-full py-2 px-3 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 text-slate-300 text-xs font-bold rounded-xl transition-all duration-200 flex items-center justify-between cursor-pointer"
-          >
-            <span>💬 Responses ({notice.responses?.length || 0})</span>
-            <span>{showResponses ? '▲ Hide' : '▼ View Details'}</span>
-          </button>
+          // Seeker view: expandable with full donor details
+          <div className="space-y-2">
+            <button
+              onClick={() => setShowResponses(!showResponses)}
+              className={`w-full py-2 px-3 border text-xs font-bold rounded-xl transition-all duration-200 flex items-center justify-between cursor-pointer ${
+                (notice.responses?.length || 0) > 0
+                  ? 'bg-oneblood-crimson/10 hover:bg-oneblood-crimson/20 border-oneblood-crimson/30 text-white'
+                  : 'bg-white/5 hover:bg-white/10 border-white/5 text-slate-300'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full ${(notice.responses?.length || 0) > 0 ? 'bg-oneblood-crimson animate-pulse' : 'bg-slate-600'}`} />
+                💬 {notice.responses?.length || 0} response(s) logged
+              </span>
+              <span className="text-slate-400">{showResponses ? '▲ Hide' : '▼ View All'}</span>
+            </button>
+
+            {showResponses && (
+              <div className="space-y-2 max-h-72 overflow-y-auto pr-1 rounded-xl">
+                {(!notice.responses || notice.responses.length === 0) ? (
+                  <p className="text-[10px] text-slate-500 italic text-center py-4">No responses yet. They'll appear here in real-time.</p>
+                ) : (
+                  notice.responses.map((resp, idx) => (
+                    <div key={idx} className="bg-slate-950/80 border border-white/8 rounded-xl p-3 space-y-2 text-left animate-fadeIn">
+
+                      {/* Top row: name + action badge */}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="w-7 h-7 rounded-full bg-oneblood-crimson/20 border border-oneblood-crimson/30 flex items-center justify-center text-xs font-black text-oneblood-crimson shrink-0">
+                            {resp.donorName?.charAt(0)?.toUpperCase() || '?'}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-xs font-bold text-white truncate">{resp.donorName || 'Anonymous'}</span>
+                              {resp.donorId && (
+                                <Link
+                                  to={`/donor/${resp.donorId}`}
+                                  className="text-[9px] text-oneblood-crimson hover:underline font-bold shrink-0"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  View Profile ↗
+                                </Link>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Action badge */}
+                        <span className={`text-[8px] shrink-0 px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wide ${
+                          resp.action === 'can_donate'   ? 'bg-red-500/20 text-red-400 border border-red-500/20' :
+                          resp.action === 'know_someone' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/20' :
+                          resp.action === 'contacted'    ? 'bg-blue-500/20 text-blue-400 border border-blue-500/20' :
+                                                          'bg-amber-500/20 text-amber-400 border border-amber-500/20'
+                        }`}>
+                          {resp.action === 'can_donate'   ? '🩸 Will Donate' :
+                           resp.action === 'know_someone' ? '👥 Referred' :
+                           resp.action === 'contacted'    ? '📞 Contacted' : '🔗 Shared'}
+                        </span>
+                      </div>
+
+                      {/* Contact details for can_donate responses */}
+                      {resp.action === 'can_donate' && (resp.donorPhone || resp.donorEmail) && (
+                        <div className="bg-oneblood-crimson/5 border border-oneblood-crimson/15 rounded-lg p-2.5 space-y-1.5">
+                          <p className="text-[8px] font-bold text-oneblood-crimson uppercase tracking-widest mb-1">Contact Donor Directly</p>
+                          {resp.donorPhone && (
+                            <a
+                              href={`tel:${resp.donorPhone}`}
+                              className="flex items-center gap-2 text-[11px] font-bold text-white hover:text-oneblood-crimson transition-colors group"
+                            >
+                              <span className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-[10px] group-hover:bg-emerald-500/30 transition-colors">📞</span>
+                              {resp.donorPhone}
+                            </a>
+                          )}
+                          {resp.donorEmail && (
+                            <a
+                              href={`mailto:${resp.donorEmail}`}
+                              className="flex items-center gap-2 text-[11px] text-slate-400 hover:text-white transition-colors group"
+                            >
+                              <span className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 text-[10px] group-hover:bg-blue-500/30 transition-colors">✉️</span>
+                              {resp.donorEmail}
+                            </a>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Referral details for know_someone */}
+                      {resp.action === 'know_someone' && (resp.referralName || resp.referralPhone || resp.referralBloodGroup) && (
+                        <div className="bg-purple-500/5 border border-purple-500/15 rounded-lg p-2.5 space-y-1">
+                          <p className="text-[8px] font-bold text-purple-400 uppercase tracking-widest mb-1">Referred Person</p>
+                          {resp.referralName && (
+                            <p className="text-[11px] text-white font-bold">👤 {resp.referralName}
+                              {resp.referralBloodGroup && <span className="ml-2 text-[9px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded font-black">{resp.referralBloodGroup}</span>}
+                            </p>
+                          )}
+                          {resp.referralPhone && (
+                            <a href={`tel:${resp.referralPhone}`} className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-400 hover:text-emerald-300">
+                              📞 {resp.referralPhone}
+                            </a>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Note */}
+                      {resp.note && (
+                        <p className="text-[10px] text-slate-400 italic bg-white/3 border border-white/5 rounded-lg p-2">
+                          "{resp.note}"
+                        </p>
+                      )}
+
+                      {/* Timestamp */}
+                      <p className="text-[8px] text-slate-600 text-right">
+                        {new Date(resp.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
         ) : (
+          // Non-seeker view: simple count
           <p className="text-xs font-medium text-slate-400">
             💬 {notice.responses?.length || 0} response(s) logged
           </p>
         )}
 
-        {/* Detailed responses list for the notice seeker */}
-        {showResponses && viewerId && notice.seekerId && notice.seekerId.toString() === viewerId.toString() && (
-          <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-            {(!notice.responses || notice.responses.length === 0) ? (
-              <p className="text-[10px] text-slate-500 italic text-center py-2">No responses received yet.</p>
-            ) : (
-              notice.responses.map((resp, idx) => (
-                <div key={idx} className="bg-black/30 border border-white/5 rounded-xl p-2.5 space-y-1.5 text-xs text-left">
-                  <div className="flex justify-between items-center gap-2">
-                    <div className="flex items-center space-x-1.5 truncate">
-                      <span className="font-bold text-white truncate">{resp.donorName}</span>
-                      {resp.donorId && (
-                        <Link 
-                          to={`/donor/${resp.donorId}`} 
-                          className="text-[9px] text-[#C0152A] hover:underline font-bold shrink-0"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          (View Profile)
-                        </Link>
-                      )}
-                    </div>
-                    <span className={`text-[8px] shrink-0 px-1.5 py-0.5 rounded font-extrabold uppercase ${
-                      resp.action === 'can_donate' ? 'bg-red-500/20 text-red-400' :
-                      resp.action === 'know_someone' ? 'bg-purple-500/20 text-purple-400' :
-                      resp.action === 'contacted' ? 'bg-blue-500/20 text-blue-400' : 'bg-amber-500/20 text-amber-400'
-                    }`}>
-                      {resp.action === 'can_donate' ? '🩸 Will Donate' :
-                       resp.action === 'know_someone' ? '👥 Referred' :
-                       resp.action === 'contacted' ? '📞 Contacted' : '🔗 Shared'}
-                    </span>
-                  </div>
-                  
-                  {/* Render donor info and phone number for seeker */}
-                  {resp.action === 'can_donate' && (resp.donorPhone || resp.donorEmail) && (
-                    <div className="text-[10px] text-slate-300 bg-white/5 p-1.5 rounded space-y-1 mt-1 font-mono">
-                      {resp.donorPhone && (
-                        <div className="flex items-center space-x-1">
-                          <span className="text-slate-500">📞</span>
-                          <a href={`tel:${resp.donorPhone}`} className="text-oneblood-crimson_light hover:underline font-bold">
-                            {resp.donorPhone}
-                          </a>
-                        </div>
-                      )}
-                      {resp.donorEmail && (
-                        <div className="flex items-center space-x-1">
-                          <span className="text-slate-500">✉️</span>
-                          <a href={`mailto:${resp.donorEmail}`} className="text-slate-400 hover:underline">
-                            {resp.donorEmail}
-                          </a>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Render referral details for seeker */}
-                  {resp.action === 'know_someone' && (resp.referralName || resp.referralPhone || resp.referralBloodGroup) && (
-                    <div className="text-[10px] text-slate-300 bg-purple-500/5 border border-purple-500/10 p-2 rounded-xl space-y-1 mt-1 font-mono">
-                      <p className="text-[8px] font-bold text-purple-400 uppercase tracking-widest">Referred Person:</p>
-                      {resp.referralName && (
-                        <div>Name: <span className="text-white font-bold">{resp.referralName}</span></div>
-                      )}
-                      {resp.referralBloodGroup && (
-                        <div>Blood Group: <span className="text-purple-400 font-extrabold">{resp.referralBloodGroup}</span></div>
-                      )}
-                      {resp.referralPhone && (
-                        <div className="flex items-center space-x-1">
-                          <span>📞 Phone: </span>
-                          <a href={`tel:${resp.referralPhone}`} className="text-oneblood-crimson_light hover:underline font-bold">
-                            {resp.referralPhone}
-                          </a>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {resp.note && (
-                    <p className="text-[10px] text-slate-300 bg-white/5 p-1.5 rounded italic">
-                      "{resp.note}"
-                    </p>
-                  )}
-                  <div className="text-[8px] text-slate-500 text-right">
-                    {new Date(resp.createdAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        )}
 
         {viewerRole === 'donor' && (notice.status === 'open' || notice.status === 'active') && (
           <div className="grid grid-cols-2 gap-2">
