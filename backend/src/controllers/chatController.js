@@ -18,7 +18,10 @@ const checkChatAccess = async (requestId, userId) => {
   const donor = await Donor.findOne({ userId });
   if (donor) {
     const acceptedResponse = request.responses.find(
-      (r) => r.responderId.toString() === donor._id.toString() && r.status === 'accepted'
+      (r) => {
+        const rId = r.responderId || r.donorId;
+        return rId && rId.toString() === donor._id.toString() && r.status === 'accepted';
+      }
     );
     const isNotified = request.notifiedDonors && request.notifiedDonors.some(id => id.toString() === donor._id.toString());
     if (acceptedResponse || isNotified) {
@@ -91,7 +94,7 @@ const sendMessage = async (req, res, next) => {
       const acceptedResponse = request.responses.find((r) => r.status === 'accepted');
       let targetDonorId = null;
       if (acceptedResponse) {
-        targetDonorId = acceptedResponse.responderId;
+        targetDonorId = acceptedResponse.responderId || acceptedResponse.donorId;
       } else if (request.notifiedDonors && request.notifiedDonors.length > 0) {
         targetDonorId = request.notifiedDonors[0];
       }
@@ -186,6 +189,7 @@ const getChatRooms = async (req, res, next) => {
         { requesterId: userId },
         ...(donor ? [
           { 'responses.responderId': donor._id, 'responses.status': 'accepted' },
+          { 'responses.donorId': donor._id, 'responses.status': 'accepted' },
           { notifiedDonors: donor._id.toString() }
         ] : [])
       ]
@@ -218,7 +222,7 @@ const getChatRooms = async (req, res, next) => {
         const accepted = reqObj.responses.find(r => r.status === 'accepted');
         let targetId = null;
         if (accepted) {
-          targetId = accepted.responderId;
+          targetId = accepted.responderId || accepted.donorId;
         } else if (reqObj.notifiedDonors && reqObj.notifiedDonors.length > 0) {
           targetId = reqObj.notifiedDonors[0];
         }
