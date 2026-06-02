@@ -69,6 +69,7 @@ const Layout = () => {
     if (!user) return '/auth/login';
     if (user.role === 'donor') return '/dashboard/donor';
     if (user.role === 'blood_bank') return '/dashboard/bank';
+    if (user.role === 'hospital') return '/dashboard/hospital';
     if (user.role === 'admin') return '/admin';
     return '/search';
   };
@@ -77,6 +78,7 @@ const Layout = () => {
     switch (role) {
       case 'admin': return 'bg-amber-500/20 text-amber-500 border border-amber-500/30';
       case 'blood_bank': return 'bg-blue-500/20 text-blue-400 border border-blue-500/30';
+      case 'hospital': return 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30';
       case 'donor': return 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
       default: return 'bg-red-500/20 text-red-400 border border-red-500/30';
     }
@@ -180,6 +182,14 @@ const Layout = () => {
                   className={`transition-colors duration-200 hover:text-oneblood-crimson ${location.pathname === '/dashboard/bank' ? 'text-oneblood-crimson' : 'text-slate-300'}`}
                 >
                   My Dashboard
+                </Link>
+              )}
+              {isAuthenticated && user?.role === 'hospital' && (
+                <Link 
+                  to="/dashboard/hospital" 
+                  className={`transition-colors duration-200 hover:text-oneblood-crimson ${location.pathname === '/dashboard/hospital' ? 'text-oneblood-crimson' : 'text-slate-300'}`}
+                >
+                  Hospital Dashboard
                 </Link>
               )}
               {/* Legacy admin links removed */}
@@ -369,6 +379,16 @@ const Layout = () => {
                             <span>My Dashboard</span>
                           </Link>
                         )}
+                        {user.role === 'hospital' && (
+                          <Link 
+                            to="/dashboard/hospital"
+                            className="flex items-center space-x-2.5 px-3 py-2 text-xs rounded-lg hover:bg-white/5 transition-colors"
+                            onClick={() => setIsProfileOpen(false)}
+                          >
+                            <ClipboardList className="w-4 h-4 text-slate-400" />
+                            <span>Hospital Dashboard</span>
+                          </Link>
+                        )}
                         {user.role === 'admin' && (
                           <Link 
                             to="/admin"
@@ -545,6 +565,15 @@ const Layout = () => {
                 My Dashboard
               </Link>
             )}
+            {isAuthenticated && user?.role === 'hospital' && (
+              <Link 
+                to="/dashboard/hospital" 
+                className="block px-3 py-2 rounded-lg hover:bg-white/5 text-slate-300 hover:text-white"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Hospital Dashboard
+              </Link>
+            )}
             {/* Legacy admin links removed */}
             {isAuthenticated ? (
               <div className="space-y-1.5 pt-2 border-t border-white/5">
@@ -643,6 +672,16 @@ const Layout = () => {
                   >
                     <ClipboardList className="w-4 h-4 text-slate-400" />
                     <span>My Dashboard</span>
+                  </Link>
+                )}
+                {user.role === 'hospital' && (
+                  <Link 
+                    to="/dashboard/hospital"
+                    className="flex items-center space-x-2.5 px-3 py-2 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-white/5"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <ClipboardList className="w-4 h-4 text-slate-400" />
+                    <span>Hospital Dashboard</span>
                   </Link>
                 )}
                 {user.role === 'admin' && (

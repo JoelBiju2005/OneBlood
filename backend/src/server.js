@@ -47,6 +47,17 @@ socketService.init(io);
 // Connect to Database & Listen
 const startServer = async () => {
   await connectDB();
+  
+  // Initialize background tasks
+  try {
+    const { runEscalationCheck } = require('./services/escalationService');
+    const { runEmailRetryJob } = require('./services/emailService');
+    runEscalationCheck().catch(err => console.error('Startup escalation check error:', err.message));
+    runEmailRetryJob().catch(err => console.error('Startup email retry error:', err.message));
+  } catch (taskErr) {
+    console.error('Failed to initialize background tasks:', taskErr.message);
+  }
+
   server.listen(PORT, () => {
     console.log(`🚀 OneBlood Backend running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
   });

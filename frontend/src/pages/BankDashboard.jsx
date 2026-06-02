@@ -4,6 +4,7 @@ import useAuthStore from '../store/authStore';
 import toast from 'react-hot-toast';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend, Cell, PieChart, Pie } from 'recharts';
 import { Landmark, Activity, HeartPulse, RefreshCw, BarChart2, Edit3, Save, CheckCircle2 } from 'lucide-react';
+import DonationInProgress from '../components/shared/DonationInProgress';
 
 const BankDashboard = () => {
   const { user } = useAuthStore();
@@ -273,6 +274,9 @@ const BankDashboard = () => {
             </table>
           </div>
         </div>
+
+        {/* Donations In Progress — matches assigned to this blood bank */}
+        <DonationInProgress />
 
         {/* Analytics charts grid using Recharts */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-4">

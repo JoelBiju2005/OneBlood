@@ -14,6 +14,7 @@ const userSchema = new mongoose.Schema({
   isVerified: { type: Boolean, default: false },
   donorProfileComplete: { type: Boolean, default: false },
   bankProfileComplete: { type: Boolean, default: false },
+  hospitalProfileComplete: { type: Boolean, default: false },
   location: {
     type: { type: String, enum: ['Point'] },
     coordinates: { type: [Number] }

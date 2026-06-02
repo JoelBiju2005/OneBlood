@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const Donor = require('../models/Donor');
 const BloodBank = require('../models/BloodBank');
+const Hospital = require('../models/Hospital');
 const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = require('../utils/tokenUtils');
 const { admin } = require('../config/firebase');
 const { createNotification } = require('../services/notificationService');
@@ -35,6 +36,9 @@ const getUserProfile = async (user) => {
   } else if (user.role === 'blood_bank') {
     const bank = await BloodBank.findOne({ adminUserId: user._id });
     if (bank) profileId = bank._id;
+  } else if (user.role === 'hospital') {
+    const hospital = await Hospital.findOne({ userId: user._id });
+    if (hospital) profileId = hospital._id;
   }
   return profileId;
 };
@@ -55,6 +59,7 @@ const buildUserPayload = async (user) => {
     profileId,
     donorProfileComplete: user.donorProfileComplete,
     bankProfileComplete: user.bankProfileComplete,
+    hospitalProfileComplete: user.hospitalProfileComplete || false,
   };
 };
 
@@ -62,8 +67,8 @@ const register = async (req, res, next) => {
   try {
     const { name, email, phone, password, role, city } = req.body;
 
-    if (!name || !email || !phone || !password) {
-      return res.status(400).json({ message: 'Please provide all required fields' });
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
     }
 
     const existingUser = await User.findOne({ email });
@@ -82,13 +87,57 @@ const register = async (req, res, next) => {
 
     const user = await User.create({
       onebloodId,
-      name,
+      name: role === 'hospital' ? req.body.hospitalName : (name || 'Unnamed User'),
       email,
-      phone,
+      phone: role === 'hospital' ? req.body.emergencyContact : phone,
       passwordHash,
       role: role || 'patient',
       city: city || 'Bengaluru',
+      hospitalProfileComplete: role === 'hospital'
     });
+
+    if (role === 'hospital') {
+      const {
+        hospitalName,
+        registrationNumber,
+        hospitalType,
+        address,
+        state,
+        pincode,
+        emergencyContact,
+        website,
+        authorizedPersonName,
+        designation,
+        lat,
+        lng,
+        documents
+      } = req.body;
+
+      if (!hospitalName || !registrationNumber || !hospitalType || !emergencyContact) {
+        return res.status(400).json({ message: 'Please provide all required hospital fields' });
+      }
+
+      await Hospital.create({
+        userId: user._id,
+        hospitalName,
+        registrationNumber,
+        hospitalType,
+        address: address || 'N/A',
+        city: city || 'Bengaluru',
+        state: state || 'Karnataka',
+        pincode: pincode || '560001',
+        emergencyContact,
+        website: website || '',
+        authorizedPersonName: authorizedPersonName || 'Authorized Person',
+        designation: designation || 'Designation',
+        verificationStatus: 'pending',
+        documents: documents || {},
+        location: {
+          type: 'Point',
+          coordinates: [parseFloat(lng || 0), parseFloat(lat || 0)]
+        }
+      });
+    }
 
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
@@ -104,6 +153,14 @@ const register = async (req, res, next) => {
     });
 
     const userPayload = await buildUserPayload(user);
+
+    // Send Welcome Email
+    try {
+      const { sendWelcomeEmail } = require('../services/emailService');
+      await sendWelcomeEmail(user.email, user.name, user.onebloodId, user.role);
+    } catch (welcomeErr) {
+      console.warn('Welcome email dispatch failed (non-fatal):', welcomeErr.message);
+    }
 
     // Notify admins of new user registration
     await notifyAdmins(

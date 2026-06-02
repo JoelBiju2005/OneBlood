@@ -3,6 +3,12 @@ const Donor = require('../models/Donor');
 const BloodBank = require('../models/BloodBank');
 const BloodRequest = require('../models/BloodRequest');
 const Message = require('../models/Message');
+const Hospital = require('../models/Hospital');
+const EmailTemplate = require('../models/EmailTemplate');
+const EmailLog = require('../models/EmailLog');
+const SystemSettings = require('../models/SystemSettings');
+const DonationMatch = require('../models/DonationMatch');
+const bcrypt = require('bcryptjs');
 
 // GET /api/admin/users — Paginated, filterable user list
 const getUsers = async (req, res, next) => {
@@ -290,6 +296,260 @@ const deleteRequest = async (req, res, next) => {
 };
 
 
+const getHospitals = async (req, res, next) => {
+  try {
+    const hospitals = await Hospital.find()
+      .populate('userId', 'name email phone onebloodId role createdAt')
+      .sort({ createdAt: -1 })
+      .lean();
+    res.status(200).json({ success: true, count: hospitals.length, hospitals });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const approveHospital = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body; // approved / rejected
+
+    if (!['approved', 'rejected'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status' });
+    }
+
+    const hospital = await Hospital.findById(id).populate('userId');
+    if (!hospital) {
+      return res.status(404).json({ message: 'Hospital not found' });
+    }
+
+    hospital.verificationStatus = status;
+    await hospital.save();
+
+    if (hospital.userId) {
+      hospital.userId.isVerified = (status === 'approved');
+      await hospital.userId.save();
+    }
+
+    res.status(200).json({ success: true, message: `Hospital verification status updated to ${status}`, hospital });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const approveBloodBank = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body; // approved / rejected
+
+    if (!['approved', 'rejected'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status' });
+    }
+
+    const bank = await BloodBank.findById(id).populate('adminUserId');
+    if (!bank) {
+      return res.status(404).json({ message: 'Blood bank not found' });
+    }
+
+    bank.verificationStatus = status;
+    bank.isVerified = (status === 'approved');
+    await bank.save();
+
+    if (bank.adminUserId) {
+      bank.adminUserId.isVerified = (status === 'approved');
+      await bank.adminUserId.save();
+    }
+
+    res.status(200).json({ success: true, message: `Blood Bank verification status updated to ${status}`, bank });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getEmailTemplates = async (req, res, next) => {
+  try {
+    const templates = await EmailTemplate.find().sort({ templateName: 1 });
+    res.status(200).json({ success: true, count: templates.length, templates });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateEmailTemplate = async (req, res, next) => {
+  try {
+    const { templateName, subject, html, variables, active } = req.body;
+    let template = await EmailTemplate.findOne({ templateName });
+    if (!template) {
+      template = new EmailTemplate({ templateName, subject, html, variables, active });
+    } else {
+      if (subject) template.subject = subject;
+      if (html) template.html = html;
+      if (variables) template.variables = variables;
+      if (active !== undefined) template.active = active;
+    }
+    await template.save();
+    res.status(200).json({ success: true, message: 'Email template saved successfully', template });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getEmailLogs = async (req, res, next) => {
+  try {
+    const logs = await EmailLog.find().sort({ createdAt: -1 }).limit(100);
+    res.status(200).json({ success: true, count: logs.length, logs });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getSettings = async (req, res, next) => {
+  try {
+    const settings = await SystemSettings.getSettings();
+    res.status(200).json({ success: true, settings });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateSettings = async (req, res, next) => {
+  try {
+    const { emailProvider, fromEmail, escalationEnabled, donorMinAge, donorMaxAge, donorMinWeight, donationGapDays } = req.body;
+    const settings = await SystemSettings.findOne();
+    if (!settings) {
+      await SystemSettings.create(req.body);
+    } else {
+      if (emailProvider) settings.emailProvider = emailProvider;
+      if (fromEmail) settings.fromEmail = fromEmail;
+      if (escalationEnabled !== undefined) settings.escalationEnabled = escalationEnabled;
+      if (donorMinAge !== undefined) settings.donorMinAge = donorMinAge;
+      if (donorMaxAge !== undefined) settings.donorMaxAge = donorMaxAge;
+      if (donorMinWeight !== undefined) settings.donorMinWeight = donorMinWeight;
+      if (donationGapDays !== undefined) settings.donationGapDays = donationGapDays;
+      await settings.save();
+    }
+    const updated = await SystemSettings.findOne();
+    res.status(200).json({ success: true, settings: updated });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const seedHubballiData = async (req, res, next) => {
+  try {
+    // 1. KIMS Hospital
+    let kimsUser = await User.findOne({ email: 'kims@hubli.in' });
+    if (!kimsUser) {
+      const passwordHash = await bcrypt.hash('OneBloodHospital2026!', 10);
+      kimsUser = await User.create({
+        onebloodId: 'OB-KIMS1',
+        name: 'KIMS Hospital Hubli',
+        email: 'kims@hubli.in',
+        phone: '+918362485111',
+        passwordHash,
+        role: 'hospital',
+        city: 'Hubballi',
+        hospitalProfileComplete: true
+      });
+      await Hospital.create({
+        userId: kimsUser._id,
+        hospitalName: 'KIMS Hospital Hubli',
+        registrationNumber: 'HOSP-KA-836-001',
+        hospitalType: 'Government',
+        address: 'Vidyanagar, Hubballi',
+        city: 'Hubballi',
+        state: 'Karnataka',
+        pincode: '580021',
+        emergencyContact: '+918362485111',
+        website: 'http://kimshubli.org',
+        authorizedPersonName: 'Dr. S. F. Kammar',
+        designation: 'Medical Superintendent',
+        verificationStatus: 'approved',
+        location: {
+          type: 'Point',
+          coordinates: [75.1228, 15.3716]
+        }
+      });
+    }
+
+    // 2. SDM Hospital
+    let sdmUser = await User.findOne({ email: 'sdm@dharwad.in' });
+    if (!sdmUser) {
+      const passwordHash = await bcrypt.hash('OneBloodHospital2026!', 10);
+      sdmUser = await User.create({
+        onebloodId: 'OB-SDMHS1',
+        name: 'SDM Medical Hospital Dharwad',
+        email: 'sdm@dharwad.in',
+        phone: '+918362477777',
+        passwordHash,
+        role: 'hospital',
+        city: 'Dharwad',
+        hospitalProfileComplete: true
+      });
+      await Hospital.create({
+        userId: sdmUser._id,
+        hospitalName: 'SDM Hospital Dharwad',
+        registrationNumber: 'HOSP-KA-836-002',
+        hospitalType: 'Private',
+        address: 'Sattur, Dharwad',
+        city: 'Dharwad',
+        state: 'Karnataka',
+        pincode: '580009',
+        emergencyContact: '+918362477777',
+        website: 'http://sdmmedical.org',
+        authorizedPersonName: 'Dr. Niranjan Kumar',
+        designation: 'Medical Director',
+        verificationStatus: 'approved',
+        location: {
+          type: 'Point',
+          coordinates: [75.0768, 15.4312]
+        }
+      });
+    }
+
+    // 3. Rashtrotthana Blood Bank
+    let bbUser = await User.findOne({ email: 'rashtrotthana@hubli.in' });
+    if (!bbUser) {
+      const passwordHash = await bcrypt.hash('OneBloodBank2026!', 10);
+      bbUser = await User.create({
+        onebloodId: 'OB-RBBH1',
+        name: 'Rashtrotthana Blood Bank',
+        email: 'rashtrotthana@hubli.in',
+        phone: '+918362356611',
+        passwordHash,
+        role: 'blood_bank',
+        city: 'Hubballi',
+        bankProfileComplete: true
+      });
+      await BloodBank.create({
+        adminUserId: bbUser._id,
+        name: 'Rashtrotthana Blood Bank Hubli',
+        registrationNumber: 'BB-KA-836-001',
+        address: 'Keshwapur, Hubballi',
+        city: 'Hubballi',
+        phone: '+918362356611',
+        email: 'rashtrotthana@hubli.in',
+        isVerified: true,
+        verificationStatus: 'approved',
+        location: {
+          type: 'Point',
+          coordinates: [75.1472, 15.3678]
+        },
+        inventory: [
+          { bloodGroup: 'A+', units: 25, componentType: 'Whole Blood' },
+          { bloodGroup: 'B+', units: 40, componentType: 'Whole Blood' },
+          { bloodGroup: 'O+', units: 30, componentType: 'Whole Blood' },
+          { bloodGroup: 'AB+', units: 15, componentType: 'Whole Blood' },
+          { bloodGroup: 'O-', units: 5, componentType: 'RBC' }
+        ]
+      });
+    }
+
+    res.status(200).json({ success: true, message: 'Hubballi-Dharwad test hospitals and blood banks seeded successfully.' });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   getUsers,
   getDonors,
@@ -302,4 +562,13 @@ module.exports = {
   deleteDonor,
   deleteBank,
   deleteRequest,
+  getHospitals,
+  approveHospital,
+  approveBloodBank,
+  getEmailTemplates,
+  updateEmailTemplate,
+  getEmailLogs,
+  getSettings,
+  updateSettings,
+  seedHubballiData
 };

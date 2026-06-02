@@ -34,18 +34,30 @@ const SignupPage = () => {
     if (location.state?.role) return location.state.role;
     const searchParams = new URLSearchParams(location.search);
     const roleParam = searchParams.get('role');
-    if (roleParam && ['donor', 'patient', 'blood_bank'].includes(roleParam)) {
+    if (roleParam && ['donor', 'patient', 'blood_bank', 'hospital'].includes(roleParam)) {
       return roleParam;
     }
     return null;
-  }); // null, 'donor', 'patient', 'blood_bank'
+  }); // null, 'donor', 'patient', 'blood_bank', 'hospital'
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     password: '',
-    city: 'Bengaluru',
-    bankName: ''
+    city: 'Hubballi',
+    bankName: '',
+    hospitalName: '',
+    registrationNumber: '',
+    hospitalType: 'Private',
+    address: '',
+    state: 'Karnataka',
+    pincode: '',
+    emergencyContact: '',
+    website: '',
+    authorizedPersonName: '',
+    designation: '',
+    lat: '15.3647',
+    lng: '75.1240'
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -78,18 +90,22 @@ const SignupPage = () => {
   };
 
   const validateForm = () => {
-    const { name, email, phone, password, city, bankName } = formData;
-    if (!name || !email || !phone || !password || !city) {
-      toast.error('All standard fields are required.');
-      return false;
-    }
-    if (selectedRole === 'blood_bank' && !bankName) {
-      toast.error('Please specify your Hospital/Bank name.');
-      return false;
-    }
-    if (phone.length < 10) {
-      toast.error('Please enter a valid 10-digit phone number.');
-      return false;
+    const { name, email, phone, password, city, bankName, hospitalName, registrationNumber, hospitalType, emergencyContact } = formData;
+    
+    if (selectedRole === 'hospital') {
+      if (!hospitalName || !registrationNumber || !hospitalType || !emergencyContact || !email || !password) {
+        toast.error('All hospital required fields are required.');
+        return false;
+      }
+    } else {
+      if (!name || !email || !phone || !password || !city) {
+        toast.error('All standard fields are required.');
+        return false;
+      }
+      if (selectedRole === 'blood_bank' && !bankName) {
+        toast.error('Please specify your Hospital/Bank name.');
+        return false;
+      }
     }
     if (password.length < 6) {
       toast.error('Password must be at least 6 characters.');
@@ -105,18 +121,37 @@ const SignupPage = () => {
 
     setIsSubmitting(true);
     try {
-      // For blood_bank role, name represents contact person, bankName represents hospital/bank name
-      const nameToSubmit = selectedRole === 'blood_bank' 
-        ? `${formData.name} (${formData.bankName})` 
-        : formData.name;
+      let extraData = {};
+      let nameToSubmit = formData.name;
+
+      if (selectedRole === 'blood_bank') {
+        nameToSubmit = `${formData.name} (${formData.bankName})`;
+      } else if (selectedRole === 'hospital') {
+        nameToSubmit = formData.hospitalName;
+        extraData = {
+          hospitalName: formData.hospitalName,
+          registrationNumber: formData.registrationNumber,
+          hospitalType: formData.hospitalType,
+          address: formData.address,
+          state: formData.state,
+          pincode: formData.pincode,
+          emergencyContact: formData.emergencyContact,
+          website: formData.website,
+          authorizedPersonName: formData.authorizedPersonName,
+          designation: formData.designation,
+          lat: formData.lat,
+          lng: formData.lng
+        };
+      }
 
       const user = await registerUser(
         nameToSubmit,
         formData.email,
-        formData.phone,
+        selectedRole === 'hospital' ? formData.emergencyContact : formData.phone,
         formData.password,
         selectedRole,
-        formData.city
+        formData.city,
+        extraData
       );
 
       toast.success('Registration successful!');
@@ -210,17 +245,26 @@ const SignupPage = () => {
                 </div>
               </div>
 
-              {/* Panel 3: Secondary Blood Bank Manager */}
+              {/* Panel 3 & 4: Blood Bank & Hospital managers */}
               <div className="text-center pt-2">
                 <span className="text-xs text-slate-500">── or ──</span>
-                <div className="mt-3 flex justify-center">
+                <div className="mt-3 flex flex-col md:flex-row justify-center gap-4">
                   <button
                     type="button"
                     onClick={() => handleRoleSelect('blood_bank')}
-                    className="flex items-center space-x-2 px-6 py-3 border-2 border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:border-white/20 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] cursor-pointer"
+                    className="flex items-center justify-center space-x-2 px-6 py-3 border-2 border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:border-white/20 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] cursor-pointer"
                   >
                     <Landmark className="w-4 h-4 text-blue-400" />
-                    <span>I manage a blood bank (Register bank)</span>
+                    <span>I manage a blood bank</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleRoleSelect('hospital')}
+                    className="flex items-center justify-center space-x-2 px-6 py-3 border-2 border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:border-white/20 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] cursor-pointer"
+                  >
+                    <Landmark className="w-4 h-4 text-emerald-400" />
+                    <span>I manage a hospital</span>
                   </button>
                 </div>
               </div>
@@ -247,127 +291,194 @@ const SignupPage = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Full Name / Contact Person */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  {selectedRole === 'blood_bank' ? 'Contact Person Name' : 'Full Name'}
-                </label>
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <User className="h-4 w-4 text-slate-500" />
-                  </span>
+            {selectedRole === 'hospital' ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Hospital Name */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Hospital Name</label>
                   <input
                     type="text"
-                    name="name"
+                    name="hospitalName"
                     required
-                    value={formData.name}
+                    value={formData.hospitalName}
                     onChange={handleChange}
-                    placeholder={selectedRole === 'blood_bank' ? 'Enter contact person name' : 'Enter full name'}
-                    className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-red-500 transition-all"
+                    placeholder="E.g., KIMS Hospital"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-red-500 transition-all"
                   />
                 </div>
-              </div>
-
-              {/* Hospital/Bank Name (Only for Blood Bank) */}
-              {selectedRole === 'blood_bank' && (
+                {/* Registration Number */}
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                    Hospital / Blood Bank Name
-                  </label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                      <Landmark className="h-4 w-4 text-slate-500" />
-                    </span>
-                    <input
-                      type="text"
-                      name="bankName"
-                      required
-                      value={formData.bankName}
-                      onChange={handleChange}
-                      placeholder="Hospital or Blood Bank name"
-                      className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-red-500 transition-all"
-                    />
-                  </div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Registration Number</label>
+                  <input
+                    type="text"
+                    name="registrationNumber"
+                    required
+                    value={formData.registrationNumber}
+                    onChange={handleChange}
+                    placeholder="E.g., HOSP-KA-836"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-red-500 transition-all"
+                  />
                 </div>
-              )}
-
-              {/* Email Address */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <Mail className="h-4 w-4 text-slate-500" />
-                  </span>
+                {/* Hospital Type */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Hospital Type</label>
+                  <select
+                    name="hospitalType"
+                    required
+                    value={formData.hospitalType}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 bg-slate-800 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-red-500 transition-all appearance-none cursor-pointer"
+                  >
+                    <option value="Private">Private</option>
+                    <option value="Government">Government</option>
+                    <option value="Charitable">Charitable</option>
+                  </select>
+                </div>
+                {/* Emergency Contact */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Emergency Contact Phone</label>
+                  <input
+                    type="tel"
+                    name="emergencyContact"
+                    required
+                    value={formData.emergencyContact}
+                    onChange={handleChange}
+                    placeholder="10-digit phone number"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-red-500 transition-all"
+                  />
+                </div>
+                {/* Authorized Person */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Authorized Person Name</label>
+                  <input
+                    type="text"
+                    name="authorizedPersonName"
+                    required
+                    value={formData.authorizedPersonName}
+                    onChange={handleChange}
+                    placeholder="Contact person's name"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-red-500 transition-all"
+                  />
+                </div>
+                {/* Designation */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Designation</label>
+                  <input
+                    type="text"
+                    name="designation"
+                    required
+                    value={formData.designation}
+                    onChange={handleChange}
+                    placeholder="E.g., Medical Superintendent"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-red-500 transition-all"
+                  />
+                </div>
+                {/* Website */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Website (Optional)</label>
+                  <input
+                    type="url"
+                    name="website"
+                    value={formData.website}
+                    onChange={handleChange}
+                    placeholder="http://example.com"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-red-500 transition-all"
+                  />
+                </div>
+                {/* City */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">City</label>
+                  <select
+                    name="city"
+                    required
+                    value={formData.city}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 bg-slate-800 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-red-500 transition-all appearance-none cursor-pointer"
+                  >
+                    {CITIES.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+                {/* Address */}
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Full Address</label>
+                  <input
+                    type="text"
+                    name="address"
+                    required
+                    value={formData.address}
+                    onChange={handleChange}
+                    placeholder="Hospital address details"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-red-500 transition-all"
+                  />
+                </div>
+                {/* State & Pincode */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">State</label>
+                  <input
+                    type="text"
+                    name="state"
+                    required
+                    value={formData.state}
+                    onChange={handleChange}
+                    placeholder="Karnataka"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-red-500 transition-all"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pincode</label>
+                  <input
+                    type="text"
+                    name="pincode"
+                    required
+                    value={formData.pincode}
+                    onChange={handleChange}
+                    placeholder="6-digit PIN"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-red-500 transition-all"
+                  />
+                </div>
+                {/* Lat & Lng */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Latitude</label>
+                  <input
+                    type="text"
+                    name="lat"
+                    required
+                    value={formData.lat}
+                    onChange={handleChange}
+                    placeholder="15.3647"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-red-500 transition-all"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Longitude</label>
+                  <input
+                    type="text"
+                    name="lng"
+                    required
+                    value={formData.lng}
+                    onChange={handleChange}
+                    placeholder="75.1240"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-red-500 transition-all"
+                  />
+                </div>
+                {/* Email */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Login Email</label>
                   <input
                     type="email"
                     name="email"
                     required
                     value={formData.email}
                     onChange={handleChange}
-                    placeholder="name@example.com"
-                    className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-red-500 transition-all"
+                    placeholder="hospital@example.com"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-red-500 transition-all"
                   />
                 </div>
-              </div>
-
-              {/* Phone Number */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  Phone Number
-                </label>
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <Phone className="h-4 w-4 text-slate-500" />
-                  </span>
-                  <input
-                    type="tel"
-                    name="phone"
-                    required
-                    value={formData.phone}
-                    onChange={handleChange}
-                    placeholder="10-digit mobile number"
-                    className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-red-500 transition-all"
-                  />
-                </div>
-              </div>
-
-              {/* City (Dropdown) */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  City
-                </label>
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <MapPin className="h-4 w-4 text-slate-500" />
-                  </span>
-                  <select
-                    name="city"
-                    required
-                    value={formData.city}
-                    onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-3 bg-slate-800 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-red-500 transition-all appearance-none cursor-pointer"
-                  >
-                    {CITIES.map((c) => (
-                      <option key={c} value={c} className="bg-slate-900 text-white">
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Password */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  Password
-                </label>
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <Lock className="h-4 w-4 text-slate-500" />
-                  </span>
+                {/* Password */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Password</label>
                   <input
                     type={showPassword ? 'text' : 'password'}
                     name="password"
@@ -375,37 +486,171 @@ const SignupPage = () => {
                     value={formData.password}
                     onChange={handleChange}
                     placeholder="Min 6 characters"
-                    className="w-full pl-10 pr-12 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-red-500 transition-all"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-red-500 transition-all"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-500 hover:text-white cursor-pointer"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Full Name / Contact Person */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    {selectedRole === 'blood_bank' ? 'Contact Person Name' : 'Full Name'}
+                  </label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                      <User className="h-4 w-4 text-slate-500" />
+                    </span>
+                    <input
+                      type="text"
+                      name="name"
+                      required
+                      value={formData.name}
+                      onChange={handleChange}
+                      placeholder={selectedRole === 'blood_bank' ? 'Enter contact person name' : 'Enter full name'}
+                      className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-red-500 transition-all"
+                    />
+                  </div>
                 </div>
 
-                {/* Password strength indicator */}
-                {formData.password && (
-                  <div className="space-y-1.5 pt-1">
-                    <div className="flex justify-between items-center text-[10px]">
-                      <span className="text-slate-400 font-medium">Strength:</span>
-                      <span
-                        className={`font-bold ${
-                          strength.score === 1 ? 'text-red-400' : strength.score === 2 ? 'text-amber-400' : 'text-emerald-400'
-                        }`}
-                      >
-                        {strength.label}
+                {/* Hospital/Bank Name (Only for Blood Bank) */}
+                {selectedRole === 'blood_bank' && (
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      Hospital / Blood Bank Name
+                    </label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                        <Landmark className="h-4 w-4 text-slate-500" />
                       </span>
-                    </div>
-                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                      <div className={`h-full transition-all duration-350 ${strength.color}`} />
+                      <input
+                        type="text"
+                        name="bankName"
+                        required
+                        value={formData.bankName}
+                        onChange={handleChange}
+                        placeholder="Hospital or Blood Bank name"
+                        className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-red-500 transition-all"
+                      />
                     </div>
                   </div>
                 )}
+
+                {/* Email Address */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                      <Mail className="h-4 w-4 text-slate-500" />
+                    </span>
+                    <input
+                      type="email"
+                      name="email"
+                      required
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="name@example.com"
+                      className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-red-500 transition-all"
+                    />
+                  </div>
+                </div>
+
+                {/* Phone Number */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    Phone Number
+                  </label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                      <Phone className="h-4 w-4 text-slate-500" />
+                    </span>
+                    <input
+                      type="tel"
+                      name="phone"
+                      required
+                      value={formData.phone}
+                      onChange={handleChange}
+                      placeholder="10-digit mobile number"
+                      className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-red-500 transition-all"
+                    />
+                  </div>
+                </div>
+
+                {/* City (Dropdown) */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    City
+                  </label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                      <MapPin className="h-4 w-4 text-slate-500" />
+                    </span>
+                    <select
+                      name="city"
+                      required
+                      value={formData.city}
+                      onChange={handleChange}
+                      className="w-full pl-10 pr-4 py-3 bg-slate-800 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-red-500 transition-all appearance-none cursor-pointer"
+                    >
+                      {CITIES.map((c) => (
+                        <option key={c} value={c} className="bg-slate-900 text-white">
+                          {c}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Password */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                      <Lock className="h-4 w-4 text-slate-500" />
+                    </span>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      name="password"
+                      required
+                      value={formData.password}
+                      onChange={handleChange}
+                      placeholder="Min 6 characters"
+                      className="w-full pl-10 pr-12 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-red-500 transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-500 hover:text-white cursor-pointer"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+
+                  {/* Password strength indicator */}
+                  {formData.password && (
+                    <div className="space-y-1.5 pt-1">
+                      <div className="flex justify-between items-center text-[10px]">
+                        <span className="text-slate-400 font-medium">Strength:</span>
+                        <span
+                          className={`font-bold ${
+                            strength.score === 1 ? 'text-red-400' : strength.score === 2 ? 'text-amber-400' : 'text-emerald-400'
+                          }`}
+                        >
+                          {strength.label}
+                        </span>
+                      </div>
+                      <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                        <div className={`h-full transition-all duration-350 ${strength.color}`} />
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
             {error && (
               <p className="text-red-500 text-xs font-bold text-center mt-2 animate-pulse error-text">

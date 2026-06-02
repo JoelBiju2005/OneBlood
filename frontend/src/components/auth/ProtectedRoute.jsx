@@ -27,6 +27,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     const dashMap = {
       donor: '/dashboard/donor',
       blood_bank: '/dashboard/bank',
+      hospital: '/dashboard/hospital',
       admin: '/admin',
       patient: '/search'
     };

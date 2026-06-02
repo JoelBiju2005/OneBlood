@@ -13,8 +13,18 @@ const bloodBankSchema = new mongoose.Schema({
   phone: { type: String },
   email: { type: String },
   isVerified: { type: Boolean, default: false },
+  verificationStatus: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'approved' },
+  documents: {
+    registrationCertificate: { type: String },
+    govApproval: { type: String }
+  },
   isActive: { type: Boolean, default: true },
-  inventory: { type: mongoose.Schema.Types.Mixed, default: {} },
+  inventory: [{
+    bloodGroup: { type: String, required: true },
+    units: { type: Number, default: 0 },
+    componentType: { type: String, enum: ['Whole Blood', 'Plasma', 'Platelets', 'RBC'], default: 'Whole Blood' },
+    expiryDate: { type: Date }
+  }],
   operatingHours: { type: String }
 }, {
   timestamps: true,

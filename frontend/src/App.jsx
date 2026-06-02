@@ -31,6 +31,7 @@ import HowItWorksPage from './pages/HowItWorksPage';
 import SuccessPage from './pages/SuccessPage';
 import AdminMonitoringPage from './pages/AdminMonitoringPage';
 import DonorFindRequestsPage from './pages/DonorFindRequestsPage';
+import HospitalDashboard from './pages/HospitalDashboard';
 
 // Notice Board & Confirmation Pages
 import NoticeBoardPage from './pages/NoticeBoardPage';
@@ -42,7 +43,7 @@ import DonorResponseConfirmPage from './pages/confirmations/DonorResponseConfirm
 const HomeRedirect = () => {
   const { user } = useAuthStore();
   if (!user) return <Navigate to="/auth/login" replace />;
-  const map = { donor: '/home/donor', patient: '/home/seeker', blood_bank: '/dashboard/bank', admin: '/admin' };
+  const map = { donor: '/home/donor', patient: '/home/seeker', blood_bank: '/dashboard/bank', hospital: '/dashboard/hospital', admin: '/admin' };
   return <Navigate to={map[user.role] || '/search'} replace />;
 };
 
@@ -164,6 +165,13 @@ function App() {
           <Route path="/dashboard/bank/setup" element={
             <ProtectedRoute allowedRoles={['blood_bank']}>
               <BankSetupPage />
+            </ProtectedRoute>
+          } />
+
+          {/* Hospital Only Routes */}
+          <Route path="/dashboard/hospital" element={
+            <ProtectedRoute allowedRoles={['hospital']}>
+              <HospitalDashboard />
             </ProtectedRoute>
           } />
 

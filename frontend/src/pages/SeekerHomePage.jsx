@@ -4,9 +4,10 @@ import api from '../utils/api';
 import useAuthStore from '../store/authStore';
 import useNotificationStore from '../store/notificationStore';
 import toast from 'react-hot-toast';
-import { HeartPulse, Search, MapPin, Plus, FileText, CheckCircle, Clock, ChevronDown, ChevronUp, Navigation, Phone, MessageSquare, Landmark } from 'lucide-react';
+import { HeartPulse, Search, MapPin, Plus, FileText, CheckCircle, Clock, ChevronDown, ChevronUp, Navigation, Phone, MessageSquare, Landmark, Building2, X, Loader2, ShieldCheck } from 'lucide-react';
 import HallOfFameSection from '../components/shared/HallOfFameSection';
 import NoticeBoardCard from '../components/shared/NoticeBoardCard';
+import DonationInProgress from '../components/shared/DonationInProgress';
 const URGENCY_COLORS = { critical: '#dc2626', urgent: '#f97316', moderate: '#eab308', planned: '#22c55e' };
 
 const SeekerHomePage = () => {
@@ -22,6 +23,14 @@ const SeekerHomePage = () => {
   const [myNotices, setMyNotices] = useState([]);
   const [banksLoading, setBanksLoading] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
+
+  // Facility selection modal state
+  const [facilityModal, setFacilityModal] = useState({ open: false, requestId: null, donorId: null, donorName: '' });
+  const [facilities, setFacilities] = useState([]);
+  const [facilitiesLoading, setFacilitiesLoading] = useState(false);
+  const [selectedFacility, setSelectedFacility] = useState(null);
+  const [approving, setApproving] = useState(false);
+  const [facilityFilter, setFacilityFilter] = useState('');
 
   const getGeolocation = () => {
     if (!navigator.geolocation) {
@@ -111,6 +120,51 @@ const SeekerHomePage = () => {
       }
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Failed to close notice.');
+    }
+  };
+
+  // ---- Approve Donor & Select Facility Workflow ----
+  const openFacilitySelector = async (requestId, donorResponderId, donorName) => {
+    setFacilityModal({ open: true, requestId, donorId: donorResponderId, donorName });
+    setSelectedFacility(null);
+    setFacilityFilter('');
+    setFacilitiesLoading(true);
+    try {
+      const res = await api.get('/hospitals/facilities');
+      setFacilities(res.data.facilities || []);
+    } catch (err) {
+      toast.error('Failed to load approved facilities');
+      setFacilities([]);
+    } finally {
+      setFacilitiesLoading(false);
+    }
+  };
+
+  const closeFacilityModal = () => {
+    setFacilityModal({ open: false, requestId: null, donorId: null, donorName: '' });
+    setSelectedFacility(null);
+  };
+
+  const handleApproveDonor = async () => {
+    if (!selectedFacility) {
+      toast.error('Please select a destination facility');
+      return;
+    }
+    setApproving(true);
+    try {
+      const res = await api.post('/donations/matches/approve', {
+        requestId: facilityModal.requestId,
+        donorId: facilityModal.donorId,
+        destinationType: selectedFacility.type,
+        facilityId: selectedFacility.id
+      });
+      toast.success(`Match created! ID: ${res.data.match?.matchObid || 'Generated'}`);
+      closeFacilityModal();
+      fetchUserData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to approve donor and create match');
+    } finally {
+      setApproving(false);
     }
   };
 
@@ -306,6 +360,17 @@ const SeekerHomePage = () => {
                                     )}
                                   </div>
                                 )}
+
+                                {/* Approve Donor button — visible for accepted/pending responses (not declined) */}
+                                {!isDeclined && req.status !== 'fulfilled' && (
+                                  <button
+                                    onClick={() => openFacilitySelector(req._id, resp.responderId, resp.responderName)}
+                                    className="w-full mt-2 py-2 bg-[#C0152A] hover:bg-red-700 text-white rounded-lg text-[10px] font-bold transition-all flex items-center justify-center gap-1.5"
+                                  >
+                                    <ShieldCheck className="w-3.5 h-3.5" />
+                                    Approve & Select Facility
+                                  </button>
+                                )}
                               </div>
                             );
                           })}
@@ -318,6 +383,9 @@ const SeekerHomePage = () => {
             </div>
           </div>
         )}
+
+        {/* Section 2.5 — Donation In Progress */}
+        <DonationInProgress compact />
 
         {/* Section 3 — My Notice Board Posts */}
         {myNotices.length > 0 && (
@@ -438,6 +506,124 @@ const SeekerHomePage = () => {
         {/* Hall of Fame statistics */}
         <HallOfFameSection />
       </div>
+
+      {/* Facility Selection Modal */}
+      {facilityModal.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={closeFacilityModal}>
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+          <div
+            className="relative bg-slate-900 border border-white/10 rounded-3xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="p-6 border-b border-white/5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-bold text-white">Select Destination Facility</h3>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Approving donor: <span className="text-white font-semibold">{facilityModal.donorName}</span>
+                  </p>
+                </div>
+                <button onClick={closeFacilityModal} className="p-2 hover:bg-white/5 rounded-xl transition-colors">
+                  <X className="w-5 h-5 text-slate-400" />
+                </button>
+              </div>
+
+              {/* Search */}
+              <div className="mt-4">
+                <input
+                  type="text"
+                  placeholder="Search facility by name or city..."
+                  value={facilityFilter}
+                  onChange={(e) => setFacilityFilter(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-slate-800 border border-white/10 rounded-xl text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500/50 transition-colors"
+                />
+              </div>
+            </div>
+
+            {/* Facility List */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {facilitiesLoading ? (
+                <div className="flex items-center justify-center py-12 text-slate-500 text-xs">
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                  Loading verified facilities...
+                </div>
+              ) : facilities.length === 0 ? (
+                <div className="text-center py-12 text-slate-500 text-xs">
+                  No approved facilities found. Contact admin to approve hospitals/blood banks.
+                </div>
+              ) : (
+                facilities
+                  .filter(f => {
+                    const q = facilityFilter.toLowerCase();
+                    return !q || f.name?.toLowerCase().includes(q) || f.city?.toLowerCase().includes(q);
+                  })
+                  .map((fac) => {
+                    const isSelected = selectedFacility?.id === fac.id;
+                    return (
+                      <button
+                        key={fac.id}
+                        onClick={() => setSelectedFacility(fac)}
+                        className={`w-full text-left p-4 rounded-2xl border transition-all ${
+                          isSelected
+                            ? 'bg-[#C0152A]/10 border-[#C0152A]/30 ring-1 ring-[#C0152A]/20'
+                            : 'bg-slate-800/40 border-white/5 hover:border-white/10'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <Building2 className={`w-4 h-4 ${fac.type === 'Hospital' ? 'text-blue-400' : 'text-purple-400'}`} />
+                              <span className="text-sm font-bold text-white">{fac.name}</span>
+                            </div>
+                            <p className="text-[11px] text-slate-400 pl-6">
+                              {fac.address}, {fac.city}
+                            </p>
+                            <div className="flex gap-3 pl-6 pt-1">
+                              <span className={`text-[9px] px-2 py-0.5 rounded font-bold uppercase tracking-wider ${
+                                fac.type === 'Hospital'
+                                  ? 'bg-blue-500/10 border border-blue-500/20 text-blue-400'
+                                  : 'bg-purple-500/10 border border-purple-500/20 text-purple-400'
+                              }`}>
+                                {fac.type}
+                              </span>
+                              {fac.phone && (
+                                <span className="text-[10px] text-slate-500">📞 {fac.phone}</span>
+                              )}
+                            </div>
+                          </div>
+                          {isSelected && (
+                            <CheckCircle className="w-5 h-5 text-[#C0152A] shrink-0" />
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-white/5">
+              <button
+                onClick={handleApproveDonor}
+                disabled={!selectedFacility || approving}
+                className="w-full py-3 bg-[#C0152A] hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2"
+              >
+                {approving ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Creating Match...</>
+                ) : (
+                  <><ShieldCheck className="w-4 h-4" /> Approve Donor & Confirm Facility</>
+                )}
+              </button>
+              {selectedFacility && (
+                <p className="text-[10px] text-slate-500 text-center mt-2">
+                  Selected: <span className="text-white font-semibold">{selectedFacility.name}</span> ({selectedFacility.type})
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

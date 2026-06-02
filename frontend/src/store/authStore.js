@@ -64,10 +64,10 @@ const useAuthStore = create((set, get) => ({
     }
   },
 
-  register: async (name, email, phone, password, role, city) => {
+  register: async (name, email, phone, password, role, city, extraData = {}) => {
     set({ isLoading: true, error: null });
     try {
-      const res = await api.post('/auth/register', { name, email, phone, password, role, city });
+      const res = await api.post('/auth/register', { name, email, phone, password, role, city, ...extraData });
       const { accessToken, refreshToken, user } = res.data;
 
       setAccessToken(accessToken);

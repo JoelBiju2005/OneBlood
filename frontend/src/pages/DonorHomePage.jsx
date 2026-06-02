@@ -6,6 +6,7 @@ import useNotificationStore from '../store/notificationStore';
 import toast from 'react-hot-toast';
 import { HeartPulse, Award, Calendar, ToggleLeft, ToggleRight, ShieldAlert, Navigation, Phone, CheckCircle, MessageCircle, ArrowRight, Activity, Users, AwardIcon } from 'lucide-react';
 import HallOfFameSection from '../components/shared/HallOfFameSection';
+import DonationInProgress from '../components/shared/DonationInProgress';
 
 const DonorHomePage = () => {
   const { user } = useAuthStore();
@@ -330,6 +331,9 @@ const DonorHomePage = () => {
             </div>
           )}
         </div>
+
+        {/* Section 2.5 — Donation In Progress */}
+        <DonationInProgress />
 
         {/* Section 3 — My Impact & Section 4 — Community Feed */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

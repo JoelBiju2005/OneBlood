@@ -593,6 +593,23 @@ const acceptRequest = async (req, res, next) => {
       return res.status(400).json({ message: 'No registered donor profile found for current user' });
     }
 
+    // Eligibility check
+    const SystemSettings = require('../models/SystemSettings');
+    const settings = await SystemSettings.getSettings();
+    if (donor.age && (donor.age < settings.donorMinAge || donor.age > settings.donorMaxAge)) {
+      return res.status(400).json({ message: `Donor age does not satisfy eligibility criteria (${settings.donorMinAge}-${settings.donorMaxAge} years).` });
+    }
+    if (donor.weight && donor.weight < settings.donorMinWeight) {
+      return res.status(400).json({ message: `Donor weight must be at least ${settings.donorMinWeight} kg.` });
+    }
+    if (donor.lastDonated) {
+      const diffTime = Math.abs(new Date() - new Date(donor.lastDonated));
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      if (diffDays < settings.donationGapDays) {
+        return res.status(400).json({ message: `Minimum gap between donations must be ${settings.donationGapDays} days. You donated ${diffDays} days ago.` });
+      }
+    }
+
     // Safely handle responses (may be undefined on older documents)
     const existingResponses = Array.isArray(request.responses) ? request.responses : [];
     const existingIndex = existingResponses.findIndex(
