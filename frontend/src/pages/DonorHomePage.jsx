@@ -35,7 +35,14 @@ const DonorHomePage = () => {
       // 2. Fetch active requests matching blood type
       const reqsRes = await api.get('/requests');
       const matching = (reqsRes.data?.requests || []).filter(
-        req => req.bloodGroup === profRes.data?.donor?.bloodGroup && req.status === 'active'
+        req => {
+          if (req.bloodGroup !== profRes.data?.donor?.bloodGroup || req.status !== 'active') return false;
+          // Filter out if the donor has already responded to this request
+          const myResp = req.responses?.find(
+            (r) => r.responderId && r.responderId.toString() === profRes.data?.donor?._id.toString()
+          );
+          return !myResp;
+        }
       );
       setActiveRequests(matching);
     } catch (err) {

@@ -32,6 +32,53 @@ const SeekerHomePage = () => {
   const [approving, setApproving] = useState(false);
   const [facilityFilter, setFacilityFilter] = useState('');
 
+  // Request editing state and handlers
+  const [editModal, setEditModal] = useState({ open: false, request: null });
+  const [editForm, setEditForm] = useState({
+    patientName: '',
+    bloodGroup: '',
+    bloodComponent: '',
+    unitsRequired: 1,
+    hospitalName: '',
+    hospitalAddress: '',
+    urgencyLevel: 'urgent'
+  });
+
+  const handleStartEdit = (req) => {
+    setEditModal({ open: true, request: req });
+    setEditForm({
+      patientName: req.patientName || '',
+      bloodGroup: req.bloodGroup || '',
+      bloodComponent: req.bloodComponent || 'whole_blood',
+      unitsRequired: req.unitsRequired || 1,
+      hospitalName: req.hospitalName || '',
+      hospitalAddress: req.hospitalAddress || '',
+      urgencyLevel: req.urgencyLevel || 'urgent'
+    });
+  };
+
+  const handleDeleteRequest = async (requestId) => {
+    if (!window.confirm('Are you sure you want to delete this blood request?')) return;
+    try {
+      await api.delete(`/requests/${requestId}`);
+      toast.success('Blood request deleted successfully.');
+      fetchUserData();
+    } catch (err) {
+      toast.error('Failed to delete request.');
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      await api.patch(`/requests/${editModal.request._id}`, editForm);
+      toast.success('Blood request updated successfully.');
+      setEditModal({ open: false, request: null });
+      fetchUserData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update request.');
+    }
+  };
+
   const getGeolocation = () => {
     if (!navigator.geolocation) {
       toast.error('Geolocation is not supported by your browser.');
@@ -292,6 +339,21 @@ const SeekerHomePage = () => {
                       <p className="text-xs text-slate-400 mt-3 bg-white/5 px-3 py-2 rounded-lg">
                         📍 {req.hospitalName} ({req.hospitalAddress})
                       </p>
+
+                      <div className="flex gap-2 mt-3">
+                        <button
+                          onClick={() => handleStartEdit(req)}
+                          className="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-bold transition-all border border-white/5 text-center cursor-pointer"
+                        >
+                          Edit Details
+                        </button>
+                        <button
+                          onClick={() => handleDeleteRequest(req._id)}
+                          className="flex-1 py-1.5 bg-red-950/40 hover:bg-red-900/40 text-red-400 border border-red-500/10 rounded-lg text-xs font-bold transition-all text-center cursor-pointer"
+                        >
+                          Delete Request
+                        </button>
+                      </div>
                     </div>
 
                     {req.responses && req.responses.length > 0 && (
@@ -620,6 +682,125 @@ const SeekerHomePage = () => {
                   Selected: <span className="text-white font-semibold">{selectedFacility.name}</span> ({selectedFacility.type})
                 </p>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Request Modal */}
+      {editModal.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setEditModal({ open: false, request: null })}>
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+          <div
+            className="relative bg-slate-900 border border-white/10 rounded-3xl max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="p-6 border-b border-white/5 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-white">Edit Blood Request</h3>
+                <p className="text-xs text-slate-400 mt-1">Update request parameters</p>
+              </div>
+              <button onClick={() => setEditModal({ open: false, request: null })} className="p-2 hover:bg-white/5 rounded-xl transition-colors">
+                <X className="w-5 h-5 text-slate-400" />
+              </button>
+            </div>
+
+            {/* Modal Body / Scrollable Form */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              <div className="space-y-1">
+                <label className="text-xs text-slate-400 font-bold uppercase">Patient Name</label>
+                <input
+                  type="text"
+                  value={editForm.patientName}
+                  onChange={(e) => setEditForm({ ...editForm, patientName: e.target.value })}
+                  className="w-full px-4 py-2.5 bg-slate-800 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-red-500/50 transition-colors"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs text-slate-400 font-bold uppercase">Blood Group</label>
+                  <select
+                    value={editForm.bloodGroup}
+                    onChange={(e) => setEditForm({ ...editForm, bloodGroup: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-slate-800 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-red-500/50 transition-colors"
+                  >
+                    {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(bg => (
+                      <option key={bg} value={bg}>{bg}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs text-slate-400 font-bold uppercase">Units Required</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={editForm.unitsRequired}
+                    onChange={(e) => setEditForm({ ...editForm, unitsRequired: parseInt(e.target.value) || 1 })}
+                    className="w-full px-4 py-2.5 bg-slate-800 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-red-500/50 transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs text-slate-400 font-bold uppercase">Blood Component</label>
+                <select
+                  value={editForm.bloodComponent}
+                  onChange={(e) => setEditForm({ ...editForm, bloodComponent: e.target.value })}
+                  className="w-full px-4 py-2.5 bg-slate-800 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-red-500/50 transition-colors"
+                >
+                  <option value="whole_blood">Whole Blood</option>
+                  <option value="prbc">Packed Red Blood Cells (PRBC)</option>
+                  <option value="platelets">Platelets</option>
+                  <option value="plasma">Fresh Frozen Plasma (FFP)</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs text-slate-400 font-bold uppercase">Hospital Name</label>
+                <input
+                  type="text"
+                  value={editForm.hospitalName}
+                  onChange={(e) => setEditForm({ ...editForm, hospitalName: e.target.value })}
+                  className="w-full px-4 py-2.5 bg-slate-800 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-red-500/50 transition-colors"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs text-slate-400 font-bold uppercase">Hospital Address</label>
+                <textarea
+                  rows="2"
+                  value={editForm.hospitalAddress}
+                  onChange={(e) => setEditForm({ ...editForm, hospitalAddress: e.target.value })}
+                  className="w-full px-4 py-2.5 bg-slate-800 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-red-500/50 transition-colors"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs text-slate-400 font-bold uppercase">Urgency Level</label>
+                <select
+                  value={editForm.urgencyLevel}
+                  onChange={(e) => setEditForm({ ...editForm, urgencyLevel: e.target.value })}
+                  className="w-full px-4 py-2.5 bg-slate-800 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-red-500/50 transition-colors"
+                >
+                  <option value="critical">🔴 Critical</option>
+                  <option value="urgent">🟠 Urgent</option>
+                  <option value="moderate">🟡 Moderate</option>
+                  <option value="planned">🟢 Planned</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-white/5">
+              <button
+                onClick={handleSaveEdit}
+                className="w-full py-3 bg-[#C0152A] hover:bg-red-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                Save Changes
+              </button>
             </div>
           </div>
         </div>

@@ -747,6 +747,61 @@ const declineRequest = async (req, res, next) => {
   }
 };
 
+const updateRequest = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const request = await BloodRequest.findById(id);
+    if (!request) {
+      return res.status(404).json({ message: 'Request not found' });
+    }
+    if (request.requesterId.toString() !== req.user._id.toString() && req.user.role !== 'super_admin') {
+      return res.status(403).json({ message: 'Unauthorized to edit this request' });
+    }
+    
+    const allowedUpdates = [
+      'patientName', 'patientAge', 'patientGender', 'hospitalName',
+      'hospitalAddress', 'doctorName', 'doctorContact', 'bloodGroup',
+      'bloodComponent', 'unitsRequired', 'urgencyLevel', 'requiredBy'
+    ];
+    
+    allowedUpdates.forEach(field => {
+      if (req.body[field] !== undefined) {
+        request[field] = req.body[field];
+      }
+    });
+    
+    if (req.body.lat !== undefined && req.body.lng !== undefined) {
+      request.location = {
+        type: 'Point',
+        coordinates: [parseFloat(req.body.lng), parseFloat(req.body.lat)]
+      };
+    }
+    
+    await request.save();
+    res.status(200).json({ message: 'Request updated successfully', request });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const deleteRequest = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const request = await BloodRequest.findById(id);
+    if (!request) {
+      return res.status(404).json({ message: 'Request not found' });
+    }
+    if (request.requesterId.toString() !== req.user._id.toString() && req.user.role !== 'super_admin') {
+      return res.status(403).json({ message: 'Unauthorized to delete this request' });
+    }
+    
+    await BloodRequest.findByIdAndDelete(id);
+    res.status(200).json({ message: 'Request deleted successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   verifyLetter,
   createRequest,
@@ -757,5 +812,7 @@ module.exports = {
   getMyRequests,
   targetDonor,
   acceptRequest,
-  declineRequest
+  declineRequest,
+  updateRequest,
+  deleteRequest
 };

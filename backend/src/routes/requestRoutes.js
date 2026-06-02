@@ -24,6 +24,8 @@ router.get('/', requestController.getRequests);
 router.get('/my-requests', protect, requestController.getMyRequests);
 router.post('/', protect, requestLimiter, requestController.createRequest);
 router.get('/:id', requestController.getRequestById);
+router.patch('/:id', protect, requestController.updateRequest);
+router.delete('/:id', protect, requestController.deleteRequest);
 router.patch('/:id/status', protect, requestController.updateStatus);
 
 // AI prescription validation with OCR processing

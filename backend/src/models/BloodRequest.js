@@ -1,8 +1,10 @@
 const mongoose = require('mongoose');
 
 const responseSchema = new mongoose.Schema({
-  donorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Donor' },
+  responderId: { type: mongoose.Schema.Types.ObjectId },
+  responderType: { type: String, enum: ['donor', 'blood_bank'] },
   status: { type: String, default: 'pending' },
+  message: { type: String },
   respondedAt: { type: Date, default: Date.now }
 }, { _id: false });
 

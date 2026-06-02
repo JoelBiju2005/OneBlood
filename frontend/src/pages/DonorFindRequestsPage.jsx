@@ -82,8 +82,12 @@ const DonorFindRequestsPage = () => {
     );
   }
 
-  // Filter requests matching compatible blood group or general active ones
-  const activeRequests = requests.filter(r => r.status === 'active' || r.status === 'accepted');
+  // Filter requests matching compatible blood group or general active ones, filtering out declined ones
+  const activeRequests = requests.filter(r => {
+    const myResp = getMyResponse(r);
+    if (myResp && myResp.status === 'declined') return false;
+    return r.status === 'active' || r.status === 'accepted';
+  });
 
   return (
     <div className="min-h-[calc(100vh-80px)] bg-slate-950 py-8 px-4 sm:px-6 lg:px-8 space-y-8 text-left relative overflow-hidden">
