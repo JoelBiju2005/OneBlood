@@ -66,12 +66,12 @@ const generateMatchPDF = async (match, seeker, donor, facility, detourBank = nul
 
       // 2. Header Section
       if (fs.existsSync(logoPath)) {
-        doc.image(logoPath, 40, 35, { width: 90 });
+        doc.image(logoPath, 40, 35, { width: 50 });
       }
       
       // Header Titles next to logo (with constrained width to prevent overlapping metadata)
-      doc.fillColor('#C0152A').fontSize(14).font('Helvetica-Bold').text('OFFICIAL BLOOD DONATION MATCH DOCUMENT', 145, 45, { width: 250 });
-      doc.fillColor('#4B5563').fontSize(9).font('Helvetica-Oblique').text('One Need. One Response. One Life.', 145, 77);
+      doc.fillColor('#C0152A').fontSize(14).font('Helvetica-Bold').text('OFFICIAL BLOOD DONATION MATCH DOCUMENT', 105, 45, { width: 285 });
+      doc.fillColor('#4B5563').fontSize(9).font('Helvetica-Oblique').text('One Need. One Response. One Life.', 105, 77);
 
       // Document Metadata (top-right corner)
       doc.fillColor('#374151').fontSize(8).font('Helvetica-Bold').text('DOCUMENT NO:', 400, 43, { align: 'right', width: 155 });
@@ -233,12 +233,11 @@ const generateMatchPDF = async (match, seeker, donor, facility, detourBank = nul
         doc.fillColor('#4B5563').font('Helvetica').text(facility.emergencyContact || 'N/A', 145, cardsStartY + 62);
       }
 
-      // 6. Verification Status Checklist & Official Authorization Section
+      // 6. Verification Status Checklist (Full-width card, 2-column layout)
       const lowerY = 495;
       
-      // --- Left Column: Verification Checklist ---
       doc.fillColor('#1F2937').fontSize(11).font('Helvetica-Bold').text('VERIFICATION STATUS', 40, lowerY);
-      doc.strokeColor('#D1D5DB').lineWidth(1).moveTo(40, lowerY + 15).lineTo(290, lowerY + 15).stroke();
+      doc.strokeColor('#D1D5DB').lineWidth(1).moveTo(40, lowerY + 15).lineTo(555, lowerY + 15).stroke();
       
       const checklistStartY = lowerY + 25;
       const checkItems = [
@@ -249,52 +248,26 @@ const generateMatchPDF = async (match, seeker, donor, facility, detourBank = nul
         'Active Donation Workflow'
       ];
       
-      let itemY = checklistStartY;
-      checkItems.forEach(item => {
+      doc.fillColor('#F9FAFB').roundedRect(40, checklistStartY, 515, 80, 6).fill();
+      doc.strokeColor('#E5E7EB').lineWidth(1).roundedRect(40, checklistStartY, 515, 80, 6).stroke();
+      
+      checkItems.forEach((item, index) => {
+        const col = index % 2;
+        const row = Math.floor(index / 2);
+        const itemX = col === 0 ? 55 : 305;
+        const currentItemY = checklistStartY + 15 + (row * 20);
+        
         // Draw green checkmark vector
         doc.save();
         doc.strokeColor('#10B981').lineWidth(1.8);
-        doc.moveTo(50, itemY + 5)
-           .lineTo(53, itemY + 8)
-           .lineTo(58, itemY + 2)
+        doc.moveTo(itemX, currentItemY + 5)
+           .lineTo(itemX + 3, currentItemY + 8)
+           .lineTo(itemX + 8, currentItemY + 2)
            .stroke();
         doc.restore();
 
-        doc.fillColor('#374151').fontSize(8.5).font('Helvetica').text(item, 70, itemY);
-        itemY += 22;
+        doc.fillColor('#374151').fontSize(8.5).font('Helvetica').text(item, itemX + 15, currentItemY);
       });
-
-      // --- Right Column: Authorization Section ---
-      doc.fillColor('#1F2937').fontSize(11).font('Helvetica-Bold').text('OFFICIAL AUTHORIZATION', 305, lowerY);
-      doc.strokeColor('#D1D5DB').lineWidth(1).moveTo(305, lowerY + 15).lineTo(555, lowerY + 15).stroke();
-      
-      const authStartY = lowerY + 25;
-      doc.fillColor('#F9FAFB').roundedRect(305, authStartY, 250, 115, 6).fill();
-      doc.strokeColor('#E5E7EB').lineWidth(1).roundedRect(305, authStartY, 250, 115, 6).stroke();
-      
-      doc.fillColor('#1F2937').fontSize(9).font('Helvetica-Bold').text('OneBlood Verification Authority', 320, authStartY + 15);
-      
-      doc.fillColor('#4B5563').fontSize(8).font('Helvetica-Bold').text('Document Status:', 320, authStartY + 30);
-      doc.fillColor('#059669').fontSize(8.5).text('Officially Verified', 400, authStartY + 30);
-      
-      // Seal
-      const sealX = 350;
-      const sealY = authStartY + 75;
-      doc.strokeColor('#D97706').lineWidth(2).circle(sealX, sealY, 20).stroke();
-      doc.fillColor('#FCD34D').circle(sealX, sealY, 17).fill();
-      doc.fillColor('#78350F').fontSize(10).font('Helvetica-Bold').text('OB', sealX - 8, sealY - 4);
-      
-      // Signature Graphic
-      const sigX = 420;
-      const sigY = authStartY + 55;
-      doc.strokeColor('#2563EB').lineWidth(1.5);
-      doc.moveTo(sigX, sigY + 15)
-         .bezierCurveTo(sigX + 10, sigY - 5, sigX + 15, sigY + 25, sigX + 25, sigY + 10)
-         .bezierCurveTo(sigX + 35, sigY, sigX + 40, sigY + 20, sigX + 50, sigY + 12)
-         .bezierCurveTo(sigX + 60, sigY + 5, sigX + 70, sigY + 22, sigX + 85, sigY + 10)
-         .stroke();
-      
-      doc.fillColor('#6B7280').fontSize(7.5).font('Helvetica').text('Authorized Signatory', sigX + 10, sigY + 28);
 
       // 7. Footer Section
       doc.strokeColor('#D1D5DB').lineWidth(1).moveTo(40, 740).lineTo(555, 740).stroke();
