@@ -18,12 +18,17 @@ const DonorDashboard = () => {
       const profRes = await api.get('/donors/profile');
       setProfile(profRes.data.donor);
 
-      // 2. Fetch active matching requests for this blood group
+      // 2. Fetch active requests that were specifically sent/notified to this donor
       const reqsRes = await api.get('/requests');
-      // Filter requests matching this donor's blood group
-      const matching = (reqsRes.data?.requests || []).filter(
-        req => req.bloodGroup === profRes.data?.donor?.bloodGroup && req.status === 'active'
-      );
+      const donorIdStr = profRes.data?.donor?._id?.toString();
+      const matching = (reqsRes.data?.requests || []).filter(req => {
+        if (req.status !== 'active') return false;
+        // Only show requests explicitly sent to this donor via notifiedDonors
+        const isNotified = req.notifiedDonors?.some(
+          (id) => id?.toString() === donorIdStr
+        );
+        return isNotified;
+      });
       setActiveRequests(matching);
 
       // 3. Fetch active match in progress for this donor
@@ -344,16 +349,16 @@ const DonorDashboard = () => {
           </div>
         </div>
 
-        {/* Active Emergency Requests List */}
+        {/* Requests Sent Directly to This Donor */}
         <div className="space-y-4 text-left">
           <h3 className="text-lg font-bold text-white font-display flex items-center space-x-2">
             <HeartPulse className="w-5 h-5 text-oneblood-crimson animate-pulse" />
-            <span>Active emergency requests ({profile.bloodGroup})</span>
+            <span>Requests Sent to You</span>
           </h3>
 
           {activeRequests.length === 0 ? (
             <div className="p-8 text-center bg-slate-900/20 border border-white/5 rounded-2xl text-xs text-slate-500">
-              No active emergency requests for {profile.bloodGroup} in your area right now.
+              No requests have been directed specifically to you right now. When a seeker sends you a direct request or your blood group is matched to a nearby emergency, it will appear here.
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
