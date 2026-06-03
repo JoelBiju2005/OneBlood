@@ -13,7 +13,7 @@ const ActiveDonationsPage = () => {
   const [activeMatches, setActiveMatches] = useState([]);
   const [historyMatches, setHistoryMatches] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showHistory, setShowHistory] = useState(false);
+  const [activeTab, setActiveTab] = useState('active'); // 'active' or 'past'
   const [actionLoading, setActionLoading] = useState(null);
 
   const fetchData = useCallback(async () => {
@@ -359,65 +359,83 @@ const ActiveDonationsPage = () => {
             </div>
           </div>
 
+          {/* Interactive Navigation Tabs */}
           <div className="mt-4 flex flex-wrap gap-3">
-            <div className="px-3 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-xs text-emerald-400 font-bold flex items-center gap-1.5">
+            <button
+              onClick={() => setActiveTab('active')}
+              className={`px-4 py-2 border rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                activeTab === 'active'
+                  ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                  : 'bg-slate-800/40 border-white/5 text-slate-400 hover:text-white'
+              }`}
+            >
               <Activity className="w-3.5 h-3.5" />
               {activeMatches.length} Active
-            </div>
-            <div className="px-3 py-2 bg-slate-800 border border-white/10 rounded-xl text-xs text-slate-400 font-bold flex items-center gap-1.5">
+            </button>
+            <button
+              onClick={() => setActiveTab('past')}
+              className={`px-4 py-2 border rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                activeTab === 'past'
+                  ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400'
+                  : 'bg-slate-800/40 border-white/5 text-slate-400 hover:text-white'
+              }`}
+            >
               <History className="w-3.5 h-3.5" />
               {historyMatches.length} Past
-            </div>
+            </button>
           </div>
         </div>
 
-        {/* Active Matches */}
-        {activeMatches.length > 0 ? (
-          <div className="space-y-4">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-              </span>
-              In-Progress Donations
-            </h3>
+        {/* Tab Contents */}
+        {activeTab === 'active' ? (
+          activeMatches.length > 0 ? (
+            <div className="space-y-4">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                </span>
+                In-Progress Donations
+              </h3>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {activeMatches.map((m) => renderMatchCard(m, false))}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {activeMatches.map((m) => renderMatchCard(m, false))}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="bg-slate-900/40 border border-white/5 rounded-2xl p-12 text-center space-y-3 animate-fadeIn">
+              <div className="w-14 h-14 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center mx-auto">
+                <HeartPulse className="w-6 h-6 text-slate-600" />
+              </div>
+              <h3 className="text-base font-bold text-slate-400">No Active Donations</h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                When you get matched with a donor or seeker, your active donation details and PDF slips will appear here.
+              </p>
+            </div>
+          )
         ) : (
-          <div className="bg-slate-900/40 border border-white/5 rounded-2xl p-12 text-center space-y-3">
-            <div className="w-14 h-14 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center mx-auto">
-              <HeartPulse className="w-6 h-6 text-slate-600" />
-            </div>
-            <h3 className="text-base font-bold text-slate-400">No Active Donations</h3>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              When you get matched with a donor or seeker, your active donation details and PDF slips will appear here.
-            </p>
-          </div>
-        )}
+          historyMatches.length > 0 ? (
+            <div className="space-y-4">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <History className="w-4.5 h-4.5 text-indigo-400" />
+                Historical/Completed Donations
+              </h3>
 
-        {/* History Accordion */}
-        {historyMatches.length > 0 && (
-          <div className="border-t border-white/5 pt-6">
-            <button
-              onClick={() => setShowHistory(!showHistory)}
-              className="w-full flex items-center justify-between py-3 text-slate-400 hover:text-white transition-colors cursor-pointer"
-            >
-              <span className="font-bold text-sm flex items-center gap-2">
-                <History className="w-4 h-4" />
-                Past Donations ({historyMatches.length})
-              </span>
-              {showHistory ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </button>
-
-            {showHistory && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4 animate-fadeIn">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {historyMatches.map((m) => renderMatchCard(m, true))}
               </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="bg-slate-900/40 border border-white/5 rounded-2xl p-12 text-center space-y-3 animate-fadeIn">
+              <div className="w-14 h-14 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center mx-auto">
+                <History className="w-6 h-6 text-slate-600" />
+              </div>
+              <h3 className="text-base font-bold text-slate-400">No Past Donations</h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                Any fully completed or receipt-verified matches from the past will be archived here.
+              </p>
+            </div>
+          )
         )}
       </div>
     </div>
