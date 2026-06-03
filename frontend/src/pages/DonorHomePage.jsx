@@ -30,16 +30,24 @@ const DonorHomePage = () => {
     try {
       // 1. Fetch donor profile
       const profRes = await api.get('/donors/profile');
-      setProfile(profRes.data.donor);
+      const donorProfileData = profRes.data.donor;
+      setProfile(donorProfileData);
 
-      // 2. Fetch active requests matching blood type
+      // 2. Fetch active requests matching blood type and sent to this donor
       const reqsRes = await api.get('/requests');
+      const donorIdStr = donorProfileData?._id?.toString();
       const matching = (reqsRes.data?.requests || []).filter(
         req => {
-          if (req.bloodGroup !== profRes.data?.donor?.bloodGroup || req.status !== 'active') return false;
+          if (req.status !== 'active') return false;
+          // Check if request was notified/sent to this donor
+          const isNotified = req.notifiedDonors?.some(
+            (id) => id?.toString() === donorIdStr
+          );
+          if (!isNotified) return false;
+
           // Filter out if the donor has already responded to this request
           const myResp = req.responses?.find(
-            (r) => r.responderId && r.responderId.toString() === profRes.data?.donor?._id.toString()
+            (r) => r.responderId && r.responderId.toString() === donorIdStr
           );
           return !myResp;
         }
@@ -63,8 +71,11 @@ const DonorHomePage = () => {
     if (!socket || !profile) return;
 
     const handleNewRequest = (data) => {
-      // Check if blood group matches
-      if (data.bloodGroup === profile.bloodGroup) {
+      // Check if donor is in the notified list
+      const isNotified = data.notifiedDonors?.some(
+        id => id?.toString() === profile._id?.toString()
+      );
+      if (isNotified) {
         setActiveRequests((prev) => {
           // Prevent duplicates
           if (prev.some(r => r._id === data._id)) return prev;
@@ -77,7 +88,10 @@ const DonorHomePage = () => {
     socket.on('notification', (payload) => {
       if (payload.data?.request) {
         const req = payload.data.request;
-        if (req.bloodGroup === profile.bloodGroup) {
+        const isNotified = req.notifiedDonors?.some(
+          id => id?.toString() === profile._id?.toString()
+        );
+        if (isNotified) {
           setActiveRequests((prev) => {
             if (prev.some(r => r._id === req._id)) return prev;
             return [req, ...prev];
