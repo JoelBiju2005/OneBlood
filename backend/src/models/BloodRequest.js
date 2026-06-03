@@ -22,7 +22,9 @@ const bloodRequestSchema = new mongoose.Schema({
   phone: { type: String },
   reason: { type: String },
   status: { type: String, default: 'pending' },
-  responses: [responseSchema]
+  responses: [responseSchema],
+  notifiedDonors: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Donor' }],
+  notifiedBanks: [{ type: mongoose.Schema.Types.ObjectId, ref: 'BloodBank' }]
 }, {
   timestamps: true,
   strict: false
