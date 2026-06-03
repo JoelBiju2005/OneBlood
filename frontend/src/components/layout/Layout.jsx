@@ -407,7 +407,7 @@ const Layout = () => {
                           <Bell className="w-4 h-4 text-slate-400" />
                           <span>Notifications</span>
                         </Link>
-                        {(user.role === 'patient' || user.role === 'donor') && (
+                        {(user.role === 'patient' || user.role === 'donor' || user.role === 'hospital' || user.role === 'blood_bank') && (
                           <Link 
                             to="/active-donations"
                             className="flex items-center space-x-2.5 px-3 py-2 text-xs rounded-lg hover:bg-white/5 transition-colors"
@@ -712,7 +712,7 @@ const Layout = () => {
                   <Bell className="w-4 h-4 text-slate-400" />
                   <span>Notifications</span>
                 </Link>
-                {(user?.role === 'patient' || user?.role === 'donor') && (
+                {(user?.role === 'patient' || user?.role === 'donor' || user?.role === 'hospital' || user?.role === 'blood_bank') && (
                   <Link 
                     to="/active-donations"
                     className="flex items-center space-x-2.5 px-3 py-2 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-white/5"

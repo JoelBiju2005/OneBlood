@@ -34,6 +34,7 @@ const SeekerHomePage = () => {
   const [useDetour, setUseDetour] = useState(false);
   const [approving, setApproving] = useState(false);
   const [facilityFilter, setFacilityFilter] = useState('');
+  const [matchSuccess, setMatchSuccess] = useState({ open: false, matchObid: '' });
 
   // Request editing state and handlers
   const [editModal, setEditModal] = useState({ open: false, request: null });
@@ -218,9 +219,10 @@ const SeekerHomePage = () => {
         hospitalId: selectedHospital.id,
         bloodBankId: useDetour ? selectedBloodBank.id : null
       });
-      toast.success(`Match created! ID: ${res.data.match?.matchObid || 'Generated'}`);
+      const createdObid = res.data.match?.matchObid || 'Generated';
       closeFacilityModal();
       fetchUserData();
+      setMatchSuccess({ open: true, matchObid: createdObid });
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to approve donor and create match');
     } finally {
@@ -877,6 +879,49 @@ const SeekerHomePage = () => {
                 className="w-full py-3 bg-[#C0152A] hover:bg-red-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Match Success Modal */}
+      {matchSuccess.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-md" />
+          <div className="relative bg-slate-900 border border-white/10 rounded-3xl max-w-md w-full p-8 text-center space-y-6 shadow-2xl animate-fadeIn">
+            {/* Success Icon */}
+            <div className="mx-auto w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-3xl animate-bounce">
+              🎉
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-xl font-bold text-white">Donation Match Confirmed!</h3>
+              <p className="text-xs text-slate-400">
+                You have approved the donor. A unique Match ID has been generated for your record.
+              </p>
+            </div>
+
+            {/* Match ID Display */}
+            <div className="bg-slate-950/60 border border-white/5 rounded-2xl p-4 space-y-1">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">Matched OBID</span>
+              <span className="text-2xl font-black text-emerald-400 font-mono tracking-wide select-all block">
+                {matchSuccess.matchObid}
+              </span>
+            </div>
+
+            <div className="space-y-3">
+              <Link
+                to="/active-donations"
+                className="w-full py-3 bg-[#C0152A] hover:bg-red-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer text-sm"
+              >
+                Go to Active Donations
+              </Link>
+              <button
+                onClick={() => setMatchSuccess({ open: false, matchObid: '' })}
+                className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl transition-all text-xs cursor-pointer"
+              >
+                Dismiss
               </button>
             </div>
           </div>

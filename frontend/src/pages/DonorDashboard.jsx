@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import api, { ASSETS_URL } from '../utils/api';
 import useAuthStore from '../store/authStore';
 import toast from 'react-hot-toast';
-import { HeartPulse, Award, Calendar, ToggleLeft, ToggleRight, ShieldAlert, Navigation, Phone, CheckCircle } from 'lucide-react';
+import { HeartPulse, Award, Calendar, ToggleLeft, ToggleRight, ShieldAlert, Navigation, Phone, CheckCircle, Activity, FileText, ArrowRight, MapPin } from 'lucide-react';
 
 const DonorDashboard = () => {
   const { user } = useAuthStore();
   const [profile, setProfile] = useState(null);
   const [activeRequests, setActiveRequests] = useState([]);
+  const [activeMatch, setActiveMatch] = useState(null);
   const [loading, setLoading] = useState(true);
   const [unlockedContacts, setUnlockedContacts] = useState({}); // map of request ID to phone details
 
@@ -24,6 +25,14 @@ const DonorDashboard = () => {
         req => req.bloodGroup === profRes.data?.donor?.bloodGroup && req.status === 'active'
       );
       setActiveRequests(matching);
+
+      // 3. Fetch active match in progress for this donor
+      const matchRes = await api.get('/donations/matches/in-progress');
+      if (matchRes.data?.matches?.length > 0) {
+        setActiveMatch(matchRes.data.matches[0]);
+      } else {
+        setActiveMatch(null);
+      }
     } catch (err) {
       toast.error('Failed to load dashboard statistics');
     } finally {
@@ -139,6 +148,92 @@ const DonorDashboard = () => {
             </button>
           </div>
         </div>
+
+        {/* Active Donation Section */}
+        {activeMatch && (
+          <div className="bg-slate-900 border border-emerald-500/20 p-6 rounded-2xl text-left space-y-4 shadow-xl shadow-emerald-950/10">
+            <div className="flex justify-between items-center flex-wrap gap-2">
+              <div className="flex items-center space-x-2 text-emerald-400 font-bold text-xs uppercase tracking-wider">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                </span>
+                <span>Active Donation Match</span>
+              </div>
+              <span className="text-xs font-black text-white px-2.5 py-1 rounded bg-slate-950/60 border border-white/5 font-mono">
+                Match ID: {activeMatch.matchObid}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Seeker Name</span>
+                  <span className="text-sm font-bold text-white block">{activeMatch.seekerId?.name || 'Anonymous Seeker'}</span>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Blood Group & Units</span>
+                  <span className="text-xs font-bold text-slate-300 block">
+                    {activeMatch.bloodGroup} &bull; {activeMatch.units} Unit(s)
+                  </span>
+                </div>
+              </div>
+
+              {/* Donation Route Visualization */}
+              <div className="bg-slate-950/40 border border-white/5 p-4 rounded-xl space-y-3 text-xs">
+                <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest block mb-1">Donation Journey Route</span>
+                <div className="flex items-center justify-between gap-1 text-[11px]">
+                  {/* Step 1: Donor */}
+                  <div className="flex flex-col items-center flex-1 min-w-0">
+                    <span className="w-6 h-6 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-xs shrink-0">👤</span>
+                    <span className="text-slate-300 font-semibold truncate max-w-full mt-1.5">You (Donor)</span>
+                  </div>
+
+                  <ArrowRight className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+
+                  {/* Step 2: Detour Blood Bank (Optional) */}
+                  {activeMatch.bloodBankId && (
+                    <>
+                      <div className="flex flex-col items-center flex-1 min-w-0">
+                        <span className="w-6 h-6 rounded-full bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-xs shrink-0">🏥</span>
+                        <span className="text-purple-400 font-semibold truncate max-w-full mt-1.5" title={activeMatch.bloodBankId.name}>
+                          {activeMatch.bloodBankId.name.replace(' Hubli', '')}
+                        </span>
+                      </div>
+                      <ArrowRight className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                    </>
+                  )}
+
+                  {/* Step 3: Destination Hospital */}
+                  <div className="flex flex-col items-center flex-1 min-w-0">
+                    <span className="w-6 h-6 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-xs shrink-0">🏥</span>
+                    <span className="text-blue-400 font-semibold truncate max-w-full mt-1.5" title={activeMatch.hospitalId?.hospitalName}>
+                      {activeMatch.hospitalId?.hospitalName.replace(' Hubli', '')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2 flex gap-2">
+              <a
+                href={activeMatch.pdfPath ? `${ASSETS_URL}${activeMatch.pdfPath}` : '#'}
+                target="_blank"
+                rel="noreferrer"
+                className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold text-center transition-all flex items-center justify-center space-x-1.5"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>Download Match Slip PDF</span>
+              </a>
+              <Link
+                to="/active-donations"
+                className="py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all flex items-center justify-center"
+              >
+                Go to Active Donations Page
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* Info Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

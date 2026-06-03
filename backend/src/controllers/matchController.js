@@ -38,12 +38,21 @@ const approveDonorAndSelectFacility = async (req, res, next) => {
       return res.status(403).json({ message: 'Unauthorized access to approve donor' });
     }
 
-    const donorUser = await User.findById(donorId);
+    let donorProfile = await Donor.findById(donorId);
+    let donorUser;
+    if (donorProfile) {
+      donorUser = await User.findById(donorProfile.userId);
+    } else {
+      // Fallback: check if donorId is the User ID directly
+      donorUser = await User.findById(donorId);
+      if (donorUser) {
+        donorProfile = await Donor.findOne({ userId: donorId });
+      }
+    }
+
     if (!donorUser) {
       return res.status(404).json({ message: 'Donor user not found' });
     }
-
-    const donorProfile = await Donor.findOne({ userId: donorId });
     if (!donorProfile) {
       return res.status(404).json({ message: 'Donor profile not found' });
     }
