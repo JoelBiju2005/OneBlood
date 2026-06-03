@@ -85,14 +85,23 @@ const DonorFindRequestsPage = () => {
   // Filter requests matching compatible blood group or general active ones, filtering out declined ones and checking notified list
   const activeRequests = requests.filter(r => {
     if (r.status !== 'active' && r.status !== 'accepted') return false;
-    // Check if the current donor's ID is in the notifiedDonors list
+    
+    // 1. Must NOT be a targeted/exclusive request
+    if (r.isTargeted === true) return false;
+
+    // 2. The required blood group must match the donor's blood group EXACTLY
+    if (!profile || r.bloodGroup !== profile.bloodGroup) return false;
+
+    // 3. Current donor's ID must be in the notifiedDonors list
     const isNotified = r.notifiedDonors?.some(
       (id) => profile && id?.toString() === profile._id?.toString()
     );
     if (!isNotified) return false;
 
+    // 4. Must not have responded/approved/declined this request yet
     const myResp = getMyResponse(r);
-    if (myResp && myResp.status === 'declined') return false;
+    if (myResp) return false;
+
     return true;
   });
 
@@ -109,7 +118,7 @@ const DonorFindRequestsPage = () => {
             <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
           </span>
           <h2 className="text-2xl font-extrabold text-white font-display tracking-wide">
-            Requests you received
+            Need of ({profile?.bloodGroup || 'Your blood group'}) nearby
           </h2>
         </div>
 
@@ -118,9 +127,9 @@ const DonorFindRequestsPage = () => {
             <div className="p-4 bg-slate-800/40 rounded-full text-slate-500">
               <HeartPulse className="w-10 h-10" />
             </div>
-            <p className="text-base font-semibold text-slate-400">No requests received yet.</p>
+            <p className="text-base font-semibold text-slate-400">No nearby blood requests found.</p>
             <p className="text-xs text-slate-500 max-w-sm">
-              Direct donor requests will appear here when patients or nearby seekers search for your blood type.
+              Emergency requests broadcasted nearby matching your blood group will appear here.
             </p>
           </div>
         ) : (

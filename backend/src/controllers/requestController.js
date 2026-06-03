@@ -139,7 +139,8 @@ const createRequest = async (req, res, next) => {
       doctorLetterVerification,
       lat,
       lng,
-      searchRadius
+      searchRadius,
+      targetDonorId
     } = req.body;
 
     // Validate required fields early with clear messages
@@ -184,7 +185,9 @@ const createRequest = async (req, res, next) => {
           coordinates: [parsedLng, parsedLat],
         },
         searchRadius: radius,
-        status: 'active'
+        status: 'active',
+        isTargeted: !!targetDonorId,
+        targetDonorId: targetDonorId || null
       });
     } catch (createErr) {
       console.error('[createRequest] BloodRequest.create failed:', createErr.message, createErr);
@@ -195,54 +198,64 @@ const createRequest = async (req, res, next) => {
     // REAL-TIME NOTIFICATION DISPATCH (Donors & Banks)
     // ----------------------------------------------------
     
-    // 1. Get compatible donor blood groups
-    const compatibleGroups = getCompatibleDonors(bloodGroup, bloodComponent);
-
-    // 2 & 3. Query donors and banks — wrapped in try-catch so geo failures don't block request creation
     let nearbyDonors = [];
     let nearbyBanks = [];
 
-    try {
-      const donorQuery = {
-        isAvailable: true,
-        bloodGroup: { $in: compatibleGroups },
-        location: {
-          $near: {
-            $geometry: {
-              type: 'Point',
-              coordinates: [parseFloat(lng), parseFloat(lat)],
-            },
-            $maxDistance: radius * 1000
-          }
+    if (targetDonorId) {
+      try {
+        const targetedDonorDoc = await Donor.findById(targetDonorId);
+        if (targetedDonorDoc) {
+          nearbyDonors = [targetedDonorDoc];
         }
-      };
+      } catch (err) {
+        console.warn('[createRequest] Find targeted donor failed:', err.message);
+      }
+    } else {
+      // 1. Get compatible donor blood groups
+      const compatibleGroups = getCompatibleDonors(bloodGroup, bloodComponent);
 
-      if (urgencyLevel === 'critical') {
-        delete donorQuery.isAvailable;
+      try {
+        const donorQuery = {
+          isAvailable: true,
+          bloodGroup: { $in: compatibleGroups },
+          location: {
+            $near: {
+              $geometry: {
+                type: 'Point',
+                coordinates: [parsedLng, parsedLat],
+              },
+              $maxDistance: radius * 1000
+            }
+          }
+        };
+
+        if (urgencyLevel === 'critical') {
+          delete donorQuery.isAvailable;
+        }
+
+        nearbyDonors = await Donor.find(donorQuery);
+      } catch (geoErr) {
+        console.warn('[createRequest] Donor geo-query failed (non-fatal):', geoErr.message);
+        nearbyDonors = [];
       }
 
-      nearbyDonors = await Donor.find(donorQuery);
-    } catch (geoErr) {
-      console.warn('[createRequest] Donor geo-query failed (non-fatal):', geoErr.message);
-      nearbyDonors = [];
-    }
-
-    try {
-      nearbyBanks = await BloodBank.find({
-        isActive: true,
-        location: {
-          $near: {
-            $geometry: {
-              type: 'Point',
-              coordinates: [parseFloat(lng), parseFloat(lat)],
-            },
-            $maxDistance: radius * 1000
+      try {
+        nearbyBanks = await BloodBank.find({
+          isActive: true,
+          location: {
+            $near: {
+              $geometry: {
+                type: 'Point',
+                coordinates: [parsedLng, parsedLat],
+              },
+              $maxDistance: radius * 1000
+            }
           }
-        }
-      });
-    } catch (geoErr) {
-      console.warn('[createRequest] Bank geo-query failed (non-fatal):', geoErr.message);
-      nearbyBanks = [];
+        });
+      } catch (geoErr) {
+        console.warn('[createRequest] Bank geo-query failed (non-fatal):', geoErr.message);
+        nearbyBanks = [];
+      }
     }
 
     const donorIds = nearbyDonors.map(d => d._id);
@@ -527,8 +540,10 @@ const targetDonor = async (req, res, next) => {
     if (!alreadyNotified) {
       request.notifiedDonors = [...notifiedList, donor._id];
       request.markModified('notifiedDonors');
-      await request.save();
     }
+    request.isTargeted = true;
+    request.targetDonorId = donor._id;
+    await request.save();
 
     const donorUser = await User.findById(donor.userId);
     if (donorUser) {

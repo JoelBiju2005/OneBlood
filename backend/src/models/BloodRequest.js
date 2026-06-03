@@ -24,7 +24,9 @@ const bloodRequestSchema = new mongoose.Schema({
   status: { type: String, default: 'pending' },
   responses: [responseSchema],
   notifiedDonors: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Donor' }],
-  notifiedBanks: [{ type: mongoose.Schema.Types.ObjectId, ref: 'BloodBank' }]
+  notifiedBanks: [{ type: mongoose.Schema.Types.ObjectId, ref: 'BloodBank' }],
+  isTargeted: { type: Boolean, default: false },
+  targetDonorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Donor' }
 }, {
   timestamps: true,
   strict: false

@@ -600,7 +600,8 @@ const SearchPage = () => {
         requiredBy: new Date(Date.now() + 24*3600*1000).toISOString(),
         doctorLetterUrl: finalLetterUrl,
         lat: userLocation[0].toString(),
-        lng: userLocation[1].toString()
+        lng: userLocation[1].toString(),
+        targetDonorId: selectedDonor ? selectedDonor._id : null
       });
 
       const requestId = requestRes.data.requestId;

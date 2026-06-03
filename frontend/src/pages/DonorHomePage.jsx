@@ -38,18 +38,28 @@ const DonorHomePage = () => {
       const donorIdStr = donorProfileData?._id?.toString();
       const matching = (reqsRes.data?.requests || []).filter(
         req => {
-          if (req.status !== 'active') return false;
-          // Check if request was notified/sent to this donor
-          const isNotified = req.notifiedDonors?.some(
-            (id) => id?.toString() === donorIdStr
-          );
-          if (!isNotified) return false;
+          if (req.status !== 'active' && req.status !== 'accepted') return false;
 
-          // Filter out if the donor has already responded to this request
           const myResp = req.responses?.find(
             (r) => r.responderId && r.responderId.toString() === donorIdStr
           );
-          return !myResp;
+
+          // Scenario A: Targeted exclusively to this donor
+          const isTargetedToMe = req.isTargeted === true && req.targetDonorId?.toString() === donorIdStr;
+          
+          // Scenario B: Broadcast request that this donor approved (any state other than declined)
+          const isApprovedByMe = req.isTargeted !== true && myResp && myResp.status !== 'declined';
+
+          if (isTargetedToMe) {
+            if (myResp && myResp.status === 'declined') return false;
+            return true;
+          }
+
+          if (isApprovedByMe) {
+            return true;
+          }
+
+          return false;
         }
       );
       setActiveRequests(matching);
@@ -71,11 +81,9 @@ const DonorHomePage = () => {
     if (!socket || !profile) return;
 
     const handleNewRequest = (data) => {
-      // Check if donor is in the notified list
-      const isNotified = data.notifiedDonors?.some(
-        id => id?.toString() === profile._id?.toString()
-      );
-      if (isNotified) {
+      // Check if targeted to this donor
+      const isTargetedToMe = data.isTargeted === true && data.targetDonorId?.toString() === profile._id?.toString();
+      if (isTargetedToMe) {
         setActiveRequests((prev) => {
           // Prevent duplicates
           if (prev.some(r => r._id === data._id)) return prev;
@@ -88,10 +96,8 @@ const DonorHomePage = () => {
     socket.on('notification', (payload) => {
       if (payload.data?.request) {
         const req = payload.data.request;
-        const isNotified = req.notifiedDonors?.some(
-          id => id?.toString() === profile._id?.toString()
-        );
-        if (isNotified) {
+        const isTargetedToMe = req.isTargeted === true && req.targetDonorId?.toString() === profile._id?.toString();
+        if (isTargetedToMe) {
           setActiveRequests((prev) => {
             if (prev.some(r => r._id === req._id)) return prev;
             return [req, ...prev];
