@@ -32,15 +32,4 @@
   <!-- "1" top angled stroke -->
   <path d="M78 115 L90 100" stroke="white" stroke-width="8" stroke-linecap="round" />
 
-  <!-- Flame -->
-  <path
-    d="M100 99 C96 90 88 82 92 72 C94 66 98 62 100 56 C102 62 106 66 108 72 C112 82 104 90 100 99 Z"
-    fill="url(#flameGrad)"
-  />
-  <!-- Inner flame highlight -->
-  <path
-    d="M100 94 C98 88 94 83 96 76 C97 72 99 70 100 66 C101 70 103 72 104 76 C106 83 102 88 100 94 Z"
-    fill="white"
-    opacity="0.55"
-  />
 </svg>

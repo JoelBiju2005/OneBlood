@@ -132,7 +132,6 @@ const createRequest = async (req, res, next) => {
       doctorContact,
       bloodGroup,
       bloodComponent,
-      unitsRequired,
       urgencyLevel,
       requiredBy,
       doctorLetterUrl,
@@ -147,9 +146,12 @@ const createRequest = async (req, res, next) => {
     if (!patientName) return res.status(400).json({ message: 'Patient name is required.' });
     if (!bloodGroup) return res.status(400).json({ message: 'Blood group is required.' });
     if (!hospitalName) return res.status(400).json({ message: 'Hospital name is required.' });
-    if (!unitsRequired) return res.status(400).json({ message: 'Units required is missing.' });
+    if (!req.body.unitsRequired && !req.body.unitsNeeded) {
+      return res.status(400).json({ message: 'Units required is missing.' });
+    }
     if (!lat || !lng) return res.status(400).json({ message: 'Location coordinates are required.' });
 
+    const unitsRequired = req.body.unitsRequired || req.body.unitsNeeded || 1;
     const parsedLat = parseFloat(lat);
     const parsedLng = parseFloat(lng);
 
@@ -160,7 +162,9 @@ const createRequest = async (req, res, next) => {
     const requesterId = req.user._id;
 
     // Create the blood request
-    const radius = parseFloat(searchRadius) || (urgencyLevel === 'critical' ? 25 : 10);
+    const resolvedUrgency = urgencyLevel || 'urgent';
+    const resolvedComponent = bloodComponent || 'whole_blood';
+    const radius = parseFloat(searchRadius) || (resolvedUrgency === 'critical' ? 25 : 10);
 
     let newRequest;
     try {
@@ -174,9 +178,9 @@ const createRequest = async (req, res, next) => {
         doctorName: doctorName || '',
         doctorContact: doctorContact || '',
         bloodGroup,
-        bloodComponent: bloodComponent || 'whole_blood',
+        bloodComponent: resolvedComponent,
         unitsRequired: parseInt(unitsRequired, 10) || 1,
-        urgencyLevel: urgencyLevel || 'urgent',
+        urgencyLevel: resolvedUrgency,
         requiredBy: requiredBy ? new Date(requiredBy) : new Date(Date.now() + 24 * 60 * 60 * 1000),
         doctorLetterUrl: doctorLetterUrl || '',
         doctorLetterVerification: doctorLetterVerification || { isVerified: false },
@@ -200,6 +204,7 @@ const createRequest = async (req, res, next) => {
     
     let nearbyDonors = [];
     let nearbyBanks = [];
+    const compatibleGroups = getCompatibleDonors(bloodGroup, resolvedComponent);
 
     if (targetDonorId) {
       try {
@@ -211,9 +216,6 @@ const createRequest = async (req, res, next) => {
         console.warn('[createRequest] Find targeted donor failed:', err.message);
       }
     } else {
-      // 1. Get compatible donor blood groups
-      const compatibleGroups = getCompatibleDonors(bloodGroup, bloodComponent);
-
       try {
         const donorQuery = {
           isAvailable: true,
@@ -229,7 +231,7 @@ const createRequest = async (req, res, next) => {
           }
         };
 
-        if (urgencyLevel === 'critical') {
+        if (resolvedUrgency === 'critical') {
           delete donorQuery.isAvailable;
         }
 
@@ -272,51 +274,68 @@ const createRequest = async (req, res, next) => {
     // 4. Dispatch Notifications in background
     // To Donors:
     nearbyDonors.forEach(async (donor) => {
-      // Find user to get email
-      const user = await User.findById(donor.userId);
-      if (user) {
-        await createNotification({
-          recipientId: user._id,
-          type: 'blood_request',
-          title: `🚨 ${urgencyLevel.toUpperCase()} Blood Request Needed`,
-          message: `${patientName} requires ${unitsRequired} unit(s) of ${bloodGroup} (${bloodComponent}) at ${hospitalName}.`,
-          priority: urgencyLevel === 'critical' ? 'high' : 'normal',
-          email: user.email,
-          recipientName: user.name,
-          data: {
-            requestId: newRequest._id,
-            request: newRequest
-          }
-        });
+      try {
+        // Find user to get email
+        const user = await User.findById(donor.userId);
+        if (user) {
+          await createNotification({
+            recipientId: user._id,
+            type: 'blood_request',
+            title: `🚨 ${resolvedUrgency.toUpperCase()} Blood Request Needed`,
+            message: `${patientName} requires ${unitsRequired} unit(s) of ${bloodGroup} (${resolvedComponent}) at ${hospitalName}.`,
+            priority: resolvedUrgency === 'critical' ? 'high' : 'normal',
+            email: user.email,
+            recipientName: user.name,
+            data: {
+              requestId: newRequest._id,
+              request: newRequest
+            }
+          });
+        }
+      } catch (err) {
+        console.warn('[createRequest] Send notification to donor failed:', err.message);
       }
     });
 
     // To Blood Banks:
     nearbyBanks.forEach(async (bank) => {
-      const admin = await User.findById(bank.adminUserId);
-      if (admin) {
-        await createNotification({
-          recipientId: admin._id,
-          type: 'blood_request',
-          title: `🏢 Incoming Blood Request: ${bloodGroup}`,
-          message: `Request for ${unitsRequired} units of ${bloodGroup} at ${hospitalName} is nearby.`,
-          priority: 'normal',
-          email: admin.email,
-          recipientName: admin.name,
-          data: {
-            requestId: newRequest._id,
-            request: newRequest
-          }
-        });
+      try {
+        const admin = await User.findById(bank.adminUserId);
+        if (admin) {
+          await createNotification({
+            recipientId: admin._id,
+            type: 'blood_request',
+            title: `🏢 Incoming Blood Request: ${bloodGroup}`,
+            message: `Request for ${unitsRequired} units of ${bloodGroup} at ${hospitalName} is nearby.`,
+            priority: 'normal',
+            email: admin.email,
+            recipientName: admin.name,
+            data: {
+              requestId: newRequest._id,
+              request: newRequest
+            }
+          });
+        }
+      } catch (err) {
+        console.warn('[createRequest] Send notification to bank failed:', err.message);
       }
     });
 
     // Socket broadcast event to active rooms
-    if (newRequest.hospitalAddress) {
-      compatibleGroups.forEach((group) => {
-        const cityRoom = `donor:${group}:${newRequest.hospitalAddress.split(',').pop().trim().toLowerCase()}`;
-        socketService.broadcastToRoom(cityRoom, 'new_blood_request', newRequest);
-      });
+    try {
+      const address = newRequest.hospitalAddress || hospitalAddress || hospitalName || '';
+      if (address && compatibleGroups) {
+        compatibleGroups.forEach((group) => {
+          const parts = address.split(',');
+          const cityPart = parts.length > 0 ? parts[parts.length - 1].trim().toLowerCase() : '';
+          if (cityPart) {
+            const cityRoom = `donor:${group}:${cityPart}`;
+            socketService.broadcastToRoom(cityRoom, 'new_blood_request', newRequest);
+          }
+        });
+      }
+    } catch (sockErr) {
+      console.warn('[createRequest] Socket room broadcast failed (non-fatal):', sockErr.message);
     }
 
     res.status(201).json({
