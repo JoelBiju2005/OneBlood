@@ -611,8 +611,8 @@ const SeekerHomePage = () => {
               {/* Detour Switch */}
               <div className="mt-4 flex items-center justify-between bg-slate-950/60 border border-white/5 rounded-2xl p-4">
                 <div className="text-left">
-                  <span className="text-xs font-bold text-white block">Add detour to Blood Bank first?</span>
-                  <span className="text-[10px] text-slate-500 block">Collect or transfuse blood at bank before going to hospital</span>
+                  <span className="text-xs font-bold text-white block">Add Transit Blood Bank step?</span>
+                  <span className="text-[10px] text-slate-500 block">Collect or transfuse blood at blood bank first before going to hospital</span>
                 </div>
                 <button
                   type="button"
@@ -644,11 +644,11 @@ const SeekerHomePage = () => {
             {/* Facility Lists Container */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               
-              {/* Optional Blood Bank Detour Section */}
+              {/* Optional Transit Blood Bank Section */}
               {useDetour && (
                 <div className="space-y-3">
                   <h4 className="text-xs font-black uppercase text-purple-400 tracking-wider flex items-center gap-1">
-                    <span>🏥</span> 1. Select Detour Blood Bank (Optional)
+                    <span>🏥</span> 1. Select Transit Blood Bank (Optional)
                   </h4>
                   <div className="space-y-2">
                     {facilitiesLoading ? (
@@ -757,7 +757,7 @@ const SeekerHomePage = () => {
                 )}
                 {useDetour && selectedBloodBank && (
                   <p>
-                    Detour: <span className="text-purple-400 font-semibold">{selectedBloodBank.name}</span>
+                    Transit Bank: <span className="text-purple-400 font-semibold">{selectedBloodBank.name}</span>
                   </p>
                 )}
               </div>

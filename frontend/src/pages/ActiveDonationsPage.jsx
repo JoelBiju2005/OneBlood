@@ -69,7 +69,7 @@ const ActiveDonationsPage = () => {
   const renderMatchCard = (match, isHistorical = false) => {
     const hospitalName = match.hospitalId?.hospitalName || 'N/A';
     const bloodBankName = match.bloodBankId?.name;
-    const hasDetour = match.destinationType === 'BloodBankAndHospital' && bloodBankName;
+    const hasTransitBank = match.bloodBankId && match.destinationType === 'BloodBankAndHospital';
 
     const statusConfig = {
       in_progress: { bg: 'bg-amber-500/10', border: 'border-amber-500/20', text: 'text-amber-400', label: 'In Progress', icon: <Clock className="w-3 h-3" /> },
@@ -77,6 +77,46 @@ const ActiveDonationsPage = () => {
       cancelled: { bg: 'bg-red-500/10', border: 'border-red-500/20', text: 'text-red-400', label: 'Cancelled', icon: <XCircle className="w-3 h-3" /> },
     };
     const status = statusConfig[match.status] || statusConfig.in_progress;
+
+    // Calculate progress percentage and active step label
+    let progressPercent = 0;
+    let progressLabel = '';
+    if (match.status === 'completed') {
+      progressPercent = 100;
+      progressLabel = 'Completed — Donation Received at Hospital';
+    } else if (match.status === 'cancelled') {
+      progressPercent = 0;
+      progressLabel = 'Cancelled';
+    } else {
+      if (hasTransitBank) {
+        if (match.stage === 'at_blood_bank') {
+          progressPercent = 25;
+          progressLabel = 'Step 1 of 3: At Transit Blood Bank';
+        } else if (match.stage === 'at_hospital') {
+          progressPercent = 65;
+          progressLabel = 'Step 2 of 3: Verified at Blood Bank ➡️ En-Route to Hospital';
+        }
+      } else {
+        progressPercent = 50;
+        progressLabel = 'Step 1 of 2: En-Route to Hospital';
+      }
+    }
+
+    // Role-based action check
+    let showCompleteAction = false;
+    let completeBtnLabel = 'Complete';
+    if (match.status === 'in_progress') {
+      if (user?.role === 'admin') {
+        showCompleteAction = true;
+        completeBtnLabel = match.stage === 'at_blood_bank' ? 'Verify Blood Bank Stage' : 'Verify Donation Received';
+      } else if (user?.role === 'blood_bank' && match.stage === 'at_blood_bank') {
+        showCompleteAction = true;
+        completeBtnLabel = 'Confirm Blood Collection';
+      } else if (user?.role === 'hospital' && match.stage === 'at_hospital') {
+        showCompleteAction = true;
+        completeBtnLabel = 'Confirm Donation Received';
+      }
+    }
 
     return (
       <div
@@ -110,6 +150,25 @@ const ActiveDonationsPage = () => {
             {status.label}
           </span>
         </div>
+
+        {/* Progress Bar Component */}
+        {match.status !== 'cancelled' && (
+          <div className="space-y-2 bg-slate-950/40 border border-white/5 rounded-xl p-4 text-left">
+            <div className="flex justify-between items-center text-[10px] text-slate-400">
+              <span className="font-bold text-slate-300">Donation Journey Progress</span>
+              <span className="font-mono text-emerald-400 font-bold">{progressPercent}%</span>
+            </div>
+            <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+              <div 
+                className="bg-gradient-to-r from-emerald-500 to-teal-400 h-2 rounded-full transition-all duration-500" 
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+            <span className="text-[9px] font-semibold text-slate-400 block pt-1">
+              📍 Current Stage: <span className="text-white">{progressLabel}</span>
+            </span>
+          </div>
+        )}
 
         {/* People Details */}
         <div className="space-y-3">
@@ -175,12 +234,14 @@ const ActiveDonationsPage = () => {
           </span>
 
           <div className="flex items-center gap-2 flex-wrap">
-            {hasDetour && (
+            {hasTransitBank && (
               <>
-                <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl px-3 py-2 flex items-center gap-2">
-                  <Landmark className="w-3.5 h-3.5 text-purple-400" />
+                <div className={`border rounded-xl px-3 py-2 flex items-center gap-2 transition-all ${match.bloodBankStatus === 'completed' ? 'bg-emerald-500/5 border-emerald-500/20 opacity-80' : 'bg-purple-500/10 border-purple-500/20'}`}>
+                  <Landmark className={`w-3.5 h-3.5 ${match.bloodBankStatus === 'completed' ? 'text-emerald-400' : 'text-purple-400'}`} />
                   <div>
-                    <span className="text-[9px] text-purple-400 font-bold uppercase block">Detour — Blood Bank</span>
+                    <span className={`text-[9px] font-bold uppercase block ${match.bloodBankStatus === 'completed' ? 'text-emerald-400' : 'text-purple-400'}`}>
+                      {match.bloodBankStatus === 'completed' ? '✓ Transit Bank Complete' : 'Transit Blood Bank'}
+                    </span>
                     <span className="text-xs text-white font-semibold">{bloodBankName}</span>
                   </div>
                 </div>
@@ -188,10 +249,12 @@ const ActiveDonationsPage = () => {
               </>
             )}
 
-            <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl px-3 py-2 flex items-center gap-2 flex-1 min-w-0">
-              <Building2 className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+            <div className={`border rounded-xl px-3 py-2 flex items-center gap-2 flex-1 min-w-0 transition-all ${match.hospitalStatus === 'completed' ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-blue-500/10 border-blue-500/20'}`}>
+              <Building2 className={`w-3.5 h-3.5 shrink-0 ${match.hospitalStatus === 'completed' ? 'text-emerald-400' : 'text-blue-400'}`} />
               <div className="min-w-0">
-                <span className="text-[9px] text-blue-400 font-bold uppercase block">Final — Hospital</span>
+                <span className={`text-[9px] font-bold uppercase block ${match.hospitalStatus === 'completed' ? 'text-emerald-400' : 'text-blue-400'}`}>
+                  {match.hospitalStatus === 'completed' ? '✓ Destination Complete' : 'Destination Hospital'}
+                </span>
                 <span className="text-xs text-white font-semibold truncate block">{hospitalName}</span>
               </div>
             </div>
@@ -235,7 +298,7 @@ const ActiveDonationsPage = () => {
           )}
 
           {/* Management buttons for facility/admin on active matches */}
-          {canManage && match.status === 'in_progress' && (
+          {showCompleteAction && (
             <>
               <button
                 onClick={() => handleComplete(match._id)}
@@ -243,27 +306,20 @@ const ActiveDonationsPage = () => {
                 className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 {actionLoading === match._id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
-                Complete
-              </button>
-              <button
-                onClick={() => handleCancel(match._id)}
-                disabled={actionLoading === match._id}
-                className="py-2.5 px-4 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-red-400 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <XCircle className="w-3.5 h-3.5" />
+                {completeBtnLabel}
               </button>
             </>
           )}
 
-          {/* Cancel button for seekers/donors on active matches */}
-          {!canManage && match.status === 'in_progress' && (
+          {/* Cancel button for seekers/donors/facilities on active matches */}
+          {match.status === 'in_progress' && (
             <button
               onClick={() => handleCancel(match._id)}
               disabled={actionLoading === match._id}
-              className="py-2.5 px-4 bg-red-950/30 hover:bg-red-900/30 border border-red-500/10 text-red-400 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              className="py-2.5 px-4 bg-red-950/30 hover:bg-red-900/30 border border-red-500/10 text-red-400 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer text-center"
             >
               {actionLoading === match._id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <XCircle className="w-3.5 h-3.5" />}
-              Cancel Match
+              {canManage ? 'Cancel' : 'Cancel Match'}
             </button>
           )}
         </div>

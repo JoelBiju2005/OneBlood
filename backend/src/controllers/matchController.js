@@ -103,7 +103,10 @@ const approveDonorAndSelectFacility = async (req, res, next) => {
       requestType: isNoticeBoard ? 'NoticeBoard' : 'BloodRequest',
       bloodGroup: request.bloodGroup,
       units: (isNoticeBoard ? request.unitsNeeded : request.unitsRequired) || 1,
-      status: 'in_progress'
+      status: 'in_progress',
+      stage: bloodBankId ? 'at_blood_bank' : 'at_hospital',
+      bloodBankStatus: bloodBankId ? 'pending' : 'completed',
+      hospitalStatus: 'pending'
     });
 
     // Update Request status to approved/accepted
@@ -128,7 +131,7 @@ const approveDonorAndSelectFacility = async (req, res, next) => {
     const seekerUser = await User.findById(requesterId);
     let pdfPath = '';
     try {
-      pdfPath = await generateMatchPDF(match, seekerUser, donorUser, facility, detourBank);
+      pdfPath = await generateMatchPDF(match, seekerUser, donorUser, facility, detourBank, donorProfile);
       match.pdfPath = `/uploads/pdfs/match_${matchObid}.pdf`;
       await match.save();
     } catch (pdfErr) {
@@ -221,62 +224,124 @@ const completeDonation = async (req, res, next) => {
 
     // Verify authorized user (Hospital or BloodBank or Admin)
     let isAuthorized = req.user.role === 'admin';
+    let isBloodBankUser = false;
+    let isHospitalUser = false;
+
     if (!isAuthorized) {
-      if (match.hospitalId) {
-        const hosp = await Hospital.findById(match.hospitalId);
-        if (hosp && hosp.userId.toString() === req.user._id.toString()) isAuthorized = true;
-      }
-      if (!isAuthorized && match.bloodBankId) {
+      if (match.bloodBankId) {
         const bb = await BloodBank.findById(match.bloodBankId);
-        if (bb && bb.adminUserId.toString() === req.user._id.toString()) isAuthorized = true;
+        if (bb && bb.adminUserId.toString() === req.user._id.toString()) {
+          isAuthorized = true;
+          isBloodBankUser = true;
+        }
+      }
+      if (!isAuthorized && match.hospitalId) {
+        const hosp = await Hospital.findById(match.hospitalId);
+        if (hosp && hosp.userId.toString() === req.user._id.toString()) {
+          isAuthorized = true;
+          isHospitalUser = true;
+        }
+      }
+    } else {
+      // If admin, check stage to decide behavior
+      if (match.stage === 'at_blood_bank') {
+        isBloodBankUser = true;
+      } else {
+        isHospitalUser = true;
       }
     }
 
     if (!isAuthorized) {
-      return res.status(403).json({ message: 'Unauthorized to mark donation as completed' });
+      return res.status(403).json({ message: 'Unauthorized to mark donation progress' });
     }
 
-    match.status = 'completed';
-    match.completionEvidence = completionEvidence || '';
-    match.completedAt = new Date();
-    await match.save();
+    // Phase 1: Transit Blood Bank Verification
+    if (isBloodBankUser && match.stage === 'at_blood_bank') {
+      match.bloodBankStatus = 'completed';
+      match.bloodBankCompletedAt = new Date();
+      match.stage = 'at_hospital';
+      await match.save();
 
-    // Update Donor Profile totalDonations and lastDonationDate
-    const donorProfile = await Donor.findOne({ userId: match.donorId });
-    if (donorProfile) {
-      donorProfile.lastDonated = new Date();
-      donorProfile.totalDonations += 1;
-      await donorProfile.save();
+      // Notify Seeker, Donor, and Hospital of transit completion
+      await createNotification({
+        recipientId: match.seekerId,
+        type: 'donor_response',
+        title: '🏥 Transit Blood Bank Verified',
+        message: `Transit Blood Bank step completed for Match ${match.matchObid}. Donor is now proceeding to the final destination Hospital.`
+      });
+
+      await createNotification({
+        recipientId: match.donorId,
+        type: 'donor_response',
+        title: '🏥 Transit Step Completed',
+        message: `Your transit collection at the Blood Bank has been verified. Please proceed to the final destination Hospital to complete your donation.`
+      });
+
+      const hospUserObj = await Hospital.findById(match.hospitalId).populate('userId');
+      if (hospUserObj && hospUserObj.userId?._id) {
+        await createNotification({
+          recipientId: hospUserObj.userId._id,
+          type: 'system',
+          title: '🏥 Transit Complete - Seeker/Donor En-Route',
+          message: `Match ${match.matchObid} Transit Blood Bank verification complete. Donor is now en-route to your hospital.`
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'Transit Blood Bank step completed successfully. Donor is en-route to the hospital.',
+        match
+      });
     }
 
-    // Update Request status
-    if (match.requestType === 'NoticeBoard') {
-      const NoticeBoard = require('../models/NoticeBoard');
-      await NoticeBoard.findByIdAndUpdate(match.requestId, { status: 'fulfilled' });
-    } else {
-      await BloodRequest.findByIdAndUpdate(match.requestId, { status: 'fulfilled' });
+    // Phase 2: Hospital Final Verification
+    if (isHospitalUser && match.stage === 'at_hospital') {
+      match.hospitalStatus = 'completed';
+      match.stage = 'completed';
+      match.status = 'completed';
+      match.completionEvidence = completionEvidence || '';
+      match.completedAt = new Date();
+      await match.save();
+
+      // Update Donor Profile totalDonations and lastDonationDate
+      const donorProfile = await Donor.findOne({ userId: match.donorId });
+      if (donorProfile) {
+        donorProfile.lastDonated = new Date();
+        donorProfile.totalDonations += 1;
+        await donorProfile.save();
+      }
+
+      // Update Request status
+      if (match.requestType === 'NoticeBoard') {
+        const NoticeBoard = require('../models/NoticeBoard');
+        await NoticeBoard.findByIdAndUpdate(match.requestId, { status: 'fulfilled' });
+      } else {
+        await BloodRequest.findByIdAndUpdate(match.requestId, { status: 'fulfilled' });
+      }
+
+      // Send final completion notifications to Seeker & Donor
+      await createNotification({
+        recipientId: match.seekerId,
+        type: 'donor_response',
+        title: '✅ Donation Completed',
+        message: `Donation Match ${match.matchObid} has been marked as completed by the hospital. Thank you for using OneBlood!`
+      });
+
+      await createNotification({
+        recipientId: match.donorId,
+        type: 'donor_response',
+        title: '✅ Donation Completed',
+        message: `Donation Match ${match.matchObid} completed. Thank you for saving a life!`
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: 'Donation completed successfully and history stored',
+        match
+      });
     }
 
-    // Send notifications to Seeker & Donor
-    await createNotification({
-      recipientId: match.seekerId,
-      type: 'donor_response',
-      title: '✅ Donation Completed',
-      message: `Donation Match ${match.matchObid} has been marked as completed by the facility.`
-    });
-
-    await createNotification({
-      recipientId: match.donorId,
-      type: 'donor_response',
-      title: '✅ Donation Completed',
-      message: `Donation Match ${match.matchObid} completed. Thank you for saving a life!`
-    });
-
-    res.status(200).json({
-      success: true,
-      message: 'Donation completed successfully and history stored',
-      match
-    });
+    return res.status(400).json({ message: 'Invalid action for the current stage of this match' });
   } catch (error) {
     next(error);
   }

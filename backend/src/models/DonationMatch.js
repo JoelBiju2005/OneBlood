@@ -12,6 +12,10 @@ const donationMatchSchema = new mongoose.Schema({
   bloodGroup: { type: String, required: true },
   units: { type: Number, required: true },
   status: { type: String, enum: ['in_progress', 'completed', 'cancelled'], default: 'in_progress' },
+  bloodBankStatus: { type: String, enum: ['pending', 'completed'], default: 'pending' },
+  hospitalStatus: { type: String, enum: ['pending', 'completed'], default: 'pending' },
+  stage: { type: String, enum: ['at_blood_bank', 'at_hospital', 'completed', 'cancelled'], default: 'at_hospital' },
+  bloodBankCompletedAt: { type: Date },
   completionEvidence: { type: String }, // Path to completed cert or receipt
   cancelledBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   cancellationReason: { type: String },

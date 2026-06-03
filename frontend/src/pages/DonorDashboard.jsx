@@ -150,22 +150,64 @@ const DonorDashboard = () => {
         </div>
 
         {/* Active Donation Section */}
-        {activeMatch && (
-          <div className="bg-slate-900 border border-emerald-500/20 p-6 rounded-2xl text-left space-y-4 shadow-xl shadow-emerald-950/10">
-            <div className="flex justify-between items-center flex-wrap gap-2">
-              <div className="flex items-center space-x-2 text-emerald-400 font-bold text-xs uppercase tracking-wider">
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                </span>
-                <span>Active Donation Match</span>
-              </div>
-              <span className="text-xs font-black text-white px-2.5 py-1 rounded bg-slate-950/60 border border-white/5 font-mono">
-                Match ID: {activeMatch.matchObid}
-              </span>
-            </div>
+        {activeMatch && (() => {
+          const hasTransitBank = activeMatch.bloodBankId && activeMatch.destinationType === 'BloodBankAndHospital';
+          let progressPercent = 0;
+          let progressLabel = '';
+          if (activeMatch.status === 'completed') {
+            progressPercent = 100;
+            progressLabel = 'Completed — Donation Received at Hospital';
+          } else if (activeMatch.status === 'cancelled') {
+            progressPercent = 0;
+            progressLabel = 'Cancelled';
+          } else {
+            if (hasTransitBank) {
+              if (activeMatch.stage === 'at_blood_bank') {
+                progressPercent = 25;
+                progressLabel = 'Step 1 of 3: At Transit Blood Bank';
+              } else if (activeMatch.stage === 'at_hospital') {
+                progressPercent = 65;
+                progressLabel = 'Step 2 of 3: Verified at Blood Bank ➡️ En-Route to Hospital';
+              }
+            } else {
+              progressPercent = 50;
+              progressLabel = 'Step 1 of 2: En-Route to Hospital';
+            }
+          }
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          return (
+            <div className="bg-slate-900 border border-emerald-500/20 p-6 rounded-2xl text-left space-y-4 shadow-xl shadow-emerald-950/10">
+              <div className="flex justify-between items-center flex-wrap gap-2">
+                <div className="flex items-center space-x-2 text-emerald-400 font-bold text-xs uppercase tracking-wider">
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                  </span>
+                  <span>Active Donation Match</span>
+                </div>
+                <span className="text-xs font-black text-white px-2.5 py-1 rounded bg-slate-950/60 border border-white/5 font-mono">
+                  Match ID: {activeMatch.matchObid}
+                </span>
+              </div>
+
+              {/* Progress Bar Component */}
+              <div className="space-y-2 bg-slate-950/40 border border-white/5 rounded-xl p-4 text-left">
+                <div className="flex justify-between items-center text-[10px] text-slate-400">
+                  <span className="font-bold text-slate-300">Donation Journey Progress</span>
+                  <span className="font-mono text-emerald-400 font-bold">{progressPercent}%</span>
+                </div>
+                <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                  <div 
+                    className="bg-gradient-to-r from-emerald-500 to-teal-400 h-2 rounded-full transition-all duration-500" 
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
+                <span className="text-[9px] font-semibold text-slate-400 block pt-1">
+                  📍 Current Stage: <span className="text-white">{progressLabel}</span>
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-3">
                 <div className="space-y-1">
                   <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Seeker Name</span>
@@ -233,7 +275,8 @@ const DonorDashboard = () => {
               </Link>
             </div>
           </div>
-        )}
+        );
+      })()}
 
         {/* Info Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
