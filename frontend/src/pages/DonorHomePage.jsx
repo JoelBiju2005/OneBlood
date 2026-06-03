@@ -4,7 +4,7 @@ import api, { ASSETS_URL } from '../utils/api';
 import useAuthStore from '../store/authStore';
 import useNotificationStore from '../store/notificationStore';
 import toast from 'react-hot-toast';
-import { HeartPulse, Award, Calendar, ToggleLeft, ToggleRight, ShieldAlert, Navigation, Phone, CheckCircle, MessageCircle, ArrowRight, Activity, Users, AwardIcon } from 'lucide-react';
+import { HeartPulse, Award, Calendar, ToggleLeft, ToggleRight, ShieldAlert, Navigation, Phone, CheckCircle, MessageCircle, ArrowRight, Activity, Users, AwardIcon, Mail, XCircle } from 'lucide-react';
 import HallOfFameSection from '../components/shared/HallOfFameSection';
 import DonationInProgress from '../components/shared/DonationInProgress';
 
@@ -276,6 +276,9 @@ const DonorHomePage = () => {
             <div className="flex space-x-6 overflow-x-auto pb-4 pt-1 snap-x scrollbar-thin scrollbar-thumb-white/10">
               {activeRequests.map((req) => {
                 const isExpanded = expandedRequestId === req._id;
+                const myResp = req.responses?.find(
+                  (r) => r.responderId && r.responderId.toString() === profile._id?.toString()
+                );
                 return (
                   <div
                     key={req._id}
@@ -302,8 +305,56 @@ const DonorHomePage = () => {
                         </p>
                       </div>
 
-                      {/* In-place response forms */}
-                      {isExpanded ? (
+                      {/* Display response details if already responded, else show response actions */}
+                      {myResp ? (
+                        <div className="pt-3 border-t border-white/5 space-y-3 text-left">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-slate-400 font-bold">Your Response:</span>
+                            <span className={`px-2.5 py-1 rounded-lg font-black uppercase text-[9px] ${
+                              myResp.status === 'accepted' ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' :
+                              myResp.status === 'need_transport' ? 'bg-blue-500/10 border border-blue-500/20 text-blue-400' :
+                              'bg-indigo-500/10 border border-indigo-500/20 text-indigo-400'
+                            }`}>
+                              {myResp.status.replace('_', ' ')}
+                            </span>
+                          </div>
+
+                          <div className="bg-white/5 rounded-xl p-3 space-y-2 border border-white/5">
+                            <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block">
+                              Seeker Contact Details
+                            </span>
+                            <div className="space-y-1.5 text-left">
+                              <p className="text-xs text-slate-300">
+                                <strong>Requester:</strong> {req.requesterId?.name || 'Patient Family'}
+                              </p>
+                              {req.phone && (
+                                <p className="text-xs text-slate-300 flex items-center gap-1.5">
+                                  <Phone className="w-3.5 h-3.5 text-emerald-400" />
+                                  <a href={`tel:${req.phone}`} className="hover:underline text-white font-semibold">
+                                    {req.phone}
+                                  </a>
+                                </p>
+                              )}
+                              {req.requesterId?.email && (
+                                <p className="text-xs text-slate-300 flex items-center gap-1.5">
+                                  <Mail className="w-3.5 h-3.5 text-blue-400" />
+                                  <a href={`mailto:${req.requesterId.email}`} className="hover:underline text-white font-semibold">
+                                    {req.requesterId.email}
+                                  </a>
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={() => handleDeclineRequest(req._id)}
+                            className="w-full py-2.5 bg-red-600/10 hover:bg-red-600/20 text-red-500 border border-red-500/20 rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1.5 cursor-pointer"
+                          >
+                            <XCircle className="w-4 h-4" />
+                            <span>Withdraw Response</span>
+                          </button>
+                        </div>
+                      ) : isExpanded ? (
                         <div className="pt-3 border-t border-white/5 space-y-3 animate-fadeIn">
                           <div className="grid grid-cols-2 text-xs text-slate-400 gap-y-2">
                             <span>Units:</span>
