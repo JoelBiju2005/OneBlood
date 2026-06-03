@@ -279,10 +279,20 @@ const SearchPage = () => {
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [selectedDonor, setSelectedDonor] = useState(null);
   const [patientName, setPatientName] = useState('');
+  const [patientAge, setPatientAge] = useState('');
+  const [patientGender, setPatientGender] = useState('male');
   const [hospitalName, setHospitalName] = useState('');
+  const [hospitalAddress, setHospitalAddress] = useState('');
+  const [doctorName, setDoctorName] = useState('');
+  const [doctorContact, setDoctorContact] = useState('');
+  const [modalBloodComponent, setModalBloodComponent] = useState('prbc');
   const [unitsNeeded, setUnitsNeeded] = useState(1);
   const [urgency, setUrgency] = useState('urgent');
   const [messageText, setMessageText] = useState('');
+  const [modalLetterFile, setModalLetterFile] = useState(null);
+  const [modalLetterPreview, setModalLetterPreview] = useState('');
+  const [modalLetterUploading, setModalLetterUploading] = useState(false);
+  const [modalUploadedUrl, setModalUploadedUrl] = useState('');
 
   // Auto GPS detection on load
   useEffect(() => {
@@ -522,7 +532,31 @@ const SearchPage = () => {
       return;
     }
     setSelectedDonor(donor);
+    // Reset all modal fields
+    setPatientName('');
+    setPatientAge('');
+    setPatientGender('male');
+    setHospitalName('');
+    setHospitalAddress('');
+    setDoctorName('');
+    setDoctorContact('');
+    setModalBloodComponent(component);
+    setUnitsNeeded(1);
+    setUrgency('urgent');
+    setMessageText('');
+    setModalLetterFile(null);
+    setModalLetterPreview('');
+    setModalUploadedUrl('');
     setIsRequestModalOpen(true);
+  };
+
+  // Handle doctor's letter file selection in the modal (no AI, just local preview + upload on submit)
+  const handleModalLetterSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setModalLetterFile(file);
+    const previewUrl = URL.createObjectURL(file);
+    setModalLetterPreview(previewUrl);
   };
 
   const handleSendRequest = async (e) => {
@@ -534,28 +568,44 @@ const SearchPage = () => {
 
     const toastId = toast.loading('Sending emergency request...');
     try {
-      // 1. Create a request
+      // 1. Upload doctor's letter if attached
+      let finalLetterUrl = uploadedLetterUrl || '';
+      if (modalLetterFile) {
+        setModalLetterUploading(true);
+        try {
+          const fd = new FormData();
+          fd.append('letter', modalLetterFile);
+          const uploadRes = await api.post('/requests/verify-letter', fd);
+          finalLetterUrl = uploadRes.data.fileUrl || uploadRes.data.url || '';
+        } catch (uploadErr) {
+          console.warn('Letter upload failed, proceeding without:', uploadErr.message);
+        } finally {
+          setModalLetterUploading(false);
+        }
+      }
+
+      // 2. Create the blood request with all real values
       const requestRes = await api.post('/requests', {
         patientName,
-        patientAge: 25,
-        patientGender: 'male',
+        patientAge: parseInt(patientAge, 10) || 0,
+        patientGender,
         hospitalName,
-        hospitalAddress: hospitalName + `, ${manualCity || 'Bengaluru'}`,
-        doctorName: aiExtractedData?.doctorName || 'Dr. Satish Patil',
-        doctorContact: '+919988776655',
+        hospitalAddress: hospitalAddress || hospitalName + `, ${manualCity || 'Bengaluru'}`,
+        doctorName: doctorName || 'Not specified',
+        doctorContact: doctorContact || '',
         bloodGroup,
-        bloodComponent: component,
+        bloodComponent: modalBloodComponent || component,
         unitsRequired: unitsNeeded,
         urgencyLevel: urgency,
         requiredBy: new Date(Date.now() + 24*3600*1000).toISOString(),
-        doctorLetterUrl: uploadedLetterUrl,
+        doctorLetterUrl: finalLetterUrl,
         lat: userLocation[0].toString(),
         lng: userLocation[1].toString()
       });
 
       const requestId = requestRes.data.requestId;
 
-      // 2. Target the specific donor if selected, otherwise it notifies all compatible donors nearby
+      // 3. Target the specific donor if selected, otherwise it notifies all compatible donors nearby
       if (selectedDonor) {
         await api.post(`/requests/${requestId}/target-donor/${selectedDonor._id}`);
         toast.success('Emergency request sent! Notifying donor...', { id: toastId });
@@ -1044,7 +1094,7 @@ const SearchPage = () => {
       {/* 3. Send Request Gated modal */}
       {isRequestModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden text-left animate-fadeIn">
+          <div className="w-full max-w-lg bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden text-left animate-fadeIn max-h-[92vh] flex flex-col">
             <div className="p-5 border-b border-white/5 flex justify-between items-center bg-slate-950/40">
               <h3 className="text-sm font-bold text-white flex items-center space-x-1.5">
                 <FileText className="w-4.5 h-4.5 text-oneblood-crimson" />
@@ -1055,123 +1105,242 @@ const SearchPage = () => {
               </button>
             </div>
 
-            <form onSubmit={handleSendRequest} className="p-5 space-y-4">
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Patient Full Name</label>
-                <input 
-                  type="text" 
-                  value={patientName}
-                  onChange={(e) => setPatientName(e.target.value)}
-                  placeholder="Enter patient full name"
-                  className="w-full px-3 py-2 bg-slate-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none"
-                  required
-                />
-              </div>
+            <form onSubmit={handleSendRequest} className="p-5 space-y-3 overflow-y-auto flex-1">
 
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Hospital Details</label>
-                <input 
-                  type="text" 
-                  value={hospitalName}
-                  onChange={(e) => setHospitalName(e.target.value)}
-                  placeholder="e.g. KLE Hospital, Bengaluru"
-                  className="w-full px-3 py-2 bg-slate-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none"
-                  required
-                />
-              </div>
+              {/* ── Section: Patient Information ── */}
+              <div className="pb-1">
+                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
+                  <span className="w-3 h-px bg-slate-700 block" />
+                  Patient Information
+                  <span className="flex-1 h-px bg-slate-700 block" />
+                </p>
+                <div className="space-y-2.5">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Patient Full Name <span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      value={patientName}
+                      onChange={(e) => setPatientName(e.target.value)}
+                      placeholder="Enter patient full name"
+                      className="w-full px-3 py-2 bg-slate-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-red-500/50 transition-colors"
+                      required
+                    />
+                  </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Units Needed</label>
-                  <div className="flex items-center space-x-2 bg-slate-950 border border-white/10 rounded-xl px-2">
-                    <button type="button" onClick={() => setUnitsNeeded(Math.max(1, unitsNeeded - 1))} className="p-1.5 text-slate-400 hover:text-white"><Minus className="w-3.5 h-3.5" /></button>
-                    <span className="flex-grow text-center text-xs font-bold text-white">{unitsNeeded}</span>
-                    <button type="button" onClick={() => setUnitsNeeded(unitsNeeded + 1)} className="p-1.5 text-slate-400 hover:text-white"><Plus className="w-3.5 h-3.5" /></button>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Patient Age</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="120"
+                        value={patientAge}
+                        onChange={(e) => setPatientAge(e.target.value)}
+                        placeholder="e.g. 45"
+                        className="w-full px-3 py-2 bg-slate-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-red-500/50 transition-colors"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Patient Gender</label>
+                      <select
+                        value={patientGender}
+                        onChange={(e) => setPatientGender(e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-red-500/50 transition-colors"
+                      >
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                        <option value="unknown">Prefer not to say</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
+              </div>
 
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Urgency</label>
-                  <select 
-                    value={urgency}
-                    onChange={(e) => setUrgency(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none"
-                  >
-                    <option value="critical">🚨 Critical</option>
-                    <option value="urgent">Urgent</option>
-                    <option value="moderate">Moderate</option>
-                    <option value="scheduled">Scheduled</option>
-                  </select>
+              {/* ── Section: Blood Requirement ── */}
+              <div className="pb-1">
+                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
+                  <span className="w-3 h-px bg-slate-700 block" />
+                  Blood Requirement
+                  <span className="flex-1 h-px bg-slate-700 block" />
+                </p>
+                <div className="space-y-2.5">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Blood Component</label>
+                    <select
+                      value={modalBloodComponent}
+                      onChange={(e) => setModalBloodComponent(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-red-500/50 transition-colors"
+                    >
+                      <option value="whole_blood">Whole Blood</option>
+                      <option value="prbc">Packed RBC (PRBC)</option>
+                      <option value="plasma">Fresh Frozen Plasma</option>
+                      <option value="platelets">Platelets</option>
+                      <option value="cryoprecipitate">Cryoprecipitate</option>
+                      <option value="sdp">Single Donor Platelets (SDP)</option>
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Units Needed</label>
+                      <div className="flex items-center space-x-2 bg-slate-950 border border-white/10 rounded-xl px-2">
+                        <button type="button" onClick={() => setUnitsNeeded(Math.max(1, unitsNeeded - 1))} className="p-1.5 text-slate-400 hover:text-white"><Minus className="w-3.5 h-3.5" /></button>
+                        <span className="flex-grow text-center text-xs font-bold text-white">{unitsNeeded}</span>
+                        <button type="button" onClick={() => setUnitsNeeded(unitsNeeded + 1)} className="p-1.5 text-slate-400 hover:text-white"><Plus className="w-3.5 h-3.5" /></button>
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Urgency <span className="text-red-500">*</span></label>
+                      <select
+                        value={urgency}
+                        onChange={(e) => setUrgency(e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-red-500/50 transition-colors"
+                      >
+                        <option value="critical">🚨 Critical</option>
+                        <option value="urgent">Urgent</option>
+                        <option value="moderate">Moderate</option>
+                        <option value="scheduled">Scheduled</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
               </div>
 
+              {/* ── Section: Hospital & Doctor Details ── */}
+              <div className="pb-1">
+                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
+                  <span className="w-3 h-px bg-slate-700 block" />
+                  Hospital & Doctor Details
+                  <span className="flex-1 h-px bg-slate-700 block" />
+                </p>
+                <div className="space-y-2.5">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Hospital Name <span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      value={hospitalName}
+                      onChange={(e) => setHospitalName(e.target.value)}
+                      placeholder="e.g. KLE Hospital, Bengaluru"
+                      className="w-full px-3 py-2 bg-slate-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-red-500/50 transition-colors"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Hospital Address</label>
+                    <input
+                      type="text"
+                      value={hospitalAddress}
+                      onChange={(e) => setHospitalAddress(e.target.value)}
+                      placeholder="Full address of the hospital"
+                      className="w-full px-3 py-2 bg-slate-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-red-500/50 transition-colors"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Doctor's Name</label>
+                      <input
+                        type="text"
+                        value={doctorName}
+                        onChange={(e) => setDoctorName(e.target.value)}
+                        placeholder="Dr. Full Name"
+                        className="w-full px-3 py-2 bg-slate-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-red-500/50 transition-colors"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Doctor's Contact</label>
+                      <input
+                        type="tel"
+                        value={doctorContact}
+                        onChange={(e) => setDoctorContact(e.target.value)}
+                        placeholder="+91 XXXXX XXXXX"
+                        className="w-full px-3 py-2 bg-slate-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-red-500/50 transition-colors"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Section: Doctor's Letter Upload ── */}
+              <div className="pb-1">
+                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
+                  <span className="w-3 h-px bg-slate-700 block" />
+                  Doctor's Prescription Letter
+                  <span className="flex-1 h-px bg-slate-700 block" />
+                </p>
+                <label
+                  htmlFor="modal-letter-upload"
+                  className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-xl p-4 cursor-pointer transition-all ${
+                    modalLetterPreview
+                      ? 'border-emerald-500/40 bg-emerald-500/5'
+                      : 'border-white/10 bg-slate-950/60 hover:border-red-500/30 hover:bg-slate-950'
+                  }`}
+                >
+                  {modalLetterPreview ? (
+                    <>
+                      {modalLetterFile?.type?.startsWith('image/') ? (
+                        <img
+                          src={modalLetterPreview}
+                          alt="Prescription preview"
+                          className="max-h-32 w-full object-contain rounded-lg"
+                        />
+                      ) : (
+                        <div className="flex items-center gap-2 text-emerald-400">
+                          <FileText className="w-5 h-5" />
+                          <span className="text-xs font-bold truncate max-w-[200px]">{modalLetterFile?.name}</span>
+                        </div>
+                      )}
+                      <span className="text-[10px] text-emerald-400 font-bold">✓ Letter attached — tap to replace</span>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-5 h-5 text-slate-500" />
+                      <span className="text-[10px] text-slate-400 font-semibold text-center">
+                        Click to upload doctor's prescription<br />
+                        <span className="text-slate-600">JPG, PNG or PDF accepted</span>
+                      </span>
+                    </>
+                  )}
+                  <input
+                    id="modal-letter-upload"
+                    type="file"
+                    accept="image/*,.pdf"
+                    onChange={handleModalLetterSelect}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+
+              {/* ── Additional Notes ── */}
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Optional Message</label>
-                <textarea 
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Additional Notes</label>
+                <textarea
                   value={messageText}
                   onChange={(e) => setMessageText(e.target.value)}
-                  placeholder="Any additional details or directives..."
-                  className="w-full px-3 py-2 bg-slate-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none h-16 resize-none"
+                  placeholder="Any additional details, directives, or special instructions..."
+                  className="w-full px-3 py-2 bg-slate-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-red-500/50 transition-colors h-14 resize-none"
                 />
               </div>
 
-              <div className="p-3 bg-white/5 border border-white/5 rounded-xl space-y-2 text-slate-400 text-[10px]">
-                <div className="flex items-center justify-between">
-                  <span>📎 Doctor Prescription Letter:</span>
-                  <span className={uploadedLetterUrl ? 'text-emerald-400 font-bold' : 'text-amber-500 font-bold'}>
-                    {uploadedLetterUrl ? '✓ Extracted Letter Attached' : 'No Letter Attached'}
-                  </span>
-                </div>
-                {uploadedLetterUrl && (
-                  <div className="pt-2 border-t border-white/5 space-y-1.5 animate-fadeIn">
-                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block">Uploaded Document Preview</span>
-                    {uploadedLetterUrl.toLowerCase().includes('.pdf') ? (
-                      <div className="p-2 bg-slate-950 rounded-lg border border-white/10 flex items-center justify-between">
-                        <span className="text-[10px] text-slate-300 truncate max-w-[200px]">{uploadedLetterUrl.split('/').pop()}</span>
-                        <a 
-                          href={uploadedLetterUrl.startsWith('http') || uploadedLetterUrl.startsWith('blob:') ? uploadedLetterUrl : `${ASSETS_URL}${uploadedLetterUrl}`} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-oneblood-crimson hover:underline font-bold"
-                        >
-                          View PDF ↗
-                        </a>
-                      </div>
-                    ) : (
-                      <div className="relative rounded-lg overflow-hidden border border-white/10 max-h-36 flex flex-col items-center justify-center bg-slate-950 p-1">
-                        <img 
-                          src={uploadedLetterUrl.startsWith('http') || uploadedLetterUrl.startsWith('blob:') ? uploadedLetterUrl : `${ASSETS_URL}${uploadedLetterUrl}`} 
-                          alt="Uploaded prescription letter" 
-                          className="object-contain max-h-32 w-full rounded"
-                        />
-                        <a 
-                          href={uploadedLetterUrl.startsWith('http') || uploadedLetterUrl.startsWith('blob:') ? uploadedLetterUrl : `${ASSETS_URL}${uploadedLetterUrl}`} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-[9px] text-oneblood-crimson hover:underline font-bold mt-1.5"
-                        >
-                          Open image in new tab ↗
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <div className="flex space-x-2 pt-2">
-                <button 
-                  type="button" 
+              {/* ── Action Buttons ── */}
+              <div className="flex space-x-2 pt-1">
+                <button
+                  type="button"
                   onClick={() => setIsRequestModalOpen(false)}
-                  className="flex-1 py-2.5 border border-white/10 hover:bg-white/5 text-slate-400 text-xs font-bold rounded-xl text-center"
+                  className="flex-1 py-2.5 border border-white/10 hover:bg-white/5 text-slate-400 text-xs font-bold rounded-xl text-center transition-all"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   type="submit"
-                  className="flex-1 py-2.5 bg-oneblood-crimson hover:bg-red-700 text-white text-xs font-bold rounded-xl text-center flex items-center justify-center space-x-1.5 cursor-pointer"
+                  disabled={modalLetterUploading}
+                  className="flex-1 py-2.5 bg-oneblood-crimson hover:bg-red-700 disabled:opacity-60 text-white text-xs font-bold rounded-xl text-center flex items-center justify-center space-x-1.5 cursor-pointer transition-all"
                 >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>Send Request</span>
+                  {modalLetterUploading ? (
+                    <><Loader2 className="w-3.5 h-3.5 animate-spin" /><span>Uploading...</span></>
+                  ) : (
+                    <><Send className="w-3.5 h-3.5" /><span>Send Request</span></>
+                  )}
                 </button>
               </div>
             </form>
