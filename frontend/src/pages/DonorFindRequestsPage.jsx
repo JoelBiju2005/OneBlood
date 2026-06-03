@@ -82,11 +82,18 @@ const DonorFindRequestsPage = () => {
     );
   }
 
-  // Filter requests matching compatible blood group or general active ones, filtering out declined ones
+  // Filter requests matching compatible blood group or general active ones, filtering out declined ones and checking notified list
   const activeRequests = requests.filter(r => {
+    if (r.status !== 'active' && r.status !== 'accepted') return false;
+    // Check if the current donor's ID is in the notifiedDonors list
+    const isNotified = r.notifiedDonors?.some(
+      (id) => profile && id?.toString() === profile._id?.toString()
+    );
+    if (!isNotified) return false;
+
     const myResp = getMyResponse(r);
     if (myResp && myResp.status === 'declined') return false;
-    return r.status === 'active' || r.status === 'accepted';
+    return true;
   });
 
   return (
@@ -102,7 +109,7 @@ const DonorFindRequestsPage = () => {
             <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
           </span>
           <h2 className="text-2xl font-extrabold text-white font-display tracking-wide">
-            Emergency Requests Nearby
+            Requests you received
           </h2>
         </div>
 
@@ -111,9 +118,9 @@ const DonorFindRequestsPage = () => {
             <div className="p-4 bg-slate-800/40 rounded-full text-slate-500">
               <HeartPulse className="w-10 h-10" />
             </div>
-            <p className="text-base font-semibold text-slate-400">No active emergency requests found nearby.</p>
+            <p className="text-base font-semibold text-slate-400">No requests received yet.</p>
             <p className="text-xs text-slate-500 max-w-sm">
-              We will notify you immediately once a seeker submits a request matching your blood group ({profile?.bloodGroup || 'any'}).
+              Direct donor requests will appear here when patients or nearby seekers search for your blood type.
             </p>
           </div>
         ) : (

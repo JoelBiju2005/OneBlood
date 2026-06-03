@@ -251,7 +251,7 @@ const DonorHomePage = () => {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
               </span>
-              <span>Live Emergency Requests Nearby ({profile.bloodGroup})</span>
+              <span>Requests you received ({profile.bloodGroup})</span>
             </h3>
             <span className="text-xs text-slate-400">{activeRequests.length} active matching</span>
           </div>
@@ -261,9 +261,9 @@ const DonorHomePage = () => {
               <div className="p-4 bg-slate-800/40 rounded-full text-slate-500">
                 <HeartPulse className="w-8 h-8" />
               </div>
-              <p className="text-sm font-semibold text-slate-400">No active requests nearby.</p>
+              <p className="text-sm font-semibold text-slate-400">No requests received yet.</p>
               <p className="text-xs text-slate-500 max-w-sm">
-                Stay available — someone in {profile.city} might need your help soon.
+                Stay available — direct donor requests will appear here when patients or nearby seekers search for your blood type.
               </p>
             </div>
           ) : (

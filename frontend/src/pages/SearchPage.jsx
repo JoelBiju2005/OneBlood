@@ -555,10 +555,13 @@ const SearchPage = () => {
 
       const requestId = requestRes.data.requestId;
 
-      // 2. Target the specific donor
-      await api.post(`/requests/${requestId}/target-donor/${selectedDonor._id}`);
-      
-      toast.success('Emergency request sent! Notifying donor...', { id: toastId });
+      // 2. Target the specific donor if selected, otherwise it notifies all compatible donors nearby
+      if (selectedDonor) {
+        await api.post(`/requests/${requestId}/target-donor/${selectedDonor._id}`);
+        toast.success('Emergency request sent! Notifying donor...', { id: toastId });
+      } else {
+        toast.success(`Emergency request broadcasted to all ${donors.length} nearby donors!`, { id: toastId });
+      }
       setIsRequestModalOpen(false);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to send request.', { id: toastId });
@@ -766,6 +769,16 @@ const SearchPage = () => {
             <span>Unified Results within {radius} km</span>
             <span>({banks.length} banks · {donors.length} donors)</span>
           </div>
+
+          {donors.length > 0 && (
+            <button
+              onClick={() => openRequestModal(null)}
+              className="w-full py-2.5 bg-gradient-to-r from-red-600 to-[#C0152A] hover:from-red-700 hover:to-red-800 text-white font-extrabold rounded-xl text-xs transition-all shadow-lg flex items-center justify-center space-x-2 border border-red-500/20 cursor-pointer"
+            >
+              <Send className="w-4 h-4 text-white shrink-0 animate-pulse" />
+              <span>Send Request to all the donors nearby with {bloodGroup} Blood Group</span>
+            </button>
+          )}
 
           {loading ? (
             <div className="py-12 space-y-4">
@@ -1029,13 +1042,13 @@ const SearchPage = () => {
       </button>
 
       {/* 3. Send Request Gated modal */}
-      {isRequestModalOpen && selectedDonor && (
+      {isRequestModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden text-left animate-fadeIn">
             <div className="p-5 border-b border-white/5 flex justify-between items-center bg-slate-950/40">
               <h3 className="text-sm font-bold text-white flex items-center space-x-1.5">
                 <FileText className="w-4.5 h-4.5 text-oneblood-crimson" />
-                <span>Send Blood Request to {selectedDonor.name}</span>
+                <span>{selectedDonor ? `Send Blood Request to ${selectedDonor.name}` : `Send Request to all nearby ${bloodGroup} donors`}</span>
               </h3>
               <button onClick={() => setIsRequestModalOpen(false)} className="text-slate-400 hover:text-white">
                 <X className="w-5 h-5" />
