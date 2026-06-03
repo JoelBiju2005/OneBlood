@@ -15,5 +15,6 @@ router.post('/matches/:matchId/complete', protect, matchController.completeDonat
 router.post('/matches/:matchId/cancel', protect, matchController.cancelMatch);
 router.get('/matches/in-progress', protect, matchController.getMatchesInProgress);
 router.get('/matches/history', protect, matchController.getMatchHistory);
+router.get('/matches/:matchId/pdf', matchController.downloadMatchPDF);
 
 module.exports = router;

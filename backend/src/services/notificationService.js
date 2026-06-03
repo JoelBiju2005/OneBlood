@@ -1,6 +1,5 @@
 const Notification = require('../models/Notification');
 const socketService = require('./socketService');
-const emailService = require('./emailService');
 
 /**
  * Creates and dispatches a notification to a specific user
@@ -38,25 +37,6 @@ const createNotification = async ({
 
     // 2. Push notification in real-time via Socket.IO
     socketService.sendToUser(recipientId.toString(), 'notification', notification);
-
-    // 3. Send email if requested / critical
-    if (email && (priority === 'high' || type === 'blood_request')) {
-      if (type === 'blood_request' && data.request) {
-        await emailService.sendRequestAlertEmail(email, recipientName, data.request);
-      } else {
-        const htmlBody = `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-            <h2 style="color: #B91C1C;">OneBlood Notice</h2>
-            <p>Hello <strong>${recipientName}</strong>,</p>
-            <p>${message}</p>
-            <p>For more details, please log in to your dashboard.</p>
-            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-            <p style="font-size: 11px; color: #777;">This is an automated notification from OneBlood. Do not reply directly to this mail.</p>
-          </div>
-        `;
-        await emailService.sendEmail(email, title, htmlBody);
-      }
-    }
 
     return notification;
   } catch (error) {

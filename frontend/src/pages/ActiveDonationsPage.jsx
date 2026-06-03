@@ -284,10 +284,9 @@ const ActiveDonationsPage = () => {
 
         {/* Actions */}
         <div className="flex gap-3 pt-2 border-t border-white/5">
-          {/* PDF Download — always available */}
-          {match.pdfPath && (
+          {match._id && (
             <a
-              href={match.pdfPath.startsWith('http') ? match.pdfPath : `${ASSETS_URL}${match.pdfPath}`}
+              href={`${ASSETS_URL}/api/donations/matches/${match._id}/pdf`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 py-2.5 bg-gradient-to-r from-blue-600/20 to-blue-500/10 border border-blue-500/20 text-blue-400 rounded-xl text-xs font-bold text-center flex items-center justify-center gap-1.5 hover:from-blue-600/30 hover:to-blue-500/20 transition-all"

@@ -563,13 +563,6 @@ const targetDonor = async (req, res, next) => {
       } catch (sockErr) {
         console.warn('[targetDonor] Socket emit failed (non-fatal):', sockErr.message);
       }
-      
-      // Email notification (non-fatal)
-      try {
-        await emailService.sendRequestAlertEmail(donorUser.email, donor.name, request);
-      } catch (emailErr) {
-        console.warn('[targetDonor] Email notification failed (non-fatal):', emailErr.message);
-      }
     }
 
     res.status(200).json({ success: true, message: 'Direct request sent to donor' });
@@ -678,19 +671,6 @@ const acceptRequest = async (req, res, next) => {
         });
       } catch (notifErr) {
         console.warn('[acceptRequest] Notification failed (non-fatal):', notifErr.message);
-      }
-
-      // Email (non-fatal)
-      try {
-        await emailService.sendRequestAcceptedEmail(
-          requesterUser.email,
-          requesterUser.name,
-          donor.name,
-          { phone: donor.phone, email: donor.email, preferredContactMethod: donor.preferredContactMethod, donorId: donor._id },
-          request
-        );
-      } catch (emailErr) {
-        console.warn('[acceptRequest] Email failed (non-fatal):', emailErr.message);
       }
     }
 

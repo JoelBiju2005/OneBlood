@@ -306,9 +306,9 @@ const HospitalDashboard = () => {
                     <span className="text-white font-bold">{new Date(match.createdAt).toLocaleDateString()}</span>
                   </div>
 
-                  {match.pdfPath && (
+                  {match._id && (
                     <a
-                      href={match.pdfPath.startsWith('http') ? match.pdfPath : `${ASSETS_URL}${match.pdfPath}`}
+                      href={`${ASSETS_URL}/api/donations/matches/${match._id}/pdf`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-2 text-xs text-blue-400 hover:text-blue-300 transition-colors"

@@ -1,138 +1,119 @@
-const { Resend } = require('resend');
-const nodemailer = require('nodemailer');
+const fs = require('fs');
+const path = require('path');
 const EmailTemplate = require('../models/EmailTemplate');
 const EmailLog = require('../models/EmailLog');
 const SystemSettings = require('../models/SystemSettings');
 
-let resend = null;
-let gmailTransporter = null;
-
-// Initialize Resend
-const getResendClient = () => {
-  if (!resend && process.env.RESEND_API_KEY) {
-    try {
-      resend = new Resend(process.env.RESEND_API_KEY);
-      console.log('🟢 Resend Email Client Initialized');
-    } catch (error) {
-      console.error('Failed to initialize Resend client:', error.message);
-    }
-  }
-  return resend;
-};
-
-// Initialize Gmail Transporter
-const getGmailTransporter = () => {
-  if (!gmailTransporter && process.env.GMAIL_USER && process.env.GMAIL_APP_PASS) {
-    try {
-      gmailTransporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: process.env.GMAIL_USER,
-          pass: process.env.GMAIL_APP_PASS
-        }
-      });
-      console.log('🟢 Gmail Transporter Initialized');
-    } catch (error) {
-      console.error('Failed to initialize Gmail Transporter:', error.message);
-    }
-  }
-  return gmailTransporter;
-};
-
 /**
- * Core send email routine with automatic provider fallback and audit logging.
+ * Core send email routine using Brevo Transactional Email HTTP API.
+ * Falls back to console mock in dev/local if API key is missing or mock.
  */
-const sendEmail = async (to, subject, htmlBody, templateName = 'custom', attachments = null) => {
+const sendEmail = async (to, subject, htmlBody, templateName = 'custom', attachments = null, emailType = null) => {
   const settings = await SystemSettings.getSettings();
-  const providerPreference = settings.emailProvider || 'resend';
   const fromEmail = settings.fromEmail || 'oneblood.officialteam@gmail.com';
-  
-  let providerUsed = '';
+  const apiKey = process.env.BREVO_API_KEY;
+
+  let providerUsed = 'brevo';
   let emailSent = false;
   let errorMsg = '';
   let resultInfo = null;
 
-  // 1. Attempt primary provider
-  if (providerPreference === 'resend') {
-    const client = getResendClient();
-    if (client) {
-      try {
-        providerUsed = 'resend';
-        const fromAddress = fromEmail.includes('gmail.com') ? 'OneBlood <onboarding@resend.dev>' : fromEmail;
-        const mailOptions = {
-          from: fromAddress,
-          to: [to],
-          subject: subject,
-          html: htmlBody,
-        };
-        if (attachments) {
-          mailOptions.attachments = attachments;
-        }
-        resultInfo = await client.emails.send(mailOptions);
-        if (resultInfo && (resultInfo.id || resultInfo.data?.id)) {
-          emailSent = true;
-          console.log(`✉️ Email sent successfully via Resend to ${to}`);
-        } else {
-          throw new Error(JSON.stringify(resultInfo));
-        }
-      } catch (err) {
-        errorMsg = `Resend failed: ${err.message}.`;
-        console.warn(`${errorMsg} Trying Gmail fallback...`);
-      }
-    } else {
-      errorMsg = 'Resend client not configured.';
-      console.warn(`${errorMsg} Trying Gmail fallback...`);
-    }
-  }
+  // Check if API key is valid and not mock
+  const isMockEnv = !apiKey || apiKey === 'mock_key_for_dev' || apiKey.trim() === '';
 
-  // 2. Fallback to Gmail if primary failed or Gmail selected
-  if (!emailSent && (providerPreference === 'gmail' || providerPreference === 'resend')) {
-    const transporter = getGmailTransporter();
-    if (transporter) {
-      try {
-        providerUsed = 'gmail';
-        const mailOptions = {
-          from: `"OneBlood" <${process.env.GMAIL_USER || fromEmail}>`,
-          to: to,
-          subject: subject,
-          html: htmlBody,
-        };
-        if (attachments) {
-          mailOptions.attachments = attachments;
+  if (!isMockEnv) {
+    try {
+      // Process attachments if any
+      const brevoAttachments = [];
+      if (attachments && Array.isArray(attachments)) {
+        for (const att of attachments) {
+          if (att.path) {
+            try {
+              let resolvedPath = att.path;
+              if (!path.isAbsolute(resolvedPath)) {
+                resolvedPath = path.resolve(__dirname, '../../', resolvedPath);
+              }
+              if (fs.existsSync(resolvedPath)) {
+                const fileBuffer = fs.readFileSync(resolvedPath);
+                const base64Content = fileBuffer.toString('base64');
+                brevoAttachments.push({
+                  content: base64Content,
+                  name: att.filename || path.basename(resolvedPath)
+                });
+              } else {
+                console.warn(`Attachment file not found at path: ${resolvedPath}`);
+              }
+            } catch (err) {
+              console.error(`Failed to read attachment file:`, err.message);
+            }
+          } else if (att.content && att.filename) {
+            brevoAttachments.push({
+              content: att.content,
+              name: att.filename
+            });
+          }
         }
-        resultInfo = await transporter.sendMail(mailOptions);
+      }
+
+      // Construct Brevo API request
+      const payload = {
+        sender: { name: "OneBlood", email: fromEmail },
+        to: [{ email: to }],
+        subject: subject,
+        htmlContent: htmlBody
+      };
+
+      if (brevoAttachments.length > 0) {
+        payload.attachment = brevoAttachments;
+      }
+
+      const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'content-type': 'application/json',
+          'api-key': apiKey
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const responseData = await response.json();
+
+      if (response.ok) {
         emailSent = true;
-        console.log(`✉️ Email sent successfully via Gmail fallback to ${to}`);
-      } catch (err) {
-        errorMsg += ` Gmail failed: ${err.message}`;
-        console.error(`🔴 Email delivery failed for both paths to ${to}: ${errorMsg}`);
+        resultInfo = responseData;
+        console.log(`✉️ Email sent successfully via Brevo to ${to}`);
+      } else {
+        throw new Error(responseData.message || JSON.stringify(responseData));
       }
-    } else {
-      errorMsg += ' Gmail transporter not configured.';
+    } catch (err) {
+      errorMsg = `Brevo failed: ${err.message}.`;
+      console.error(`🔴 Brevo Email delivery failed to ${to}: ${errorMsg}`);
     }
   }
 
-  // 3. Dev log output if completely offline/unconfigured
+  // Dev log output if mock mode or if Brevo failed (acting as local fallback)
   if (!emailSent) {
     providerUsed = 'mock';
-    console.log('\n=================== DEVELOPMENT EMAIL OUTPUT ===================');
+    console.log('\n=================== MOCK EMAIL OUTPUT ===================');
     console.log(`To:      ${to}`);
     console.log(`Subject: ${subject}`);
     console.log('--------------------------- BODY -------------------------------');
-    console.log(htmlBody.replace(/<[^>]*>/g, '').trim());
-    console.log('================================================================\n');
-    emailSent = true; // Mark sent so we don't spam retry loops in local dev
+    console.log(htmlBody.replace(/<[^>]*>/g, '').trim().substring(0, 500) + '...');
+    console.log('==========================================================\n');
+    emailSent = true; // Mark as sent to prevent infinite retry loops in local dev
   }
 
-  // 4. Log execution details to DB
+  // Log execution details to DB
   try {
     await EmailLog.create({
       to,
       templateName,
+      emailType: emailType || templateName,
       subject,
-      status: emailSent ? 'sent' : 'failed',
+      status: providerUsed === 'mock' ? 'sent' : (emailSent ? 'sent' : 'failed'),
       provider: providerUsed,
-      errorMessage: emailSent ? undefined : errorMsg,
+      errorMessage: errorMsg || undefined,
       attempts: 1
     });
   } catch (logErr) {
@@ -145,7 +126,7 @@ const sendEmail = async (to, subject, htmlBody, templateName = 'custom', attachm
 /**
  * Resolves template from DB or default values, replacing placeholders.
  */
-const sendTemplateEmail = async (to, templateName, defaultSubject, defaultHtml, variables, attachments = null) => {
+const sendTemplateEmail = async (to, templateName, defaultSubject, defaultHtml, variables, attachments = null, emailType = null) => {
   let subject = defaultSubject;
   let html = defaultHtml;
 
@@ -168,7 +149,7 @@ const sendTemplateEmail = async (to, templateName, defaultSubject, defaultHtml, 
     }
   }
 
-  return sendEmail(to, subject, html, templateName, attachments);
+  return sendEmail(to, subject, html, templateName, attachments, emailType);
 };
 
 /**
@@ -191,129 +172,84 @@ const sendWelcomeEmail = async (to, name, onebloodId = 'N/A', role = 'donor') =>
       </p>
     </div>
   `;
-  return sendTemplateEmail(to, 'welcome_email', defaultSubject, defaultHtml, { name, onebloodId, role });
+  return sendTemplateEmail(to, 'welcome_email', defaultSubject, defaultHtml, { name, onebloodId, role }, null, 'welcome');
 };
 
 /**
- * Send critical blood request alert to donor
+ * Send match confirmation email to seeker and donor
  */
-const sendRequestAlertEmail = async (donorEmail, donorName, requestData) => {
-  const urgencyStyle = requestData.urgencyLevel === 'critical' ? 'color: #B91C1C; font-weight: bold;' : 'color: #F59E0B;';
-
-  const defaultSubject = `🚨 EMERGENCY: ${requestData.bloodGroup} Blood Required at ${requestData.hospitalName}`;
+const sendMatchConfirmationEmail = async (to, seekerName, donorName, matchObid, facilityName, pdfPath = null) => {
+  const defaultSubject = `OneBlood Donation Match Confirmed - ID: {{matchObid}}`;
   const defaultHtml = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-      <h2 style="color: #B91C1C; border-bottom: 2px solid #B91C1C; padding-bottom: 10px; margin-top: 0;">ONEBLOOD EMERGENCY ALERT</h2>
-      <p>Dear <strong>{{donorName}}</strong>,</p>
-      <p>A critical blood requirement has been reported near you. As an eligible <strong>{{bloodGroup}}</strong> donor, your donation could save a life today.</p>
-      
-      <div style="background-color: #FEF2F2; border-left: 4px solid #B91C1C; padding: 15px; margin: 20px 0; border-radius: 4px;">
-        <h3 style="margin-top: 0; color: #7F1D1D;">Requirement Details</h3>
-        <table style="width: 100%; border-collapse: collapse;">
-          <tr><td style="padding: 5px 0;"><strong>Patient:</strong></td><td>{{patientName}}</td></tr>
-          <tr><td style="padding: 5px 0;"><strong>Blood Type:</strong></td><td><span style="background-color: #B91C1C; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold;">{{bloodGroup}}</span> ({{bloodComponent}})</td></tr>
-          <tr><td style="padding: 5px 0;"><strong>Hospital:</strong></td><td>{{hospitalName}}</td></tr>
-          <tr><td style="padding: 5px 0;"><strong>Urgency:</strong></td><td><span style="${urgencyStyle}">{{urgencyLevel}}</span></td></tr>
-          <tr><td style="padding: 5px 0;"><strong>Required By:</strong></td><td>{{requiredBy}}</td></tr>
-        </table>
-      </div>
-
-      <p style="text-align: center; margin-top: 30px;">
-        <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/dashboard/donor" style="background-color: #B91C1C; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">Respond to Request Now</a>
-      </p>
+      <h2 style="color: #B91C1C; border-bottom: 2px solid #B91C1C; padding-bottom: 10px; margin-top: 0;">Donation Match Confirmed</h2>
+      <p>Dear User,</p>
+      <p>A blood donation match has been established between seeker <strong>{{seekerName}}</strong> and donor <strong>{{donorName}}</strong>.</p>
+      <p><strong>Match OBID:</strong> {{matchObid}}</p>
+      <p><strong>Destination Hospital:</strong> {{facilityName}}</p>
+      <p>Please find the official match slip attached to this email.</p>
     </div>
   `;
-
-  return sendTemplateEmail(donorEmail, 'request_alert', defaultSubject, defaultHtml, {
-    donorName,
-    patientName: requestData.patientName,
-    bloodGroup: requestData.bloodGroup,
-    bloodComponent: requestData.bloodComponent || 'Whole Blood',
-    hospitalName: requestData.hospitalName,
-    urgencyLevel: (requestData.urgencyLevel || 'moderate').toUpperCase(),
-    requiredBy: new Date(requestData.requiredBy).toLocaleString()
-  });
+  const attachments = pdfPath ? [{ filename: `OneBlood_Match_${matchObid}.pdf`, path: pdfPath }] : null;
+  return sendTemplateEmail(to, 'match_confirmed_seeker_donor', defaultSubject, defaultHtml, { seekerName, donorName, matchObid, facilityName }, attachments, 'match_confirmed');
 };
 
 /**
- * Send donor contact details to requester once donor accepts
+ * Send match email to hospital
  */
-const sendRequestAcceptedEmail = async (requesterEmail, requesterName, donorName, contactData, requestData) => {
-  const defaultSubject = `💖 MATCH FOUND: ${donorName} accepted your request!`;
+const sendHospitalMatchEmail = async (to, seekerName, donorName, matchObid, facilityName, pdfPath = null) => {
+  const defaultSubject = `🏥 New Match Assigned - ID: {{matchObid}}`;
   const defaultHtml = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-      <h2 style="color: #059669; border-bottom: 2px solid #059669; padding-bottom: 10px; margin-top: 0;">DONOR ACCEPTED MATCH</h2>
-      <p>Dear <strong>{{requesterName}}</strong>,</p>
-      <p>Good news! Donor <strong>{{donorName}}</strong> has accepted your emergency request for <strong>{{bloodGroup}}</strong> blood.</p>
-      
-      <div style="background-color: #ECFDF5; border-left: 4px solid #059669; padding: 15px; margin: 20px 0; border-radius: 4px;">
-        <h3 style="margin-top: 0; color: #064E3B;">Donor Contact Information</h3>
-        <table style="width: 100%; border-collapse: collapse;">
-          <tr><td style="padding: 5px 0;"><strong>Name:</strong></td><td>{{donorName}}</td></tr>
-          <tr><td style="padding: 5px 0;"><strong>Phone Number:</strong></td><td><a href="tel:{{phone}}">{{phone}}</a></td></tr>
-          <tr><td style="padding: 5px 0;"><strong>Email Address:</strong></td><td><a href="mailto:{{email}}">{{email}}</a></td></tr>
-          <tr><td style="padding: 5px 0;"><strong>Preferred Method:</strong></td><td style="text-transform: capitalize;">{{preferredContactMethod}}</td></tr>
-        </table>
-      </div>
-
-      <p>Please contact the donor immediately to coordinate transport and donation logistics.</p>
-      <p style="text-align: center; margin-top: 30px;">
-        <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/donor/{{donorId}}/profile" style="background-color: #059669; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">View Donor Profile</a>
-      </p>
+      <h2 style="color: #B91C1C; border-bottom: 2px solid #B91C1C; padding-bottom: 10px; margin-top: 0;">🏥 New Match Assigned</h2>
+      <p>Dear Hospital Administrator,</p>
+      <p>Match ID <strong>{{matchObid}}</strong> has been registered to your hospital.</p>
+      <p>A blood donation match has been established between seeker <strong>{{seekerName}}</strong> and donor <strong>{{donorName}}</strong>.</p>
+      <p><strong>Match OBID:</strong> {{matchObid}}</p>
+      <p><strong>Destination Hospital:</strong> {{facilityName}}</p>
+      <p>Please find the official match slip attached to this email.</p>
     </div>
   `;
-  return sendTemplateEmail(requesterEmail, 'request_accepted', defaultSubject, defaultHtml, {
-    requesterName,
-    donorName,
-    phone: contactData.phone,
-    email: contactData.email,
-    preferredContactMethod: contactData.preferredContactMethod || 'phone',
-    donorId: contactData.donorId,
-    bloodGroup: requestData.bloodGroup
-  });
+  const attachments = pdfPath ? [{ filename: `OneBlood_Match_${matchObid}.pdf`, path: pdfPath }] : null;
+  return sendTemplateEmail(to, 'match_confirmed_hospital', defaultSubject, defaultHtml, { seekerName, donorName, matchObid, facilityName }, attachments, 'match_confirmed_hospital');
 };
 
 /**
- * Send request fulfillment email
+ * Send match email to blood bank (transit detour)
  */
-const sendRequestFulfilledEmail = async (email, name, requestData) => {
-  const defaultSubject = `✅ Fulfilled: Request for ${requestData.bloodGroup} completed`;
+const sendBloodBankMatchEmail = async (to, seekerName, donorName, matchObid, facilityName, detourBankName, pdfPath = null) => {
+  const defaultSubject = `🏥 New Detour Match Assigned - ID: {{matchObid}}`;
   const defaultHtml = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-      <h2 style="color: #059669; border-bottom: 2px solid #059669; padding-bottom: 10px; margin-top: 0;">Request Fulfilled</h2>
-      <p>Dear <strong>{{name}}</strong>,</p>
-      <p>The emergency request for <strong>{{bloodGroup}}</strong> has been marked as **fulfilled**. Thank you for your support and coordination in saving a life today!</p>
+      <h2 style="color: #B91C1C; border-bottom: 2px solid #B91C1C; padding-bottom: 10px; margin-top: 0;">🏥 New Detour Match Assigned</h2>
+      <p>Dear Blood Bank Administrator,</p>
+      <p>Match ID <strong>{{matchObid}}</strong> detour has been registered to your blood bank.</p>
+      <p>A blood donation match has been established between seeker <strong>{{seekerName}}</strong> and donor <strong>{{donorName}}</strong>, with your blood bank as a transit step.</p>
+      <p><strong>Match OBID:</strong> {{matchObid}}</p>
+      <p><strong>Detour Blood Bank:</strong> {{detourBankName}}</p>
+      <p><strong>Destination Hospital:</strong> {{facilityName}}</p>
+      <p>Please find the official match slip attached to this email.</p>
     </div>
   `;
-  return sendTemplateEmail(email, 'request_fulfilled', defaultSubject, defaultHtml, { name, bloodGroup: requestData.bloodGroup });
+  const attachments = pdfPath ? [{ filename: `OneBlood_Match_${matchObid}.pdf`, path: pdfPath }] : null;
+  return sendTemplateEmail(to, 'match_confirmed_blood_bank', defaultSubject, defaultHtml, { seekerName, donorName, matchObid, facilityName, detourBankName }, attachments, 'match_confirmed_blood_bank');
 };
 
 /**
- * Send OTP verification email
+ * Send donation completed email to all parties (seeker, donor, hospital, blood bank)
  */
-const sendOTPEmail = async (to, name, otp) => {
-  const defaultSubject = `Your OneBlood verification code — ${otp}`;
+const sendDonationCompletedEmail = async (to, role, seekerName, donorName, matchObid, facilityName) => {
+  const defaultSubject = `✅ Donation Completed - Match ID: {{matchObid}}`;
   const defaultHtml = `
-<div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;">
-  <div style="background: #C0152A; padding: 24px; text-align: center;">
-    <h1 style="color: white; margin: 0; font-size: 28px;">One<span style="font-weight:400">Blood</span></h1>
-    <p style="color: rgba(255,255,255,0.8); margin: 4px 0 0; font-size: 12px; letter-spacing: 2px;">EMERGENCY BLOOD RESOURCE PLATFORM</p>
-  </div>
-  <div style="padding: 32px 24px; background: #fff; border: 1px solid #eee; border-top: none;">
-    <p style="color: #333; font-size: 16px;">Hi {{name}},</p>
-    <p style="color: #555; font-size: 15px;">Your OneBlood verification code is:</p>
-    <div style="background: #f5f5f5; border-radius: 12px; padding: 24px; text-align: center; margin: 24px 0;">
-      <span style="font-size: 40px; font-weight: 800; letter-spacing: 10px; color: #C0152A;">{{otp}}</span>
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+      <h2 style="color: #059669; border-bottom: 2px solid #059669; padding-bottom: 10px; margin-top: 0;">✅ Donation Completed</h2>
+      <p>Dear {{role}},</p>
+      <p>The blood donation for Match ID <strong>{{matchObid}}</strong> has been successfully completed and verified at <strong>{{facilityName}}</strong>.</p>
+      <p>Donor <strong>{{donorName}}</strong> donated blood for seeker <strong>{{seekerName}}</strong>.</p>
+      <p>Thank you for your valuable contribution to saving lives through OneBlood!</p>
     </div>
-    <p style="color: #888; font-size: 13px;">This code expires in <strong>10 minutes</strong>. Do not share it with anyone.</p>
-    <p style="color: #888; font-size: 13px;">If you didn't create a OneBlood account, you can safely ignore this email.</p>
-  </div>
-  <div style="padding: 16px 24px; background: #f9f9f9; text-align: center; border: 1px solid #eee; border-top: none;">
-    <p style="color: #aaa; font-size: 11px; margin: 0;">OneBlood — Connecting lives, one drop at a time.</p>
-  </div>
-</div>
   `;
-  return sendTemplateEmail(to, 'otp_email', defaultSubject, defaultHtml, { name, otp });
+  return sendTemplateEmail(to, 'donation_completed', defaultSubject, defaultHtml, { role, seekerName, donorName, matchObid, facilityName }, null, 'donation_completed');
 };
 
 /**
@@ -326,10 +262,10 @@ const runEmailRetryJob = async () => {
       log.attempts += 1;
       log.status = 'retrying';
       await log.save();
-      
+
       console.log(`Retrying email send to ${log.to} for template ${log.templateName} (Attempt ${log.attempts})`);
-      const res = await sendEmail(log.to, log.subject, log.html || 'Retry body', log.templateName);
-      if (res.success) {
+      const res = await sendEmail(log.to, log.subject, log.html || 'Retry body', log.templateName, null, log.emailType);
+      if (res.success && res.provider !== 'mock') {
         log.status = 'sent';
         log.errorMessage = undefined;
       } else {
@@ -350,9 +286,9 @@ module.exports = {
   sendEmail,
   sendTemplateEmail,
   sendWelcomeEmail,
-  sendRequestAlertEmail,
-  sendRequestAcceptedEmail,
-  sendRequestFulfilledEmail,
-  sendOTPEmail,
+  sendMatchConfirmationEmail,
+  sendHospitalMatchEmail,
+  sendBloodBankMatchEmail,
+  sendDonationCompletedEmail,
   runEmailRetryJob
 };

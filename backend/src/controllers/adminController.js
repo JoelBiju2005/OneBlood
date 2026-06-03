@@ -376,15 +376,17 @@ const getEmailTemplates = async (req, res, next) => {
 
 const updateEmailTemplate = async (req, res, next) => {
   try {
-    const { templateName, subject, html, variables, active } = req.body;
+    const { templateName, subject, html, variables, active, description, category } = req.body;
     let template = await EmailTemplate.findOne({ templateName });
     if (!template) {
-      template = new EmailTemplate({ templateName, subject, html, variables, active });
+      template = new EmailTemplate({ templateName, subject, html, variables, active, description, category });
     } else {
       if (subject) template.subject = subject;
       if (html) template.html = html;
       if (variables) template.variables = variables;
       if (active !== undefined) template.active = active;
+      if (description) template.description = description;
+      if (category) template.category = category;
     }
     await template.save();
     res.status(200).json({ success: true, message: 'Email template saved successfully', template });

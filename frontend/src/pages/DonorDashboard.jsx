@@ -263,15 +263,17 @@ const DonorDashboard = () => {
             </div>
 
             <div className="pt-2 flex gap-2">
-              <a
-                href={activeMatch.pdfPath ? `${ASSETS_URL}${activeMatch.pdfPath}` : '#'}
-                target="_blank"
-                rel="noreferrer"
-                className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold text-center transition-all flex items-center justify-center space-x-1.5"
-              >
-                <FileText className="w-3.5 h-3.5" />
-                <span>Download Match Slip PDF</span>
-              </a>
+              {activeMatch._id && (
+                <a
+                  href={`${ASSETS_URL}/api/donations/matches/${activeMatch._id}/pdf`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold text-center transition-all flex items-center justify-center space-x-1.5"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>Download Match Slip PDF</span>
+                </a>
+              )}
               <Link
                 to="/active-donations"
                 className="py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all flex items-center justify-center"

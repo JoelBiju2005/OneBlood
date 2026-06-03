@@ -5,8 +5,10 @@ const Donor = require('../models/Donor');
 const Hospital = require('../models/Hospital');
 const BloodBank = require('../models/BloodBank');
 const SystemSettings = require('../models/SystemSettings');
+const fs = require('fs');
+const path = require('path');
 const { generateMatchPDF } = require('../services/pdfService');
-const { sendEmail } = require('../services/emailService');
+const { sendMatchConfirmationEmail, sendHospitalMatchEmail, sendBloodBankMatchEmail, sendDonationCompletedEmail } = require('../services/emailService');
 const { createNotification } = require('../services/notificationService');
 const socketService = require('../services/socketService');
 
@@ -160,7 +162,7 @@ const approveDonorAndSelectFacility = async (req, res, next) => {
       title: '💖 Match Created & Confirmed',
       message: `Your request has been matched with donor ${donorUser.name}. Match ID: ${matchObid}. PDF generated.`
     });
-    await sendEmail(seekerUser.email, emailSubject, emailBody, 'match_confirmed', attachments);
+    await sendMatchConfirmationEmail(seekerUser.email, seekerUser.name, donorUser.name, matchObid, facilityName, pdfPath);
 
     // Notify Donor
     await createNotification({
@@ -169,7 +171,7 @@ const approveDonorAndSelectFacility = async (req, res, next) => {
       title: '💖 Match Confirmed',
       message: `You are matched for donation. Match ID: ${matchObid}. Hospital: ${facilityName}.`
     });
-    await sendEmail(donorUser.email, emailSubject, emailBody, 'match_confirmed', attachments);
+    await sendMatchConfirmationEmail(donorUser.email, seekerUser.name, donorUser.name, matchObid, facilityName, pdfPath);
 
     // Notify Hospital
     if (facility.userId?._id) {
@@ -181,7 +183,7 @@ const approveDonorAndSelectFacility = async (req, res, next) => {
       });
     }
     if (facilityEmail) {
-      await sendEmail(facilityEmail, emailSubject, emailBody, 'match_confirmed', attachments);
+      await sendHospitalMatchEmail(facilityEmail, seekerUser.name, donorUser.name, matchObid, facilityName, pdfPath);
     }
 
     // Notify Blood Bank Detour (if present)
@@ -194,7 +196,7 @@ const approveDonorAndSelectFacility = async (req, res, next) => {
       });
       const bbEmail = detourBank.adminUserId?.email || detourBank.email;
       if (bbEmail) {
-        await sendEmail(bbEmail, emailSubject, emailBody, 'match_confirmed', attachments);
+        await sendBloodBankMatchEmail(bbEmail, seekerUser.name, donorUser.name, matchObid, facilityName, detourBank.name, pdfPath);
       }
     }
 
@@ -334,6 +336,33 @@ const completeDonation = async (req, res, next) => {
         message: `Donation Match ${match.matchObid} completed. Thank you for saving a life!`
       });
 
+      // Send completion emails
+      try {
+        const seeker = await User.findById(match.seekerId);
+        const donor = await User.findById(match.donorId);
+        const hospitalObj = await Hospital.findById(match.hospitalId).populate('userId');
+        const bloodBankObj = match.bloodBankId ? await BloodBank.findById(match.bloodBankId).populate('adminUserId') : null;
+
+        if (seeker && seeker.email) {
+          await sendDonationCompletedEmail(seeker.email, 'Seeker', seeker.name, donor ? donor.name : 'Donor', match.matchObid, match.facilityName);
+        }
+        if (donor && donor.email) {
+          await sendDonationCompletedEmail(donor.email, 'Donor', seeker ? seeker.name : 'Seeker', donor.name, match.matchObid, match.facilityName);
+        }
+        
+        const hospEmail = hospitalObj?.userId?.email || hospitalObj?.email;
+        if (hospEmail) {
+          await sendDonationCompletedEmail(hospEmail, 'Hospital', seeker ? seeker.name : 'Seeker', donor ? donor.name : 'Donor', match.matchObid, match.facilityName);
+        }
+
+        const bbEmail = bloodBankObj?.adminUserId?.email || bloodBankObj?.email;
+        if (bbEmail) {
+          await sendDonationCompletedEmail(bbEmail, 'Blood Bank', seeker ? seeker.name : 'Seeker', donor ? donor.name : 'Donor', match.matchObid, match.facilityName);
+        }
+      } catch (emailErr) {
+        console.error('Failed to send donation completed emails:', emailErr.message);
+      }
+
       return res.status(200).json({
         success: true,
         message: 'Donation completed successfully and history stored',
@@ -465,10 +494,55 @@ const getMatchHistory = async (req, res, next) => {
   }
 };
 
+/**
+ * Serves or regenerates a match slip PDF on-the-fly.
+ */
+const downloadMatchPDF = async (req, res, next) => {
+  try {
+    const { matchId } = req.params;
+    const match = await DonationMatch.findById(matchId);
+    if (!match) {
+      return res.status(404).json({ message: 'Donation match not found' });
+    }
+
+    const pdfDir = path.join(__dirname, '../../uploads/pdfs');
+    const fileName = `match_${match.matchObid}.pdf`;
+    const filePath = path.join(pdfDir, fileName);
+
+    // If PDF exists, serve it
+    if (fs.existsSync(filePath)) {
+      return res.download(filePath, fileName);
+    }
+
+    // Otherwise, regenerate it on-the-fly!
+    const seeker = await User.findById(match.seekerId);
+    const donor = await User.findById(match.donorId);
+    const donorProfile = await Donor.findOne({ userId: match.donorId });
+    const facility = await Hospital.findById(match.hospitalId);
+    const detourBank = match.bloodBankId ? await BloodBank.findById(match.bloodBankId) : null;
+
+    if (!seeker || !donor || !facility) {
+      return res.status(400).json({ message: 'Required data to generate PDF is missing' });
+    }
+
+    console.log(`Re-generating PDF for match ${match.matchObid} on-the-fly...`);
+    const newPath = await generateMatchPDF(match, seeker, donor, facility, detourBank, donorProfile);
+    
+    // Save path in match
+    match.pdfPath = `/uploads/pdfs/match_${match.matchObid}.pdf`;
+    await match.save();
+
+    return res.download(newPath, fileName);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   approveDonorAndSelectFacility,
   completeDonation,
   cancelMatch,
   getMatchesInProgress,
-  getMatchHistory
+  getMatchHistory,
+  downloadMatchPDF
 };

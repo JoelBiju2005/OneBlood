@@ -5,6 +5,8 @@ const emailTemplateSchema = new mongoose.Schema({
   subject: { type: String, required: true },
   html: { type: String, required: true },
   variables: [{ type: String }],
+  description: { type: String },
+  category: { type: String },
   active: { type: Boolean, default: true }
 }, {
   timestamps: true

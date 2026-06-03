@@ -55,7 +55,7 @@ const generateMatchPDF = async (match, seeker, donor, facility, detourBank = nul
       }
 
       // Logo path
-      const logoPath = 'C:/Users/JOEL BIJU/.gemini/antigravity-ide/brain/9fba1a38-fedf-46be-ae8f-66bb3c70a9b2/media__1780468113952.jpg';
+      const logoPath = path.join(__dirname, '../assets/oneblood-logo.png');
 
       // 1. Watermark Background
       doc.save();

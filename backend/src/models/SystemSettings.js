@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const systemSettingsSchema = new mongoose.Schema({
-  emailProvider: { type: String, enum: ['resend', 'gmail'], default: 'resend' },
+  emailProvider: { type: String, enum: ['brevo'], default: 'brevo' },
   fromEmail: { type: String, default: 'oneblood.officialteam@gmail.com' },
   escalationEnabled: { type: Boolean, default: true },
   donorMinAge: { type: Number, default: 18 },
@@ -17,7 +17,7 @@ systemSettingsSchema.statics.getSettings = async function() {
   let settings = await this.findOne();
   if (!settings) {
     settings = await this.create({
-      emailProvider: process.env.EMAIL_PROVIDER || 'resend',
+      emailProvider: process.env.EMAIL_PROVIDER || 'brevo',
       fromEmail: process.env.FROM_EMAIL || 'oneblood.officialteam@gmail.com',
       escalationEnabled: true,
       donorMinAge: 18,
