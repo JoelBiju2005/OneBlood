@@ -29,6 +29,9 @@ const SeekerHomePage = () => {
   const [facilities, setFacilities] = useState([]);
   const [facilitiesLoading, setFacilitiesLoading] = useState(false);
   const [selectedFacility, setSelectedFacility] = useState(null);
+  const [selectedHospital, setSelectedHospital] = useState(null);
+  const [selectedBloodBank, setSelectedBloodBank] = useState(null);
+  const [useDetour, setUseDetour] = useState(false);
   const [approving, setApproving] = useState(false);
   const [facilityFilter, setFacilityFilter] = useState('');
 
@@ -174,6 +177,9 @@ const SeekerHomePage = () => {
   const openFacilitySelector = async (requestId, donorResponderId, donorName) => {
     setFacilityModal({ open: true, requestId, donorId: donorResponderId, donorName });
     setSelectedFacility(null);
+    setSelectedHospital(null);
+    setSelectedBloodBank(null);
+    setUseDetour(false);
     setFacilityFilter('');
     setFacilitiesLoading(true);
     try {
@@ -190,11 +196,18 @@ const SeekerHomePage = () => {
   const closeFacilityModal = () => {
     setFacilityModal({ open: false, requestId: null, donorId: null, donorName: '' });
     setSelectedFacility(null);
+    setSelectedHospital(null);
+    setSelectedBloodBank(null);
+    setUseDetour(false);
   };
 
   const handleApproveDonor = async () => {
-    if (!selectedFacility) {
-      toast.error('Please select a destination facility');
+    if (!selectedHospital) {
+      toast.error('Please select a destination hospital');
+      return;
+    }
+    if (useDetour && !selectedBloodBank) {
+      toast.error('Please select a detour blood bank first');
       return;
     }
     setApproving(true);
@@ -202,8 +215,8 @@ const SeekerHomePage = () => {
       const res = await api.post('/donations/matches/approve', {
         requestId: facilityModal.requestId,
         donorId: facilityModal.donorId,
-        destinationType: selectedFacility.type,
-        facilityId: selectedFacility.id
+        hospitalId: selectedHospital.id,
+        bloodBankId: useDetour ? selectedBloodBank.id : null
       });
       toast.success(`Match created! ID: ${res.data.match?.matchObid || 'Generated'}`);
       closeFacilityModal();
@@ -469,6 +482,8 @@ const SeekerHomePage = () => {
                   viewerRole={user?.role}
                   onRespond={handleNoticeRespond}
                   urgencyColors={URGENCY_COLORS}
+                  isOwner={true}
+                  onApprove={(noticeId, responderId, responderName) => openFacilitySelector(noticeId, responderId, responderName)}
                 />
               ))}
             </div>
@@ -574,16 +589,16 @@ const SeekerHomePage = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={closeFacilityModal}>
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
           <div
-            className="relative bg-slate-900 border border-white/10 rounded-3xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col"
+            className="relative bg-slate-900 border border-white/10 rounded-3xl max-w-xl w-full max-h-[85vh] overflow-hidden flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
             <div className="p-6 border-b border-white/5">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-bold text-white">Select Destination Facility</h3>
+                  <h3 className="text-lg font-bold text-white">Coordinate Hospital & Blood Bank</h3>
                   <p className="text-xs text-slate-400 mt-1">
-                    Approving donor: <span className="text-white font-semibold">{facilityModal.donorName}</span>
+                    Donor: <span className="text-white font-semibold">{facilityModal.donorName}</span>
                   </p>
                 </div>
                 <button onClick={closeFacilityModal} className="p-2 hover:bg-white/5 rounded-xl transition-colors">
@@ -591,97 +606,159 @@ const SeekerHomePage = () => {
                 </button>
               </div>
 
+              {/* Detour Switch */}
+              <div className="mt-4 flex items-center justify-between bg-slate-950/60 border border-white/5 rounded-2xl p-4">
+                <div className="text-left">
+                  <span className="text-xs font-bold text-white block">Add detour to Blood Bank first?</span>
+                  <span className="text-[10px] text-slate-500 block">Collect or transfuse blood at bank before going to hospital</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setUseDetour(!useDetour)}
+                  className={`w-12 h-6 rounded-full p-1 transition-colors duration-200 focus:outline-none ${
+                    useDetour ? 'bg-[#C0152A]' : 'bg-slate-700'
+                  }`}
+                >
+                  <div
+                    className={`w-4 h-4 rounded-full bg-white transition-transform duration-200 ${
+                      useDetour ? 'transform translate-x-6' : ''
+                    }`}
+                  />
+                </button>
+              </div>
+
               {/* Search */}
               <div className="mt-4">
                 <input
                   type="text"
-                  placeholder="Search facility by name or city..."
+                  placeholder="Search facilities by name or city..."
                   value={facilityFilter}
                   onChange={(e) => setFacilityFilter(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-800 border border-white/10 rounded-xl text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500/50 transition-colors"
+                  className="w-full px-4 py-2.5 bg-slate-800 border border-white/10 rounded-xl text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-red-500/50 transition-colors"
                 />
               </div>
             </div>
 
-            {/* Facility List */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {facilitiesLoading ? (
-                <div className="flex items-center justify-center py-12 text-slate-500 text-xs">
-                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                  Loading verified facilities...
+            {/* Facility Lists Container */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              
+              {/* Optional Blood Bank Detour Section */}
+              {useDetour && (
+                <div className="space-y-3">
+                  <h4 className="text-xs font-black uppercase text-purple-400 tracking-wider flex items-center gap-1">
+                    <span>🏥</span> 1. Select Detour Blood Bank (Optional)
+                  </h4>
+                  <div className="space-y-2">
+                    {facilitiesLoading ? (
+                      <div className="py-4 text-center text-xs text-slate-500">Loading blood banks...</div>
+                    ) : facilities.filter(f => f.type === 'BloodBank').length === 0 ? (
+                      <div className="py-4 text-center text-xs text-slate-500">No blood banks found.</div>
+                    ) : (
+                      facilities
+                        .filter(f => f.type === 'BloodBank')
+                        .filter(f => {
+                          const q = facilityFilter.toLowerCase();
+                          return !q || f.name?.toLowerCase().includes(q) || f.city?.toLowerCase().includes(q);
+                        })
+                        .map((fac) => {
+                          const isSelected = selectedBloodBank?.id === fac.id;
+                          return (
+                            <button
+                              key={fac.id}
+                              type="button"
+                              onClick={() => setSelectedBloodBank(fac)}
+                              className={`w-full text-left p-3.5 rounded-2xl border transition-all ${
+                                isSelected
+                                  ? 'bg-purple-500/10 border-purple-500/30 ring-1 ring-purple-500/20'
+                                  : 'bg-slate-800/40 border-white/5 hover:border-white/10'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <span className="text-xs font-bold text-white block">{fac.name}</span>
+                                  <span className="text-[10px] text-slate-400 block">{fac.address}, {fac.city}</span>
+                                </div>
+                                {isSelected && <CheckCircle className="w-4 h-4 text-purple-400 shrink-0" />}
+                              </div>
+                            </button>
+                          );
+                        })
+                    )}
+                  </div>
                 </div>
-              ) : facilities.length === 0 ? (
-                <div className="text-center py-12 text-slate-500 text-xs">
-                  No approved facilities found. Contact admin to approve hospitals/blood banks.
-                </div>
-              ) : (
-                facilities
-                  .filter(f => {
-                    const q = facilityFilter.toLowerCase();
-                    return !q || f.name?.toLowerCase().includes(q) || f.city?.toLowerCase().includes(q);
-                  })
-                  .map((fac) => {
-                    const isSelected = selectedFacility?.id === fac.id;
-                    return (
-                      <button
-                        key={fac.id}
-                        onClick={() => setSelectedFacility(fac)}
-                        className={`w-full text-left p-4 rounded-2xl border transition-all ${
-                          isSelected
-                            ? 'bg-[#C0152A]/10 border-[#C0152A]/30 ring-1 ring-[#C0152A]/20'
-                            : 'bg-slate-800/40 border-white/5 hover:border-white/10'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <Building2 className={`w-4 h-4 ${fac.type === 'Hospital' ? 'text-blue-400' : 'text-purple-400'}`} />
-                              <span className="text-sm font-bold text-white">{fac.name}</span>
-                            </div>
-                            <p className="text-[11px] text-slate-400 pl-6">
-                              {fac.address}, {fac.city}
-                            </p>
-                            <div className="flex gap-3 pl-6 pt-1">
-                              <span className={`text-[9px] px-2 py-0.5 rounded font-bold uppercase tracking-wider ${
-                                fac.type === 'Hospital'
-                                  ? 'bg-blue-500/10 border border-blue-500/20 text-blue-400'
-                                  : 'bg-purple-500/10 border border-purple-500/20 text-purple-400'
-                              }`}>
-                                {fac.type}
-                              </span>
-                              {fac.phone && (
-                                <span className="text-[10px] text-slate-500">📞 {fac.phone}</span>
-                              )}
-                            </div>
-                          </div>
-                          {isSelected && (
-                            <CheckCircle className="w-5 h-5 text-[#C0152A] shrink-0" />
-                          )}
-                        </div>
-                      </button>
-                    );
-                  })
               )}
+
+              {/* Mandatory Hospital Section */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-black uppercase text-blue-400 tracking-wider flex items-center gap-1">
+                  <span>🏥</span> {useDetour ? '2. Select Mandatory Destination Hospital' : 'Select Mandatory Destination Hospital'}
+                </h4>
+                <div className="space-y-2">
+                  {facilitiesLoading ? (
+                    <div className="py-8 text-center text-xs text-slate-500">Loading hospitals...</div>
+                  ) : facilities.filter(f => f.type === 'Hospital').length === 0 ? (
+                    <div className="py-8 text-center text-xs text-slate-500">No approved hospitals found.</div>
+                  ) : (
+                    facilities
+                      .filter(f => f.type === 'Hospital')
+                      .filter(f => {
+                        const q = facilityFilter.toLowerCase();
+                        return !q || f.name?.toLowerCase().includes(q) || f.city?.toLowerCase().includes(q);
+                      })
+                      .map((fac) => {
+                        const isSelected = selectedHospital?.id === fac.id;
+                        return (
+                          <button
+                            key={fac.id}
+                            type="button"
+                            onClick={() => setSelectedHospital(fac)}
+                            className={`w-full text-left p-3.5 rounded-2xl border transition-all ${
+                              isSelected
+                                ? 'bg-blue-500/10 border-blue-500/30 ring-1 ring-blue-500/20'
+                                : 'bg-slate-800/40 border-white/5 hover:border-white/10'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <span className="text-xs font-bold text-white block">{fac.name}</span>
+                                <span className="text-[10px] text-slate-400 block">{fac.address}, {fac.city}</span>
+                              </div>
+                              {isSelected && <CheckCircle className="w-4 h-4 text-blue-400 shrink-0" />}
+                            </div>
+                          </button>
+                        );
+                      })
+                  )}
+                </div>
+              </div>
+
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 border-t border-white/5">
+            <div className="p-4 border-t border-white/5 bg-slate-950/20">
               <button
                 onClick={handleApproveDonor}
-                disabled={!selectedFacility || approving}
-                className="w-full py-3 bg-[#C0152A] hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2"
+                disabled={!selectedHospital || (useDetour && !selectedBloodBank) || approving}
+                className="w-full py-3 bg-[#C0152A] hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer text-sm"
               >
                 {approving ? (
                   <><Loader2 className="w-4 h-4 animate-spin" /> Creating Match...</>
                 ) : (
-                  <><ShieldCheck className="w-4 h-4" /> Approve Donor & Confirm Facility</>
+                  <><ShieldCheck className="w-4 h-4" /> Approve Donor & Confirm Matching</>
                 )}
               </button>
-              {selectedFacility && (
-                <p className="text-[10px] text-slate-500 text-center mt-2">
-                  Selected: <span className="text-white font-semibold">{selectedFacility.name}</span> ({selectedFacility.type})
-                </p>
-              )}
+              <div className="mt-2 text-[10px] text-slate-500 text-center space-y-1">
+                {selectedHospital && (
+                  <p>
+                    Final: <span className="text-white font-semibold">{selectedHospital.name}</span>
+                  </p>
+                )}
+                {useDetour && selectedBloodBank && (
+                  <p>
+                    Detour: <span className="text-purple-400 font-semibold">{selectedBloodBank.name}</span>
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>

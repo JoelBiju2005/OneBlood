@@ -15,19 +15,26 @@ const socketService = require('../services/socketService');
  */
 const approveDonorAndSelectFacility = async (req, res, next) => {
   try {
-    const { requestId, donorId, destinationType, facilityId } = req.body;
+    const { requestId, donorId, hospitalId, bloodBankId } = req.body;
 
-    if (!requestId || !donorId || !destinationType || !facilityId) {
-      return res.status(400).json({ message: 'Missing required fields: requestId, donorId, destinationType, facilityId' });
+    if (!requestId || !donorId || !hospitalId) {
+      return res.status(400).json({ message: 'Missing required fields: requestId, donorId, hospitalId' });
     }
 
-    const request = await BloodRequest.findById(requestId);
+    let request = await BloodRequest.findById(requestId);
+    let isNoticeBoard = false;
     if (!request) {
-      return res.status(404).json({ message: 'Blood request not found' });
+      const NoticeBoard = require('../models/NoticeBoard');
+      request = await NoticeBoard.findById(requestId);
+      if (!request) {
+        return res.status(404).json({ message: 'Blood request or Notice not found' });
+      }
+      isNoticeBoard = true;
     }
 
     // Ensure the requester is the one approving
-    if (request.requesterId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    const requesterId = isNoticeBoard ? request.seekerId : request.requesterId;
+    if (requesterId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Unauthorized access to approve donor' });
     }
 
@@ -57,59 +64,63 @@ const approveDonorAndSelectFacility = async (req, res, next) => {
       }
     }
 
-    // Resolve Facility
-    let facility = null;
-    let facilityEmail = '';
-    let facilityName = '';
-    let hospitalId = null;
-    let bloodBankId = null;
+    // Resolve hospital
+    const facility = await Hospital.findById(hospitalId).populate('userId');
+    if (!facility) return res.status(404).json({ message: 'Hospital not found' });
+    const facilityName = facility.hospitalName;
+    const facilityEmail = facility.userId?.email || facility.emergencyContact;
 
-    if (destinationType === 'Hospital') {
-      facility = await Hospital.findById(facilityId).populate('userId');
-      if (!facility) return res.status(404).json({ message: 'Hospital not found' });
-      hospitalId = facilityId;
-      facilityName = facility.hospitalName;
-      facilityEmail = facility.userId?.email || facility.emergencyContact;
-    } else {
-      facility = await BloodBank.findById(facilityId).populate('adminUserId');
-      if (!facility) return res.status(404).json({ message: 'Blood Bank not found' });
-      bloodBankId = facilityId;
-      facilityName = facility.name;
-      facilityEmail = facility.adminUserId?.email || facility.email;
+    // Resolve optional detour blood bank
+    let detourBank = null;
+    if (bloodBankId) {
+      detourBank = await BloodBank.findById(bloodBankId).populate('adminUserId');
+      if (!detourBank) return res.status(404).json({ message: 'Blood Bank detour not found' });
     }
 
     // Generate Match OBID
     const matchObid = await DonationMatch.generateMatchId();
 
+    const destinationType = bloodBankId ? 'BloodBankAndHospital' : 'Hospital';
+
     // Create Donation Match
     const match = await DonationMatch.create({
       matchObid,
-      seekerId: request.requesterId,
+      seekerId: requesterId,
       donorId: donorUser._id,
       destinationType,
       hospitalId,
-      bloodBankId,
+      bloodBankId: bloodBankId || null,
       requestId,
+      requestType: isNoticeBoard ? 'NoticeBoard' : 'BloodRequest',
       bloodGroup: request.bloodGroup,
-      units: request.unitsRequired || 1,
+      units: (isNoticeBoard ? request.unitsNeeded : request.unitsRequired) || 1,
       status: 'in_progress'
     });
 
-    // Update Blood Request response item status to approved
-    const respIndex = request.responses.findIndex(r => r.responderId && r.responderId.toString() === donorProfile._id.toString());
-    if (respIndex > -1) {
-      request.responses[respIndex].status = 'accepted';
-      request.markModified('responses');
+    // Update Request status to approved/accepted
+    if (isNoticeBoard) {
+      const respIndex = request.responses.findIndex(r => r.donorId && (r.donorId.toString() === donorProfile._id.toString() || r.donorId.toString() === donorId.toString()));
+      if (respIndex > -1) {
+        request.responses[respIndex].action = 'can_donate'; // ensure action is recorded correctly
+      }
+      request.status = 'active'; // keep notice post active or accepted status
+      await request.save();
+    } else {
+      const respIndex = request.responses.findIndex(r => r.responderId && r.responderId.toString() === donorProfile._id.toString());
+      if (respIndex > -1) {
+        request.responses[respIndex].status = 'accepted';
+        request.markModified('responses');
+      }
+      request.status = 'accepted';
+      await request.save();
     }
-    request.status = 'accepted';
-    await request.save();
 
     // Generate PDF
-    const seekerUser = await User.findById(request.requesterId);
+    const seekerUser = await User.findById(requesterId);
     let pdfPath = '';
     try {
-      pdfPath = await generateMatchPDF(match, seekerUser, donorUser, facility);
-      match.pdfPath = pdfPath;
+      pdfPath = await generateMatchPDF(match, seekerUser, donorUser, facility, detourBank);
+      match.pdfPath = `/uploads/pdfs/match_${matchObid}.pdf`;
       await match.save();
     } catch (pdfErr) {
       console.error('Failed to generate PDF:', pdfErr.message);
@@ -119,13 +130,16 @@ const approveDonorAndSelectFacility = async (req, res, next) => {
     const attachments = pdfPath ? [{ filename: `OneBlood_Match_${matchObid}.pdf`, path: pdfPath }] : null;
     
     const emailSubject = `OneBlood Donation Match Confirmed - ID: ${matchObid}`;
-    const emailBody = `
+    let emailBody = `
       <h3>Donation Match Confirmed</h3>
       <p>A blood donation match has been established between seeker <strong>${seekerUser.name}</strong> and donor <strong>${donorUser.name}</strong>.</p>
       <p><strong>Match OBID:</strong> ${matchObid}</p>
-      <p><strong>Destination Facility:</strong> ${facilityName}</p>
-      <p>Please find the official match slip attached to this email.</p>
+      <p><strong>Destination Hospital:</strong> ${facilityName}</p>
     `;
+    if (detourBank) {
+      emailBody += `<p><strong>Detour Blood Bank:</strong> ${detourBank.name}</p>`;
+    }
+    emailBody += `<p>Please find the official match slip attached to this email.</p>`;
 
     // Notify Seeker
     await createNotification({
@@ -141,29 +155,42 @@ const approveDonorAndSelectFacility = async (req, res, next) => {
       recipientId: donorUser._id,
       type: 'donor_response',
       title: '💖 Match Confirmed',
-      message: `You are matched for donation. Match ID: ${matchObid}. Facility: ${facilityName}.`
+      message: `You are matched for donation. Match ID: ${matchObid}. Hospital: ${facilityName}.`
     });
     await sendEmail(donorUser.email, emailSubject, emailBody, 'match_confirmed', attachments);
 
-    // Notify Facility
-    const facUserId = destinationType === 'Hospital' ? facility.userId?._id : facility.adminUserId?._id;
-    if (facUserId) {
+    // Notify Hospital
+    if (facility.userId?._id) {
       await createNotification({
-        recipientId: facUserId,
+        recipientId: facility.userId._id,
         type: 'system',
         title: '🏥 New Match Assigned',
-        message: `Match ID ${matchObid} has been registered to your facility.`
+        message: `Match ID ${matchObid} has been registered to your hospital.`
       });
     }
     if (facilityEmail) {
       await sendEmail(facilityEmail, emailSubject, emailBody, 'match_confirmed', attachments);
     }
 
+    // Notify Blood Bank Detour (if present)
+    if (detourBank && detourBank.adminUserId?._id) {
+      await createNotification({
+        recipientId: detourBank.adminUserId._id,
+        type: 'system',
+        title: '🏥 New Detour Match Assigned',
+        message: `Match ID ${matchObid} detour has been registered to your blood bank.`
+      });
+      const bbEmail = detourBank.adminUserId?.email || detourBank.email;
+      if (bbEmail) {
+        await sendEmail(bbEmail, emailSubject, emailBody, 'match_confirmed', attachments);
+      }
+    }
+
     res.status(201).json({
       success: true,
       message: 'Donor approved and DonationMatch established',
       match,
-      pdfUrl: pdfPath ? `/uploads/pdfs/match_${matchObid}.pdf` : null
+      pdfUrl: `/uploads/pdfs/match_${matchObid}.pdf`
     });
   } catch (error) {
     next(error);
@@ -183,13 +210,14 @@ const completeDonation = async (req, res, next) => {
       return res.status(404).json({ message: 'Donation match not found' });
     }
 
-    // Verify authorized user (Facility admin or site admin)
+    // Verify authorized user (Hospital or BloodBank or Admin)
     let isAuthorized = req.user.role === 'admin';
     if (!isAuthorized) {
-      if (match.destinationType === 'Hospital') {
+      if (match.hospitalId) {
         const hosp = await Hospital.findById(match.hospitalId);
         if (hosp && hosp.userId.toString() === req.user._id.toString()) isAuthorized = true;
-      } else {
+      }
+      if (!isAuthorized && match.bloodBankId) {
         const bb = await BloodBank.findById(match.bloodBankId);
         if (bb && bb.adminUserId.toString() === req.user._id.toString()) isAuthorized = true;
       }
@@ -212,8 +240,13 @@ const completeDonation = async (req, res, next) => {
       await donorProfile.save();
     }
 
-    // Update Blood Request status
-    await BloodRequest.findByIdAndUpdate(match.requestId, { status: 'fulfilled' });
+    // Update Request status
+    if (match.requestType === 'NoticeBoard') {
+      const NoticeBoard = require('../models/NoticeBoard');
+      await NoticeBoard.findByIdAndUpdate(match.requestId, { status: 'fulfilled' });
+    } else {
+      await BloodRequest.findByIdAndUpdate(match.requestId, { status: 'fulfilled' });
+    }
 
     // Send notifications to Seeker & Donor
     await createNotification({
@@ -260,7 +293,12 @@ const cancelMatch = async (req, res, next) => {
     await match.save();
 
     // Revert Request status back to active so other donors can help
-    await BloodRequest.findByIdAndUpdate(match.requestId, { status: 'active' });
+    if (match.requestType === 'NoticeBoard') {
+      const NoticeBoard = require('../models/NoticeBoard');
+      await NoticeBoard.findByIdAndUpdate(match.requestId, { status: 'open' });
+    } else {
+      await BloodRequest.findByIdAndUpdate(match.requestId, { status: 'active' });
+    }
 
     // Send alerts
     const seeker = await User.findById(match.seekerId);

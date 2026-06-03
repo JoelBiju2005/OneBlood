@@ -544,6 +544,146 @@ const seedHubballiData = async (req, res, next) => {
       });
     }
 
+    // 4. Tatwadarsha Hospital
+    let tatUser = await User.findOne({ email: 'tatwadarsha@hubli.in' });
+    if (!tatUser) {
+      const passwordHash = await bcrypt.hash('OneBloodHospital2026!', 10);
+      tatUser = await User.create({
+        onebloodId: 'OB-TATW1',
+        name: 'Tatwadarsha Hospital Hubli',
+        email: 'tatwadarsha@hubli.in',
+        phone: '+918362215222',
+        passwordHash,
+        role: 'hospital',
+        city: 'Hubballi',
+        hospitalProfileComplete: true
+      });
+      await Hospital.create({
+        userId: tatUser._id,
+        hospitalName: 'Tatwadarsha Hospital Hubli',
+        registrationNumber: 'HOSP-KA-836-003',
+        hospitalType: 'Private',
+        address: 'Vidyanagar, Hubballi',
+        city: 'Hubballi',
+        state: 'Karnataka',
+        pincode: '580021',
+        emergencyContact: '+918362215222',
+        website: 'http://tatwadarshahospital.com',
+        authorizedPersonName: 'Dr. Tatwadarsha Admin',
+        designation: 'Medical Director',
+        verificationStatus: 'approved',
+        location: {
+          type: 'Point',
+          coordinates: [75.1274, 15.3712]
+        }
+      });
+    }
+
+    // 5. Suchirayu Hospital
+    let sucUser = await User.findOne({ email: 'suchirayu@hubli.in' });
+    if (!sucUser) {
+      const passwordHash = await bcrypt.hash('OneBloodHospital2026!', 10);
+      sucUser = await User.create({
+        onebloodId: 'OB-SUCH1',
+        name: 'Suchirayu Hospital Hubli',
+        email: 'suchirayu@hubli.in',
+        phone: '+918362233333',
+        passwordHash,
+        role: 'hospital',
+        city: 'Hubballi',
+        hospitalProfileComplete: true
+      });
+      await Hospital.create({
+        userId: sucUser._id,
+        hospitalName: 'Suchirayu Hospital Hubli',
+        registrationNumber: 'HOSP-KA-836-004',
+        hospitalType: 'Private',
+        address: 'Gokul Road, Hubballi',
+        city: 'Hubballi',
+        state: 'Karnataka',
+        pincode: '580030',
+        emergencyContact: '+918362233333',
+        website: 'http://suchirayu.com',
+        authorizedPersonName: 'Dr. Suchirayu Admin',
+        designation: 'Managing Director',
+        verificationStatus: 'approved',
+        location: {
+          type: 'Point',
+          coordinates: [75.1095, 15.3742]
+        }
+      });
+    }
+
+    // 6. Hebsur Hospital
+    let hebUser = await User.findOne({ email: 'hebsur@hubli.in' });
+    if (!hebUser) {
+      const passwordHash = await bcrypt.hash('OneBloodHospital2026!', 10);
+      hebUser = await User.create({
+        onebloodId: 'OB-HEBS1',
+        name: 'Hebsur Hospital Hubli',
+        email: 'hebsur@hubli.in',
+        phone: '+918362352222',
+        passwordHash,
+        role: 'hospital',
+        city: 'Hubballi',
+        hospitalProfileComplete: true
+      });
+      await Hospital.create({
+        userId: hebUser._id,
+        hospitalName: 'Hebsur Hospital Hubli',
+        registrationNumber: 'HOSP-KA-836-005',
+        hospitalType: 'Private',
+        address: 'Deshpande Nagar, Hubballi',
+        city: 'Hubballi',
+        state: 'Karnataka',
+        pincode: '580029',
+        emergencyContact: '+918362352222',
+        website: 'http://hebsurhospital.com',
+        authorizedPersonName: 'Dr. Hebsur Admin',
+        designation: 'Chief Surgeon',
+        verificationStatus: 'approved',
+        location: {
+          type: 'Point',
+          coordinates: [75.1328, 15.3575]
+        }
+      });
+    }
+
+    // 7. Shakuntala Memorial Hospital
+    let shakUser = await User.findOne({ email: 'shakuntala@hubli.in' });
+    if (!shakUser) {
+      const passwordHash = await bcrypt.hash('OneBloodHospital2026!', 10);
+      shakUser = await User.create({
+        onebloodId: 'OB-SHAK1',
+        name: 'Shakuntala Memorial Hospital Hubli',
+        email: 'shakuntala@hubli.in',
+        phone: '+918362372222',
+        passwordHash,
+        role: 'hospital',
+        city: 'Hubballi',
+        hospitalProfileComplete: true
+      });
+      await Hospital.create({
+        userId: shakUser._id,
+        hospitalName: 'Shakuntala Memorial Hospital Hubli',
+        registrationNumber: 'HOSP-KA-836-006',
+        hospitalType: 'Private',
+        address: 'Vidyanagar, Hubballi',
+        city: 'Hubballi',
+        state: 'Karnataka',
+        pincode: '580021',
+        emergencyContact: '+918362372222',
+        website: 'http://shakuntalahospital.com',
+        authorizedPersonName: 'Dr. Shakuntala Admin',
+        designation: 'Medical Superintendent',
+        verificationStatus: 'approved',
+        location: {
+          type: 'Point',
+          coordinates: [75.1215, 15.3675]
+        }
+      });
+    }
+
     res.status(200).json({ success: true, message: 'Hubballi-Dharwad test hospitals and blood banks seeded successfully.' });
   } catch (err) {
     next(err);

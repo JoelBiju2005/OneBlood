@@ -5,7 +5,7 @@ import useNotificationStore from '../../store/notificationStore';
 import Logo from '../shared/Logo';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
-import { Bell, User, LogOut, Menu, X, Check, Heart, Shield, Landmark, MessageCircle, Home, ClipboardList } from 'lucide-react';
+import { Bell, User, LogOut, Menu, X, Check, Heart, Shield, Landmark, MessageCircle, Home, ClipboardList, Activity } from 'lucide-react';
 
 const Layout = () => {
   const { user, logout, isAuthenticated, oneblood_token, switchRole } = useAuthStore();
@@ -407,6 +407,16 @@ const Layout = () => {
                           <Bell className="w-4 h-4 text-slate-400" />
                           <span>Notifications</span>
                         </Link>
+                        {(user.role === 'patient' || user.role === 'donor') && (
+                          <Link 
+                            to="/active-donations"
+                            className="flex items-center space-x-2.5 px-3 py-2 text-xs rounded-lg hover:bg-white/5 transition-colors"
+                            onClick={() => setIsProfileOpen(false)}
+                          >
+                            <Activity className="w-4 h-4 text-emerald-400" />
+                            <span>Active Donations</span>
+                          </Link>
+                        )}
                         <button 
                           onClick={() => { setIsProfileOpen(false); handleLogout(); }}
                           className="w-full flex items-center space-x-2.5 px-3 py-2 text-xs rounded-lg text-oneblood-crimson hover:bg-oneblood-crimson/10 transition-colors text-left"
@@ -702,6 +712,16 @@ const Layout = () => {
                   <Bell className="w-4 h-4 text-slate-400" />
                   <span>Notifications</span>
                 </Link>
+                {(user?.role === 'patient' || user?.role === 'donor') && (
+                  <Link 
+                    to="/active-donations"
+                    className="flex items-center space-x-2.5 px-3 py-2 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-white/5"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Activity className="w-4 h-4 text-emerald-400" />
+                    <span>Active Donations</span>
+                  </Link>
+                )}
                 <button 
                   onClick={() => { setIsMenuOpen(false); handleLogout(); }}
                   className="w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg text-sm text-oneblood-crimson hover:bg-oneblood-crimson/10 text-left"

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ASSETS_URL } from '../../utils/api';
 
-export default function NoticeBoardCard({ notice, viewerId, viewerRole, onRespond, urgencyColors, isOwner }) {
+export default function NoticeBoardCard({ notice, viewerId, viewerRole, onRespond, urgencyColors, isOwner, onApprove }) {
   const [showResponses, setShowResponses] = useState(false);
   const [isReferralOpen, setIsReferralOpen] = useState(false);
   const [refName, setRefName] = useState('');
@@ -208,6 +208,16 @@ export default function NoticeBoardCard({ notice, viewerId, viewerRole, onRespon
                         <p className="text-[10px] text-slate-400 italic bg-white/3 border border-white/5 rounded-lg p-2">
                           "{resp.note}"
                         </p>
+                      )}
+
+                      {/* Approve Donor button — visible for can_donate responses */}
+                      {isOwner && resp.action === 'can_donate' && notice.status !== 'fulfilled' && (
+                        <button
+                          onClick={() => onApprove && onApprove(notice._id, resp.donorId, resp.donorName)}
+                          className="w-full mt-2 py-2 bg-[#C0152A] hover:bg-red-700 text-white rounded-lg text-[10px] font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          Approve & Select Facility
+                        </button>
                       )}
 
                       {/* Timestamp */}

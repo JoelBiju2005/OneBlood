@@ -32,6 +32,7 @@ import SuccessPage from './pages/SuccessPage';
 import AdminMonitoringPage from './pages/AdminMonitoringPage';
 import DonorFindRequestsPage from './pages/DonorFindRequestsPage';
 import HospitalDashboard from './pages/HospitalDashboard';
+import ActiveDonationsPage from './pages/ActiveDonationsPage';
 
 // Notice Board & Confirmation Pages
 import NoticeBoardPage from './pages/NoticeBoardPage';
@@ -136,6 +137,11 @@ function App() {
           <Route path="/notifications" element={
             <ProtectedRoute>
               <NotificationsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/active-donations" element={
+            <ProtectedRoute allowedRoles={['patient', 'donor', 'hospital', 'blood_bank', 'admin']}>
+              <ActiveDonationsPage />
             </ProtectedRoute>
           } />
 

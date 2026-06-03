@@ -11,7 +11,7 @@ const path = require('path');
  * @param {Object} facility Facility details (Hospital or BloodBank)
  * @returns {Promise<string>} Path to the saved PDF file
  */
-const generateMatchPDF = async (match, seeker, donor, facility) => {
+const generateMatchPDF = async (match, seeker, donor, facility, detourBank = null) => {
   return new Promise(async (resolve, reject) => {
     try {
       const pdfDir = path.join(__dirname, '../../uploads/pdfs');
@@ -64,25 +64,33 @@ const generateMatchPDF = async (match, seeker, donor, facility) => {
       doc.fillColor('#1F2937').fontSize(12).text('Donor Details', 50, startY + 95, { underline: true });
       doc.fontSize(10).fillColor('#4B5563');
       doc.text(`Donor Name: ${donor.name}`, 50, startY + 115);
-      doc.text(`OneBlood ID: ${donor.onebloodId}`, 50, startY + 130);
+      doc.text(`OneBlood ID: ${donor.onebloodId || 'N/A'}`, 50, startY + 130);
 
       // Column 2: Facility & QR Code
       const col2X = 320;
-      doc.fillColor('#1F2937').fontSize(12).text('Destination Facility', col2X, startY, { underline: true });
+      doc.fillColor('#1F2937').fontSize(12).text('Destination Facilities', col2X, startY, { underline: true });
       doc.fontSize(10).fillColor('#4B5563');
-      const facName = facility.hospitalName || facility.name || 'Selected Facility';
-      const facAddr = facility.address || 'N/A';
-      const facContact = facility.emergencyContact || facility.phone || 'N/A';
       
-      doc.text(`Name: ${facName}`, col2X, startY + 20, { width: 220 });
-      doc.text(`Address: ${facAddr}`, col2X, startY + 35, { width: 220 });
-      doc.text(`Emergency Phone: ${facContact}`, col2X, startY + 65);
+      let nextY = startY + 20;
+      if (detourBank) {
+        doc.fillColor('#1F2937').fontSize(10).text('1. Detour (Blood Bank):', col2X, nextY, { bold: true });
+        doc.fontSize(9).fillColor('#4B5563');
+        doc.text(`Name: ${detourBank.name}`, col2X, nextY + 13, { width: 220 });
+        doc.text(`Address: ${detourBank.address}, ${detourBank.city}`, col2X, nextY + 25, { width: 220 });
+        nextY += 45;
+      }
+      
+      doc.fillColor('#1F2937').fontSize(10).text(detourBank ? '2. Final Destination (Hospital):' : 'Hospital Destination:', col2X, nextY, { bold: true });
+      doc.fontSize(9).fillColor('#4B5563');
+      doc.text(`Name: ${facility.hospitalName || facility.name}`, col2X, nextY + 13, { width: 220 });
+      doc.text(`Address: ${facility.address}, ${facility.city}`, col2X, nextY + 25, { width: 220 });
+      doc.text(`Emergency Phone: ${facility.emergencyContact || 'N/A'}`, col2X, nextY + 37);
 
       // Generate and Embed QR Code
       const qrDataUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/match/${match.matchObid}`;
       const qrBuffer = await QRCode.toBuffer(qrDataUrl, { margin: 1, width: 90 });
-      doc.image(qrBuffer, col2X, startY + 95, { width: 85 });
-      doc.fontSize(8).fillColor('#9CA3AF').text('Scan to verify match status online', col2X, startY + 185);
+      doc.image(qrBuffer, col2X, startY + 115, { width: 75 });
+      doc.fontSize(8).fillColor('#9CA3AF').text('Scan to verify match status online', col2X, startY + 195);
 
       // 5. Footer Section
       doc.strokeColor('#E5E7EB').lineWidth(1).moveTo(50, 720).lineTo(545, 720).stroke();
