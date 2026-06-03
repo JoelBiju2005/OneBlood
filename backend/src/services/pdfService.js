@@ -164,17 +164,17 @@ const generateMatchPDF = async (match, seeker, donor, facility, detourBank = nul
       doc.fillColor('#4B5563').font('Helvetica').text(`Name: ${facility.hospitalName || facility.name}  |  Emergency contact: ${facility.emergencyContact || 'N/A'}`, 55, boxY + 24);
       doc.text(`Address: ${facility.address || 'N/A'}, ${facility.city || 'N/A'}`, 55, boxY + 37);
 
-      // 6. QR Verification Code
+      // 6. Official Verification Logo
       const qrY = boxY + 70;
       doc.fillColor('#1F2937').fontSize(11).font('Helvetica-Bold').text('OFFICIAL VERIFICATION', 40, qrY);
       doc.strokeColor('#E5E7EB').lineWidth(1).moveTo(40, qrY + 15).lineTo(555, qrY + 15).stroke();
 
-      const qrDataUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/active-donations?matchObid=${match.matchObid}`;
-      const qrBuffer = await QRCode.toBuffer(qrDataUrl, { margin: 1, width: 85 });
-      doc.image(qrBuffer, 40, qrY + 25, { width: 75 });
+      if (fs.existsSync(logoPath)) {
+        doc.image(logoPath, 40, qrY + 25, { width: 75 });
+      }
       
-      doc.fontSize(8.5).fillColor('#4B5563').font('Helvetica-Bold').text('DIGITAL MATCH CERTIFICATE SECURITY NOTICE', 130, qrY + 30);
-      doc.fontSize(8).fillColor('#9CA3AF').font('Helvetica').text('This document contains a secure digital match signature representing a verified blood donation coordination. Scan the QR code with any smartphone to verify this match status, active transit, or completion records online.', 130, qrY + 42, { width: 380 });
+      doc.fontSize(8.5).fillColor('#4B5563').font('Helvetica-Bold').text('OFFICIAL MATCH SLIP VERIFICATION NOTICE', 130, qrY + 30);
+      doc.fontSize(8).fillColor('#9CA3AF').font('Helvetica').text('This document is verified and authenticated by OneBlood. The presence of the official OneBlood logo confirms the validity and security of this match, active transit, and completion records.', 130, qrY + 42, { width: 380 });
 
       // 7. Footer
       doc.strokeColor('#E5E7EB').lineWidth(1).moveTo(40, 750).lineTo(555, 750).stroke();
