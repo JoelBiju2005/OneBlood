@@ -118,7 +118,7 @@ const wrapEmail = (title, contentHtml) => {
           <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #111827; padding: 24px 40px; border-bottom: 4px solid #C0152A;">
             <tr>
               <td width="46" style="vertical-align: middle;">
-                <img src="cid:onebloodlogo" alt="OneBlood Logo" style="height: 38px; width: auto; display: block; border: 0;" />
+                <img src="${process.env.FRONTEND_URL || 'http://localhost:5173'}/oneblood-logo.png" alt="OneBlood Logo" style="height: 38px; width: auto; display: block; border: 0;" />
               </td>
               <td style="vertical-align: middle; padding-left: 14px;">
                 <span style="font-family: Georgia, serif; font-weight: bold; font-size: 24px; letter-spacing: -0.02em;">
@@ -166,15 +166,6 @@ const sendEmail = async (to, subject, htmlBody, templateName = 'custom', attachm
   if (!isMockEnv) {
     try {
       const brevoAttachments = [];
-
-      // Embed OneBlood logo inline if available
-      if (logoBase64) {
-        brevoAttachments.push({
-          content: logoBase64,
-          name: 'oneblood-logo.png',
-          cid: 'onebloodlogo'
-        });
-      }
 
       // Process other attachments if any
       if (attachments && Array.isArray(attachments)) {
