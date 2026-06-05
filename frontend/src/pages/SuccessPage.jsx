@@ -1,9 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
-import { Copy, Share2, ArrowRight, Check, Sparkles } from 'lucide-react';
+import { Copy, Share2, ArrowRight, Check, Sparkles, MessageSquare } from 'lucide-react';
 import toast from 'react-hot-toast';
-import confetti from 'canvas-confetti';
 
 const SuccessPage = () => {
   const navigate = useNavigate();
@@ -34,44 +33,6 @@ const SuccessPage = () => {
       document.title = `Welcome to OneBlood — ${onebloodId}`;
     }
   }, [onebloodId]);
-
-  // Trigger Confetti Burst (crimson & white & light red only)
-  useEffect(() => {
-    if (!isNewUser) return;
-    
-    const duration = 3000;
-    const animationEnd = Date.now() + duration;
-    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 50 };
-
-    const randomInRange = (min, max) => Math.random() * (max - min) + min;
-
-    const interval = setInterval(() => {
-      const timeLeft = animationEnd - Date.now();
-
-      if (timeLeft <= 0) {
-        return clearInterval(interval);
-      }
-
-      const particleCount = 50 * (timeLeft / duration);
-      // Confetti colors: crimson (#C0152A), white (#ffffff), light red (#ff4d4d)
-      const colors = ['#C0152A', '#ffffff', '#ff4d4d'];
-
-      confetti({
-        ...defaults,
-        particleCount,
-        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
-        colors
-      });
-      confetti({
-        ...defaults,
-        particleCount,
-        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
-        colors
-      });
-    }, 250);
-
-    return () => clearInterval(interval);
-  }, [isNewUser]);
 
   // Primary CTA route mapping
   const getPrimaryRoute = () => {
@@ -168,8 +129,8 @@ const SuccessPage = () => {
           <div className="bg-[#111] border border-[#C0152A]/30 rounded-3xl p-8 md:p-10 shadow-2xl text-center space-y-6"
                style={{ boxShadow: '0 0 40px rgba(192,21,42,0.15)' }}>
             
-            <div className="inline-flex p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-full text-emerald-400 animate-bounce">
-              <Sparkles className="w-8 h-8" />
+            <div className="inline-flex p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-full text-emerald-400">
+              <Check className="w-8 h-8" />
             </div>
             
             <div className="space-y-2">
@@ -177,7 +138,7 @@ const SuccessPage = () => {
                 Successfully Logged In
               </h1>
               <p className="text-slate-400 text-lg">
-                Welcome back, {name}! 🩸
+                Welcome back, {name}!
               </p>
             </div>
 
@@ -222,7 +183,7 @@ const SuccessPage = () => {
               You're now part of OneBlood
             </h1>
             <p className="text-slate-400 text-lg">
-              Welcome, {firstName}! 🩸
+              Welcome, {firstName}!
             </p>
             <p className="text-slate-500 text-sm">
               Your account has been created successfully.
@@ -257,7 +218,7 @@ const SuccessPage = () => {
                 ) : (
                   <>
                     <Copy className="w-4 h-4 text-slate-300" />
-                    <span>📋 Copy ID</span>
+                    <span>Copy ID</span>
                   </>
                 )}
               </button>
@@ -284,7 +245,7 @@ const SuccessPage = () => {
                     onClick={handleWhatsAppShare}
                     className="w-full text-left px-4 py-2.5 text-xs text-white hover:bg-white/5 transition-all flex items-center gap-2"
                   >
-                    <span className="text-emerald-400">💬</span>
+                    <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
                     <span>Share on WhatsApp</span>
                   </button>
                 </div>

@@ -5,6 +5,7 @@ import useAuthStore from '../store/authStore';
 import useNotificationStore from '../store/notificationStore';
 import NoticeBoardCard from '../components/shared/NoticeBoardCard';
 import toast from 'react-hot-toast';
+import { ClipboardList, HeartPulse, AlertCircle } from 'lucide-react';
 
 const URGENCY_ORDER = { critical: 0, urgent: 1, moderate: 2, planned: 3 };
 const URGENCY_COLORS = { critical: '#dc2626', urgent: '#f97316', moderate: '#eab308', planned: '#22c55e' };
@@ -62,7 +63,7 @@ export default function NoticeBoardPage() {
           <div
             className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-sm w-full bg-slate-900 border border-oneblood-crimson/40 shadow-xl rounded-2xl p-4 flex items-start space-x-3`}
           >
-            <span className="text-2xl">🩸</span>
+            <HeartPulse className="w-5 h-5 text-oneblood-crimson shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-white">New response on your notice!</p>
               <p className="text-xs text-slate-400 mt-0.5">
@@ -109,7 +110,8 @@ export default function NoticeBoardPage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6 border-b border-white/5">
           <div className="space-y-2">
             <h1 className="text-4xl md:text-5xl font-heading text-white flex items-center gap-3">
-              <span>🩸 Requests Board</span>
+              <ClipboardList className="w-8 h-8 text-oneblood-crimson" />
+              <span>Requests Board</span>
             </h1>
             <p className="text-slate-400 font-body max-w-xl text-sm md:text-base leading-relaxed">
               Open emergency calls for blood from patients across the platform. Every post is pre-screened and prioritized.
@@ -147,10 +149,10 @@ export default function NoticeBoardPage() {
               className="bg-slate-950 border border-white/5 text-white text-xs font-semibold p-3 rounded-xl focus:border-oneblood-crimson/50 focus:outline-none"
             >
               <option value="">All Urgencies</option>
-              <option value="critical">🔴 Critical</option>
-              <option value="urgent">🟠 Urgent</option>
-              <option value="moderate">🟡 Moderate</option>
-              <option value="planned">🟢 Planned</option>
+              <option value="critical">Critical</option>
+              <option value="urgent">Urgent</option>
+              <option value="moderate">Moderate</option>
+              <option value="planned">Planned</option>
             </select>
           </div>
 
@@ -176,8 +178,8 @@ export default function NoticeBoardPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {notices.length === 0 ? (
               <div className="col-span-full py-16 text-center space-y-4">
-                <span className="text-4xl block">📋</span>
-                <p className="text-slate-400 font-medium font-body text-base">No open notices match your active filters.</p>
+                <AlertCircle className="w-10 h-10 text-slate-400 mx-auto" />
+                <p className="text-slate-400 font-medium font-body text-base">No open requests match your active filters.</p>
                 <p className="text-slate-500 text-xs">Verify your search criteria or post a new request from your dashboard.</p>
               </div>
             ) : (

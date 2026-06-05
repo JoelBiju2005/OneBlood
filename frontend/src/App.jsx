@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import Layout from './components/layout/Layout';
 import ProtectedRoute, { FullPageSpinner } from './components/auth/ProtectedRoute';
 import useAuthStore from './store/authStore';
+import { ThemeProvider } from './store/themeContext';
 
 // Import All Client Pages
 import LandingPage from './pages/LandingPage';
@@ -60,151 +61,153 @@ function App() {
   }
 
   return (
-    <BrowserRouter>
-      {/* Toast Alert System */}
-      <Toaster 
-        position="top-right"
-        toastOptions={{
-          style: {
-            background: '#0f172a',
-            color: '#fff',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            fontSize: '12px'
-          }
-        }}
-      />
-      
-      <Routes>
-        <Route element={<Layout />}>
-          {/* Public Routes */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/search" element={<SearchPage />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/how-it-works" element={<HowItWorksPage />} />
-          <Route path="/auth/login" element={<LoginPage />} />
-          <Route path="/auth/signup" element={<SignupPage />} />
-          <Route path="/welcome" element={<SuccessPage />} />
-          <Route path="/blood-bank/:id" element={<BloodBankDetailPage />} />
-          <Route path="/donor/:id" element={<DonorPublicProfilePage />} />
+    <ThemeProvider>
+      <BrowserRouter>
+        {/* Toast Alert System */}
+        <Toaster 
+          position="top-right"
+          toastOptions={{
+            style: {
+              background: '#0f172a',
+              color: '#fff',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              fontSize: '12px'
+            }
+          }}
+        />
+        
+        <Routes>
+          <Route element={<Layout />}>
+            {/* Public Routes */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/how-it-works" element={<HowItWorksPage />} />
+            <Route path="/auth/login" element={<LoginPage />} />
+            <Route path="/auth/signup" element={<SignupPage />} />
+            <Route path="/welcome" element={<SuccessPage />} />
+            <Route path="/blood-bank/:id" element={<BloodBankDetailPage />} />
+            <Route path="/donor/:id" element={<DonorPublicProfilePage />} />
 
-          {/* Notice Board Routes */}
-          <Route path="/noticeboard" element={<NoticeBoardPage />} />
-          <Route path="/noticeboard/post" element={
-            <ProtectedRoute allowedRoles={['patient']}>
-              <PostNoticePage />
-            </ProtectedRoute>
-          } />
-          <Route path="/noticeboard/posted" element={
-            <ProtectedRoute>
-              <NoticePostedPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/noticeboard/response-confirm" element={
-            <ProtectedRoute>
-              <NoticeBoardResponsePage />
-            </ProtectedRoute>
-          } />
-          <Route path="/donor/response-confirm" element={
-            <ProtectedRoute allowedRoles={['donor']}>
-              <DonorResponseConfirmPage />
-            </ProtectedRoute>
-          } />
+            {/* Notice Board Routes */}
+            <Route path="/noticeboard" element={<NoticeBoardPage />} />
+            <Route path="/noticeboard/post" element={
+              <ProtectedRoute allowedRoles={['patient']}>
+                <PostNoticePage />
+              </ProtectedRoute>
+            } />
+            <Route path="/noticeboard/posted" element={
+              <ProtectedRoute>
+                <NoticePostedPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/noticeboard/response-confirm" element={
+              <ProtectedRoute>
+                <NoticeBoardResponsePage />
+              </ProtectedRoute>
+            } />
+            <Route path="/donor/response-confirm" element={
+              <ProtectedRoute allowedRoles={['donor']}>
+                <DonorResponseConfirmPage />
+              </ProtectedRoute>
+            } />
 
-          {/* Home Redirect & Role Specific Homes */}
-          <Route path="/home" element={<HomeRedirect />} />
-          <Route path="/home/donor" element={
-            <ProtectedRoute allowedRoles={['donor']}>
-              <DonorHomePage />
-            </ProtectedRoute>
-          } />
-          <Route path="/home/seeker" element={
-            <ProtectedRoute allowedRoles={['patient']}>
-              <SeekerHomePage />
-            </ProtectedRoute>
-          } />
+            {/* Home Redirect & Role Specific Homes */}
+            <Route path="/home" element={<HomeRedirect />} />
+            <Route path="/home/donor" element={
+              <ProtectedRoute allowedRoles={['donor']}>
+                <DonorHomePage />
+              </ProtectedRoute>
+            } />
+            <Route path="/home/seeker" element={
+              <ProtectedRoute allowedRoles={['patient']}>
+                <SeekerHomePage />
+              </ProtectedRoute>
+            } />
 
-          {/* Any Authenticated User */}
-          <Route path="/request/new" element={
-            <ProtectedRoute>
-              <NewRequestPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/profile" element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          } />
-          <Route path="/notifications" element={
-            <ProtectedRoute>
-              <NotificationsPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/active-donations" element={
-            <ProtectedRoute allowedRoles={['patient', 'donor', 'hospital', 'blood_bank', 'admin']}>
-              <ActiveDonationsPage />
-            </ProtectedRoute>
-          } />
+            {/* Any Authenticated User */}
+            <Route path="/request/new" element={
+              <ProtectedRoute>
+                <NewRequestPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            } />
+            <Route path="/notifications" element={
+              <ProtectedRoute>
+                <NotificationsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/active-donations" element={
+              <ProtectedRoute allowedRoles={['patient', 'donor', 'hospital', 'blood_bank', 'admin']}>
+                <ActiveDonationsPage />
+              </ProtectedRoute>
+            } />
 
-          {/* Donor Only Routes */}
-          <Route path="/dashboard/donor" element={
-            <ProtectedRoute allowedRoles={['donor']}>
-              <DonorHomePage />
-            </ProtectedRoute>
-          } />
-          <Route path="/donor/find-requests" element={
-            <ProtectedRoute allowedRoles={['donor']}>
-              <DonorFindRequestsPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/donor/register" element={
-            <ProtectedRoute allowedRoles={['donor']}>
-              <DonorRegistrationPage />
-            </ProtectedRoute>
-          } />
+            {/* Donor Only Routes */}
+            <Route path="/dashboard/donor" element={
+              <ProtectedRoute allowedRoles={['donor']}>
+                <DonorHomePage />
+              </ProtectedRoute>
+            } />
+            <Route path="/donor/find-requests" element={
+              <ProtectedRoute allowedRoles={['donor']}>
+                <DonorFindRequestsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/donor/register" element={
+              <ProtectedRoute allowedRoles={['donor']}>
+                <DonorRegistrationPage />
+              </ProtectedRoute>
+            } />
 
-          {/* Blood Bank Only Routes */}
-          <Route path="/dashboard/bank" element={
-            <ProtectedRoute allowedRoles={['blood_bank']}>
-              <BankDashboard />
-            </ProtectedRoute>
-          } />
-          <Route path="/dashboard/bank/setup" element={
-            <ProtectedRoute allowedRoles={['blood_bank']}>
-              <BankSetupPage />
-            </ProtectedRoute>
-          } />
+            {/* Blood Bank Only Routes */}
+            <Route path="/dashboard/bank" element={
+              <ProtectedRoute allowedRoles={['blood_bank']}>
+                <BankDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard/bank/setup" element={
+              <ProtectedRoute allowedRoles={['blood_bank']}>
+                <BankSetupPage />
+              </ProtectedRoute>
+            } />
 
-          {/* Hospital Only Routes */}
-          <Route path="/dashboard/hospital" element={
-            <ProtectedRoute allowedRoles={['hospital']}>
-              <HospitalDashboard />
-            </ProtectedRoute>
-          } />
+            {/* Hospital Only Routes */}
+            <Route path="/dashboard/hospital" element={
+              <ProtectedRoute allowedRoles={['hospital']}>
+                <HospitalDashboard />
+              </ProtectedRoute>
+            } />
 
-          {/* Admin Only Routes */}
-          <Route path="/admin" element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <AdminPanel />
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/monitoring" element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <AdminMonitoringPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/*" element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <AdminPanel />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/admin-portal" element={<AdminPortal />} />
+            {/* Admin Only Routes */}
+            <Route path="/admin" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminPanel />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/monitoring" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminMonitoringPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/*" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminPanel />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/admin-portal" element={<AdminPortal />} />
 
-          {/* Catch-all Fallback */}
-          <Route path="*" element={<NotFoundPage />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+            {/* Catch-all Fallback */}
+            <Route path="*" element={<NotFoundPage />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 

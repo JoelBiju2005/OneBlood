@@ -10,7 +10,8 @@ import toast from 'react-hot-toast';
 import { 
   Search as SearchIcon, MapPin, Landmark, Heart, Phone, Mail, 
   Clock, ShieldCheck, HeartPulse, Upload, FileText, CheckCircle2, 
-  AlertTriangle, Navigation, Sliders, ChevronRight, Eye, Send, X, Plus, Minus, Loader2, ExternalLink
+  AlertTriangle, Navigation, Sliders, ChevronRight, Eye, Send, X, Plus, Minus, Loader2, ExternalLink,
+  ClipboardList, Check, Activity
 } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 
@@ -634,7 +635,7 @@ const SearchPage = () => {
         <div className="bg-oneblood-crimson/15 border-b border-oneblood-crimson/25 p-3 flex items-center justify-between animate-pulse">
           <span className="text-[11px] font-bold text-white flex items-center space-x-1.5">
             <HeartPulse className="w-4 h-4 text-oneblood-crimson" />
-            <span>🩸 EMERGENCY? Upload doctor prescription for instant matches.</span>
+            <span>EMERGENCY? Upload doctor prescription for instant matches.</span>
           </span>
         </div>
 
@@ -677,20 +678,60 @@ const SearchPage = () => {
                     <div className="w-5 h-5 border-2 border-oneblood-crimson border-t-transparent rounded-full animate-spin shrink-0" />
                     <span className="text-xs font-bold text-white">AI Processing Document...</span>
                   </div>
-                  <ul className="text-[10px] space-y-1.5 font-medium text-slate-400">
-                    <li className="flex items-center space-x-2">
-                      <span className={ocrStatus === 'reading' ? 'text-oneblood-gold' : 'text-emerald-400'}>
-                        {ocrStatus === 'reading' ? '⚡ Reading prescription...' : '✓ Extracted raw letter text'}
+                  <ul className="text-[10px] space-y-2 font-medium text-slate-400">
+                    <li className="flex items-center">
+                      <span className={`flex items-center gap-1.5 ${ocrStatus === 'reading' ? 'text-oneblood-gold' : 'text-emerald-400'}`}>
+                        {ocrStatus === 'reading' ? (
+                          <>
+                            <Activity className="w-3.5 h-3.5 animate-pulse text-amber-500" />
+                            <span>Reading prescription...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Check className="w-3.5 h-3.5 text-emerald-500" />
+                            <span>Extracted raw letter text</span>
+                          </>
+                        )}
                       </span>
                     </li>
-                    <li className="flex items-center space-x-2">
-                      <span className={ocrStatus === 'group' ? 'text-oneblood-gold' : ocrStatus === 'doctor' || ocrStatus === 'done' ? 'text-emerald-400' : 'text-slate-600'}>
-                        {ocrStatus === 'group' ? '⚡ Detecting blood group & component...' : ocrStatus === 'doctor' || ocrStatus === 'done' ? '✓ Found B+ PRBC requirements' : '· Detect blood group'}
+                    <li className="flex items-center">
+                      <span className={`flex items-center gap-1.5 ${ocrStatus === 'group' ? 'text-oneblood-gold' : ocrStatus === 'doctor' || ocrStatus === 'done' ? 'text-emerald-400' : 'text-slate-600'}`}>
+                        {ocrStatus === 'group' ? (
+                          <>
+                            <Activity className="w-3.5 h-3.5 animate-pulse text-amber-500" />
+                            <span>Detecting blood group & component...</span>
+                          </>
+                        ) : ocrStatus === 'doctor' || ocrStatus === 'done' ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 text-emerald-500" />
+                            <span>Found B+ PRBC requirements</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-600 ml-1 mr-1" />
+                            <span>Detect blood group</span>
+                          </>
+                        )}
                       </span>
                     </li>
-                    <li className="flex items-center space-x-2">
-                      <span className={ocrStatus === 'doctor' ? 'text-oneblood-gold' : ocrStatus === 'done' ? 'text-emerald-400' : 'text-slate-600'}>
-                        {ocrStatus === 'doctor' ? '⚡ Verifying doctor stamp & signature...' : ocrStatus === 'done' ? '✓ Signature and registration verified' : '· Verify doctor details'}
+                    <li className="flex items-center">
+                      <span className={`flex items-center gap-1.5 ${ocrStatus === 'doctor' ? 'text-oneblood-gold' : ocrStatus === 'done' ? 'text-emerald-400' : 'text-slate-600'}`}>
+                        {ocrStatus === 'doctor' ? (
+                          <>
+                            <Activity className="w-3.5 h-3.5 animate-pulse text-amber-500" />
+                            <span>Verifying doctor stamp & signature...</span>
+                          </>
+                        ) : ocrStatus === 'done' ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 text-emerald-500" />
+                            <span>Signature and registration verified</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-600 ml-1 mr-1" />
+                            <span>Verify doctor details</span>
+                          </>
+                        )}
                       </span>
                     </li>
                   </ul>
@@ -1087,9 +1128,19 @@ const SearchPage = () => {
       {/* Mobile Floating Resize Map/List Toggle */}
       <button 
         onClick={() => setMobileShowMap(!mobileShowMap)}
-        className="md:hidden fixed bottom-4 right-4 z-30 bg-oneblood-crimson hover:bg-red-700 text-white font-bold text-xs px-4 py-2.5 rounded-full shadow-2xl flex items-center space-x-1.5 cursor-pointer"
+        className="md:hidden fixed bottom-4 right-4 z-30 bg-oneblood-crimson hover:bg-red-700 text-white font-bold text-xs px-4 py-2.5 rounded-full shadow-2xl flex items-center gap-1.5 cursor-pointer"
       >
-        <span>{mobileShowMap ? 'Show More List 📋' : 'Maximize Map 🗺'}</span>
+        {mobileShowMap ? (
+          <>
+            <ClipboardList className="w-3.5 h-3.5" />
+            <span>Show List</span>
+          </>
+        ) : (
+          <>
+            <MapPin className="w-3.5 h-3.5" />
+            <span>Maximize Map</span>
+          </>
+        )}
       </button>
 
       {/* 3. Send Request Gated modal */}

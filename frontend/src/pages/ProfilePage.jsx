@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import useAuthStore from '../store/authStore';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
-import { User, Phone, MapPin, Loader2, Save, HeartPulse, Building } from 'lucide-react';
+import { User, Phone, MapPin, Loader2, Save, HeartPulse, Building, Copy } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -164,15 +164,15 @@ const ProfilePage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-[calc(100vh-80px)] flex flex-col items-center justify-center bg-slate-950 text-white">
+      <div className="min-h-[calc(100vh-80px)] flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-white transition-colors duration-300">
         <Loader2 className="w-10 h-10 animate-spin text-red-500 mb-2" />
-        <p className="text-xs text-slate-400">Loading profile details...</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400">Loading profile details...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-[calc(100vh-80px)] bg-slate-950 text-white py-12 px-4 relative overflow-hidden">
+    <div className="min-h-[calc(100vh-80px)] bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-white py-12 px-4 relative overflow-hidden transition-colors duration-300">
       {/* Background gradients */}
       <div className="absolute top-[-10%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-red-600/5 blur-[130px] pointer-events-none" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[45vw] h-[45vw] rounded-full bg-amber-500/5 blur-[130px] pointer-events-none" />
@@ -184,26 +184,26 @@ const ProfilePage = () => {
             {user?.role === 'blood_bank' ? <Building className="w-8 h-8" /> : <User className="w-8 h-8" />}
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Edit Profile</h1>
-            <p className="text-xs text-slate-400">Keep your personal and geospatial contact details up to date</p>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Edit Profile</h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Keep your personal and geospatial contact details up to date</p>
           </div>
         </div>
 
         {/* Profile Identity Card (monospaced and crimson OneBlood ID card first) */}
-        <div className="flex flex-col items-center text-center space-y-3 bg-slate-900/60 border border-white/5 backdrop-blur-xl p-6 rounded-2xl shadow-xl w-full">
-          <div className="w-20 h-20 rounded-full bg-[#C0152A]/10 border border-[#C0152A]/30 flex items-center justify-center text-xl font-bold text-white tracking-wider">
+        <div className="flex flex-col items-center text-center space-y-3 bg-white/70 dark:bg-slate-900/60 border border-slate-200 dark:border-white/5 backdrop-blur-xl p-6 rounded-2xl shadow-xl w-full">
+          <div className="w-20 h-20 rounded-full bg-[#C0152A]/10 border border-[#C0152A]/30 flex items-center justify-center text-xl font-bold text-slate-900 dark:text-white tracking-wider">
             {user?.name ? user.name.split(' ').map(p => p[0]).join('').toUpperCase().slice(0, 2) : 'OB'}
           </div>
           <div>
-            <h2 className="text-xl font-extrabold text-white">{user?.name}</h2>
-            <p className="text-xs text-slate-400 capitalize">
+            <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">{user?.name}</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 capitalize">
               {user?.role === 'blood_bank' ? 'Blood Bank Admin' : user?.role === 'patient' ? 'Seeker' : user?.role}
               {user?.role === 'donor' && profileData?.bloodGroup && `  •  ${profileData.bloodGroup}`}
               {(profileData?.city || user?.city) && `  •  ${profileData?.city || user?.city}`}
             </p>
           </div>
-          <div className="bg-black/30 border border-[#C0152A]/30 rounded-xl px-4 py-3 flex flex-col items-center max-w-xs w-full">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">OneBlood ID</span>
+          <div className="bg-slate-100/50 dark:bg-black/30 border border-slate-200 dark:border-[#C0152A]/30 rounded-xl px-4 py-3 flex flex-col items-center max-w-xs w-full">
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1">OneBlood ID</span>
             <div className="flex items-center gap-2">
               <span className="font-mono text-lg font-bold text-[#C0152A] tracking-wider">{user?.onebloodId}</span>
               <button
@@ -212,10 +212,10 @@ const ProfilePage = () => {
                   navigator.clipboard.writeText(user?.onebloodId);
                   toast.success('OneBlood ID copied!');
                 }}
-                className="p-1.5 rounded bg-white/5 hover:bg-white/10 text-xs text-slate-300 transition-all cursor-pointer flex items-center justify-center"
+                className="p-1.5 rounded bg-slate-200 dark:bg-white/5 hover:bg-slate-300 dark:hover:bg-white/10 text-xs text-slate-600 dark:text-slate-300 transition-all cursor-pointer flex items-center justify-center"
                 title="Copy ID"
               >
-                📋
+                <Copy className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>

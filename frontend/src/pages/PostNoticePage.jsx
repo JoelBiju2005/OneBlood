@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
+import { Check, Upload, FileText, ClipboardList } from 'lucide-react';
 
 const URGENCY_OPTIONS = [
-  { value: 'critical', label: '🔴 Critical — Needed within hours', description: 'Life-threatening emergency, no time to spare' },
-  { value: 'urgent',   label: '🟠 Urgent — Needed within 24 hrs', description: 'Surgery or procedure tomorrow' },
-  { value: 'moderate', label: '🟡 Moderate — Needed within 2–3 days', description: 'Some time available but actively searching' },
-  { value: 'planned',  label: '🟢 Planned — Scheduled procedure', description: 'Elective surgery, planning ahead' },
+  { value: 'critical', label: 'Critical — Needed within hours', description: 'Life-threatening emergency, no time to spare' },
+  { value: 'urgent',   label: 'Urgent — Needed within 24 hrs', description: 'Surgery or procedure tomorrow' },
+  { value: 'moderate', label: 'Moderate — Needed within 2–3 days', description: 'Some time available but actively searching' },
+  { value: 'planned',  label: 'Planned — Scheduled procedure', description: 'Elective surgery, planning ahead' },
 ];
 
 export default function PostNoticePage() {
@@ -48,7 +49,10 @@ export default function PostNoticePage() {
         
         {/* Header and Step Indicators */}
         <div className="space-y-4 text-center">
-          <h1 className="text-3xl font-heading text-white">📋 Post a Blood Need</h1>
+          <h1 className="text-3xl font-heading text-white flex items-center justify-center gap-2">
+            <ClipboardList className="w-7 h-7 text-oneblood-crimson" />
+            <span>Post a Blood Need</span>
+          </h1>
           <p className="text-slate-400 font-body text-xs md:text-sm">
             Your request will appear on the public requests board. A doctor's letter adds credibility and priority.
           </p>
@@ -241,13 +245,13 @@ export default function PostNoticePage() {
               >
                 {doctorLetter ? (
                   <div className="space-y-2">
-                    <span className="text-3xl block">✅</span>
+                    <Check className="w-8 h-8 text-emerald-400 mx-auto" />
                     <p className="text-xs font-bold text-emerald-400 truncate">{doctorLetter.name}</p>
                     <p className="text-[10px] text-slate-500">{(doctorLetter.size / 1024 / 1024).toFixed(2)} MB</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <span className="text-3xl block">📂</span>
+                    <Upload className="w-8 h-8 text-slate-400 mx-auto" />
                     <p className="text-xs font-bold text-slate-300">Click to upload or drag & drop</p>
                     <p className="text-[10px] text-slate-500">PDF, JPEG, or PNG up to 5MB</p>
                   </div>
@@ -283,7 +287,7 @@ export default function PostNoticePage() {
                   onClick={handleSubmit} 
                   disabled={submitting}
                 >
-                  {submitting ? 'Posting…' : '🩸 Post to Requests Board'}
+                  {submitting ? 'Posting…' : 'Post to Requests Board'}
                 </button>
               </div>
             </div>

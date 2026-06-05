@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import api from '../utils/api';
 import useAuthStore from '../store/authStore';
 import toast from 'react-hot-toast';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend, Cell, PieChart, Pie } from 'recharts';
-import { Landmark, Activity, HeartPulse, RefreshCw, BarChart2, Edit3, Save, CheckCircle2 } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
+import { Landmark, Activity, HeartPulse, RefreshCw, BarChart2, CheckCircle2, Copy, Zap } from 'lucide-react';
 import DonationInProgress from '../components/shared/DonationInProgress';
 
 const BankDashboard = () => {
@@ -93,7 +93,7 @@ const BankDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-[calc(100vh-80px)] flex items-center justify-center bg-oneblood-midnight text-slate-400">
+      <div className="min-h-[calc(100vh-80px)] flex items-center justify-center bg-slate-50 dark:bg-oneblood-midnight text-slate-500 dark:text-slate-400 transition-colors duration-300">
         <div className="w-8 h-8 border-2 border-oneblood-crimson border-t-transparent rounded-full animate-spin mr-2" />
         <span>Loading Bank Dashboard...</span>
       </div>
@@ -102,7 +102,7 @@ const BankDashboard = () => {
 
   if (!bank) {
     return (
-      <div className="min-h-[calc(100vh-80px)] flex flex-col items-center justify-center bg-oneblood-midnight text-slate-400 space-y-4">
+      <div className="min-h-[calc(100vh-80px)] flex flex-col items-center justify-center bg-slate-50 dark:bg-oneblood-midnight text-slate-555 dark:text-slate-400 space-y-4 transition-colors duration-300">
         <p className="text-sm font-semibold">No blood bank profile found for this account.</p>
         <p className="text-xs">Make sure you are registered as a blood bank admin.</p>
       </div>
@@ -145,40 +145,40 @@ const BankDashboard = () => {
   }
 
   return (
-    <div className="min-h-[calc(100vh-80px)] bg-oneblood-midnight py-10 px-4">
+    <div className="min-h-[calc(100vh-80px)] bg-slate-50 dark:bg-oneblood-midnight py-10 px-4 transition-colors duration-300">
       <div className="max-w-7xl mx-auto space-y-8">
         
         {/* Welcome Header */}
-        <div className="text-left space-y-2 pb-6 border-b border-white/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="text-left space-y-2 pb-6 border-b border-slate-200 dark:border-white/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-              <h1 className="text-2xl font-bold text-white font-display flex items-center space-x-2">
-                <Landmark className="w-6 h-6 text-blue-400" />
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white font-display flex items-center space-x-2">
+                <Landmark className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                 <span>{bank.name}</span>
               </h1>
               {user?.onebloodId && (
-                <span className="inline-flex items-center gap-1 bg-[#C0152A]/10 border border-[#C0152A]/30 text-white font-mono font-bold text-[10px] px-2.5 py-1 rounded-lg">
-                  ID: {user.onebloodId}
+                <span className="inline-flex items-center gap-1.5 bg-[#C0152A]/10 border border-[#C0152A]/30 text-[#C0152A] dark:text-white font-mono font-bold text-[10px] px-2.5 py-1 rounded-lg">
+                  <span>ID: {user.onebloodId}</span>
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(user.onebloodId);
                       toast.success('OneBlood ID copied!');
                     }}
-                    className="hover:text-red-400 transition-colors cursor-pointer ml-1"
+                    className="hover:text-red-700 dark:hover:text-red-400 transition-colors cursor-pointer"
                     title="Copy ID"
                   >
-                    📋
+                    <Copy className="w-3 h-3" />
                   </button>
                 </span>
               )}
             </div>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Official Blood Bank Admin Center &bull; Registration: {bank.registrationNumber}
             </p>
           </div>
           <button 
             onClick={fetchDashboardData}
-            className="flex items-center space-x-1.5 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-semibold text-slate-300 transition-all cursor-pointer"
+            className="flex items-center space-x-1.5 px-4 py-2 bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 transition-all cursor-pointer shadow-sm"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Refresh Stats</span>
@@ -190,18 +190,18 @@ const BankDashboard = () => {
           <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-2xl text-left flex items-start space-x-3">
             <HeartPulse className="w-5 h-5 text-red-500 shrink-0 mt-0.5 animate-pulse" />
             <div className="space-y-1">
-              <h4 className="text-xs font-bold text-red-400">Critical Stock Warning ({lowStockAlerts.length} items low)</h4>
-              <p className="text-[11px] text-slate-400">
+              <h4 className="text-xs font-bold text-red-600 dark:text-red-400">Critical Stock Warning ({lowStockAlerts.length} items low)</h4>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400">
                 The following blood components have dropped below the safe threshold of 5 units. Please coordinate donation campaigns or update stocks:
               </p>
               <div className="flex flex-wrap gap-2 pt-2">
                 {lowStockAlerts.slice(0, 8).map((alert, idx) => (
-                  <span key={idx} className="text-[10px] bg-red-500/20 border border-red-500/30 text-red-400 px-2 py-0.5 rounded-lg font-bold">
+                  <span key={idx} className="text-[10px] bg-red-500/25 border border-red-500/35 text-red-650 dark:text-red-450 px-2 py-0.5 rounded-lg font-bold">
                     {alert.group} {alert.component} ({alert.qty} units)
                   </span>
                 ))}
                 {lowStockAlerts.length > 8 && (
-                  <span className="text-[10px] bg-white/5 border border-white/10 text-slate-300 px-2 py-0.5 rounded-lg font-bold">
+                  <span className="text-[10px] bg-slate-200 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-lg font-bold">
                     + {lowStockAlerts.length - 8} more
                   </span>
                 )}
@@ -212,30 +212,31 @@ const BankDashboard = () => {
 
         {/* Real-time Inventory matrix grid */}
         <div className="space-y-4 text-left">
-          <div className="flex justify-between items-center">
-            <h3 className="text-base font-bold text-white font-display flex items-center space-x-2">
+          <div className="flex justify-between items-center flex-wrap gap-2">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white font-display flex items-center space-x-2">
               <Activity className="w-5 h-5 text-oneblood-crimson" />
               <span>Real-time Inventory matrix</span>
             </h3>
-            <span className="text-[10px] text-slate-500 italic bg-white/5 border border-white/5 px-2 py-0.5 rounded">
-              ⚡ Debounced Sync: Cell edits auto-save to cloud after 1.5s
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 italic bg-white dark:bg-white/5 border border-slate-200 dark:border-white/5 px-2.5 py-1 rounded flex items-center gap-1">
+              <Zap className="w-3.5 h-3.5 text-amber-500" />
+              <span>Debounced Sync: Cell edits auto-save to cloud after 1.5s</span>
             </span>
           </div>
 
-          <div className="bg-slate-900 border border-white/5 rounded-2xl overflow-x-auto shadow-2xl p-4">
-            <table className="w-full text-xs text-slate-300 min-w-[700px]">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl overflow-x-auto shadow-sm dark:shadow-2xl p-4">
+            <table className="w-full text-xs text-slate-600 dark:text-slate-300 min-w-[700px]">
               <thead>
-                <tr className="border-b border-white/5">
-                  <th className="py-3 px-4 font-bold text-slate-400 text-left w-48">Blood Components</th>
+                <tr className="border-b border-slate-200 dark:border-white/5">
+                  <th className="py-3 px-4 font-bold text-slate-500 dark:text-slate-400 text-left w-48">Blood Components</th>
                   {bloodGroupsList.map(bg => (
-                    <th key={bg.key} className="py-3 px-2 font-bold text-center text-slate-400 w-16">{bg.label}</th>
+                    <th key={bg.key} className="py-3 px-2 font-bold text-center text-slate-500 dark:text-slate-400 w-16">{bg.label}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-slate-100 dark:divide-white/5">
                 {componentsList.map(comp => (
-                  <tr key={comp.key} className="hover:bg-white/5 transition-all">
-                    <td className="py-3.5 px-4 font-bold text-white">{comp.label}</td>
+                  <tr key={comp.key} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-all">
+                    <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">{comp.label}</td>
                     {bloodGroupsList.map(bg => {
                       const val = inventory?.[comp.key]?.[bg.key] || 0;
                       const isEditing = editingCell?.component === comp.key && editingCell?.group === bg.key;
@@ -251,7 +252,7 @@ const BankDashboard = () => {
                                 handleQtyChange(comp.key, bg.key, e.target.value);
                               }}
                               onBlur={() => setEditingCell(null)}
-                              className="w-12 py-1 px-1.5 bg-slate-950 border border-oneblood-crimson rounded text-center text-[11px] text-white focus:outline-none font-mono"
+                              className="w-12 py-1 px-1.5 bg-slate-100 dark:bg-slate-950 border border-oneblood-crimson rounded text-center text-[11px] text-slate-900 dark:text-white focus:outline-none font-mono"
                               autoFocus
                             />
                           ) : (
@@ -260,7 +261,7 @@ const BankDashboard = () => {
                                 setEditingCell({ component: comp.key, group: bg.key });
                                 setTempQty(val.toString());
                               }}
-                              className={`w-12 py-1.5 text-center font-bold font-mono rounded cursor-pointer transition-all border ${val >= 10 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : val > 0 ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20 animate-pulse'}`}
+                              className={`w-12 py-1.5 text-center font-bold font-mono rounded cursor-pointer transition-all border ${val >= 10 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' : val > 0 ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20' : 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20 animate-pulse'}`}
                             >
                               {val}
                             </button>
@@ -282,8 +283,8 @@ const BankDashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-4">
           
           {/* Chart 1: Monthly donation trends */}
-          <div className="lg:col-span-8 bg-slate-900/40 border border-white/5 p-6 rounded-2xl text-left space-y-4">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center space-x-1.5">
+          <div className="lg:col-span-8 bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 p-6 rounded-2xl text-left space-y-4 shadow-sm">
+            <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center space-x-1.5">
               <BarChart2 className="w-4 h-4 text-oneblood-gold" />
               <span>Monthly donation trends (2026)</span>
             </h3>
@@ -300,7 +301,7 @@ const BankDashboard = () => {
                         <stop offset="95%" stopColor="#B91C1C" stopOpacity={0}/>
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
                     <XAxis dataKey="name" stroke="#64748b" fontSize={10} />
                     <YAxis stroke="#64748b" fontSize={10} />
                     <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: 'rgba(255,255,255,0.1)', fontSize: 11 }} />
@@ -312,8 +313,8 @@ const BankDashboard = () => {
           </div>
 
           {/* Chart 2: Blood Group distribution Pie Chart */}
-          <div className="lg:col-span-4 bg-slate-900/40 border border-white/5 p-6 rounded-2xl text-left space-y-4">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Blood group stock distribution</h3>
+          <div className="lg:col-span-4 bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 p-6 rounded-2xl text-left space-y-4 shadow-sm">
+            <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Blood group stock distribution</h3>
             
             <div className="h-72 w-full flex items-center justify-center pt-4">
               {groupData.length === 0 ? (

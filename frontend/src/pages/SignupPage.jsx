@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import toast from 'react-hot-toast';
-import { HeartPulse, User, Mail, Phone, Lock, Landmark, Heart, Loader2, Eye, EyeOff, MapPin } from 'lucide-react';
+import { HeartPulse, User, Mail, Phone, Lock, Landmark, Heart, Loader2, Eye, EyeOff, MapPin, AlertCircle } from 'lucide-react';
 
 const CITIES = [
   'Bengaluru',
@@ -653,8 +653,9 @@ const SignupPage = () => {
             )}
 
             {error && (
-              <p className="text-red-500 text-xs font-bold text-center mt-2 animate-pulse error-text">
-                ⚠️ {error}
+              <p className="text-red-500 text-xs font-bold flex items-center justify-center gap-1.5 mt-2 animate-pulse error-text">
+                <AlertCircle className="w-4 h-4 text-red-500" />
+                <span>{error}</span>
               </p>
             )}
 
