@@ -2,6 +2,7 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import { HeartPulse } from 'lucide-react';
+import Logo from '../shared/Logo';
 
 const FullPageSpinner = () => (
   <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-oneblood-midnight text-slate-800 dark:text-white transition-colors duration-300 relative">
@@ -11,8 +12,8 @@ const FullPageSpinner = () => (
       {/* Nice pulse animation wrapper */}
       <div className="relative flex items-center justify-center">
         {/* Outer glowing pulsing rings */}
-        <div className="absolute w-20 h-20 bg-red-500/20 dark:bg-red-500/10 rounded-full animate-ping duration-1000" />
-        <div className="absolute w-14 h-14 bg-red-500/30 dark:bg-red-500/20 rounded-full animate-pulse" />
+        <div className="absolute w-24 h-24 bg-red-500/20 dark:bg-red-500/10 rounded-full animate-ping duration-1000" />
+        <div className="absolute w-16 h-16 bg-red-500/30 dark:bg-red-500/20 rounded-full animate-pulse" />
         
         {/* Inner solid icon holder */}
         <div className="relative w-16 h-16 bg-[#C0152A] rounded-full flex items-center justify-center shadow-lg shadow-red-700/30">
@@ -20,10 +21,14 @@ const FullPageSpinner = () => (
         </div>
       </div>
 
-      <div className="text-center space-y-2">
+      <div className="text-center space-y-3 flex flex-col items-center">
+        {/* Official Brand Logo */}
+        <Logo size="lg" showText={false} className="mb-2" />
+        
+        {/* Title branding using Logo component styling logic but centered and polished */}
         <h2 className="text-2xl font-black tracking-wide text-slate-900 dark:text-white flex items-center justify-center">
           <span className="text-[#C0152A]">One</span>
-          <span>Blood</span>
+          <span className="text-slate-800 dark:text-white">Blood</span>
         </h2>
         
         {/* Visible elegant loading text */}
