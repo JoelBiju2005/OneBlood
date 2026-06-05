@@ -4,6 +4,15 @@ const EmailTemplate = require('../models/EmailTemplate');
 const EmailLog = require('../models/EmailLog');
 const SystemSettings = require('../models/SystemSettings');
 
+const getFrontendUrl = () => {
+  if (process.env.FRONTEND_URL) {
+    return process.env.FRONTEND_URL.replace(/\/$/, '');
+  }
+  return process.env.NODE_ENV === 'production' 
+    ? 'https://oneblood-app.web.app' 
+    : 'http://localhost:5173';
+};
+
 // Load OneBlood Logo for inline email embedding
 const logoPath = path.join(__dirname, '../assets/oneblood-logo.png');
 let logoBase64 = '';
@@ -19,6 +28,7 @@ try {
  * Wraps HTML content in a beautiful, responsive layout with the OneBlood branding.
  */
 const wrapEmail = (title, contentHtml) => {
+  const logoUrl = `${getFrontendUrl()}/oneblood-logo.png`;
   return `
     <!DOCTYPE html>
     <html>
@@ -118,7 +128,7 @@ const wrapEmail = (title, contentHtml) => {
           <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #111827; padding: 24px 40px; border-bottom: 4px solid #C0152A;">
             <tr>
               <td width="46" style="vertical-align: middle;">
-                <img src="${process.env.FRONTEND_URL || 'http://localhost:5173'}/oneblood-logo.png" alt="OneBlood Logo" style="height: 38px; width: auto; display: block; border: 0;" />
+                <img src="${logoUrl}" alt="OneBlood Logo" style="height: 38px; width: auto; display: block; border: 0;" />
               </td>
               <td style="vertical-align: middle; padding-left: 14px;">
                 <span style="font-family: Georgia, serif; font-weight: bold; font-size: 24px; letter-spacing: -0.02em;">
@@ -321,7 +331,7 @@ const sendWelcomeEmail = async (to, name, onebloodId = 'N/A', role = 'donor') =>
     <p>Whether you need to request blood in an emergency or want to save lives as a donor or facility, you now have access to a fully verified real-time network.</p>
     
     <div style="text-align: center; margin: 32px 0 16px 0;">
-      <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/search" class="button">Search Map & Inventory</a>
+      <a href="${getFrontendUrl()}/search" class="button">Search Map & Inventory</a>
     </div>
   `);
 
