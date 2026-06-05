@@ -1,7 +1,6 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
-import { HeartPulse } from 'lucide-react';
 import Logo from '../shared/Logo';
 
 const FullPageSpinner = () => (
@@ -9,23 +8,24 @@ const FullPageSpinner = () => (
     <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(192,21,42,0.04)_0%,transparent_65%)] dark:bg-[radial-gradient(circle_at_center,rgba(192,21,42,0.08)_0%,transparent_65%)] pointer-events-none" />
     
     <div className="flex flex-col items-center space-y-6 relative z-10">
-      {/* Nice pulse animation wrapper */}
-      <div className="relative flex items-center justify-center">
-        {/* Outer glowing pulsing rings */}
-        <div className="absolute w-24 h-24 bg-red-500/20 dark:bg-red-500/10 rounded-full animate-ping duration-1000" />
-        <div className="absolute w-16 h-16 bg-red-500/30 dark:bg-red-500/20 rounded-full animate-pulse" />
+      {/* Beating & Glowing Logo Wrapper */}
+      <div className="relative flex items-center justify-center mb-2">
+        {/* Outer pulsing background glows */}
+        <div className="absolute w-28 h-28 bg-red-500/10 dark:bg-red-500/5 rounded-full animate-ping duration-[1600ms]" />
+        <div className="absolute w-24 h-24 bg-red-500/20 dark:bg-red-500/10 rounded-full animate-pulse duration-[1200ms]" />
         
-        {/* Inner solid icon holder */}
-        <div className="relative w-16 h-16 bg-[#C0152A] rounded-full flex items-center justify-center shadow-lg shadow-red-700/30">
-          <HeartPulse className="w-8 h-8 text-white animate-pulse" />
+        {/* Beating Logo Container */}
+        <div className="relative animate-pulse duration-[1000ms] flex items-center justify-center">
+          <Logo 
+            size="xl" 
+            showText={false} 
+            className="drop-shadow-[0_0_35px_rgba(192,21,42,0.5)] dark:drop-shadow-[0_0_45px_rgba(192,21,42,0.65)]" 
+          />
         </div>
       </div>
 
       <div className="text-center space-y-3 flex flex-col items-center">
-        {/* Official Brand Logo */}
-        <Logo size="lg" showText={false} className="mb-2" />
-        
-        {/* Title branding using Logo component styling logic but centered and polished */}
+        {/* Title branding */}
         <h2 className="text-2xl font-black tracking-wide text-slate-900 dark:text-white flex items-center justify-center">
           <span className="text-[#C0152A]">One</span>
           <span className="text-slate-800 dark:text-white">Blood</span>
@@ -33,7 +33,7 @@ const FullPageSpinner = () => (
         
         {/* Visible elegant loading text */}
         <div className="flex flex-col items-center space-y-3">
-          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 tracking-wider">
+          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 tracking-wider animate-pulse">
             Connecting to server...
           </span>
           {/* Nice loading bar */}
