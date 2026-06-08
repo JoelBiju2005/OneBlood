@@ -106,3 +106,164 @@
 .animate-loading-bar {
   animation: loading-bar 1.5s infinite ease-in-out;
 }
+
+/* ==========================================
+   ONEBLOOD DYNAMIC THEME SWAPPING OVERRIDES
+   ========================================== */
+
+/* Overrides for text color: white -> dark in light mode, white in dark mode */
+.text-white {
+  color: #0f172a !important; /* slate-900 */
+}
+.dark .text-white {
+  color: #ffffff !important;
+}
+
+/* Red / Emerald / Amber backgrounds and buttons MUST keep white text in both modes */
+.btn-primary,
+.btn-danger,
+.bg-oneblood-crimson,
+.bg-\[\#C0152A\],
+.bg-red-600,
+.bg-red-700,
+.bg-\[\#a01021\],
+.bg-emerald-600,
+.bg-emerald-700,
+.bg-amber-500,
+.bg-blue-600,
+.bg-indigo-600,
+.btn-primary *,
+.btn-danger *,
+.bg-oneblood-crimson *,
+.bg-\[\#C0152A\] *,
+.bg-red-600 *,
+.bg-red-700 *,
+.bg-\[\#a01021\] *,
+.bg-emerald-600 *,
+.bg-emerald-700 *,
+.bg-amber-500 *,
+.bg-blue-600 *,
+.bg-indigo-600 * {
+  color: #ffffff !important;
+}
+
+/* Overrides for text-slate-300 and text-slate-400 */
+.text-slate-300 {
+  color: #334155 !important; /* slate-700 */
+}
+.dark .text-slate-300 {
+  color: #cbd5e1 !important; /* slate-300 */
+}
+
+.text-slate-400 {
+  color: #475569 !important; /* slate-600 */
+}
+.dark .text-slate-400 {
+  color: #94a3b8 !important; /* slate-400 */
+}
+
+/* Overrides for background classes to toggle dark/light colors */
+.bg-slate-950 {
+  background-color: #f8fafc !important; /* slate-50 */
+}
+.dark .bg-slate-950 {
+  background-color: #020617 !important;
+}
+
+.bg-slate-900,
+.bg-slate-900\/60,
+.bg-slate-900\/40 {
+  background-color: #ffffff !important; /* pure white card in light mode */
+}
+.dark .bg-slate-900 {
+  background-color: #0f172a !important;
+}
+.dark .bg-slate-900\/60 {
+  background-color: rgba(15, 23, 42, 0.6) !important;
+}
+.dark .bg-slate-900\/40 {
+  background-color: rgba(15, 23, 42, 0.4) !important;
+}
+
+.bg-oneblood-midnight, .bg-\[\#0F0A0A\], .bg-\[\#0F0A0A\]\/60 {
+  background-color: #f8fafc !important; /* slate-50 */
+}
+.dark .bg-oneblood-midnight, .dark .bg-\[\#0F0A0A\], .dark .bg-\[\#0F0A0A\]\/60 {
+  background-color: #0f0a0a !important;
+}
+
+/* Input, select, textarea elements text/background colors */
+input, select, textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important; /* slate-300 */
+}
+.dark input, .dark select, .dark textarea {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Options within select dropdowns */
+option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+.dark option {
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+}
+
+/* Glass card component adjustments */
+.glass-card {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+.dark .glass-card {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Border lines and overlays */
+.border-white\/5, .border-white\/10 {
+  border-color: #cbd5e1 !important;
+}
+.dark .border-white\/5 {
+  border-color: rgba(255, 255, 255, 0.05) !important;
+}
+.dark .border-white\/10 {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Override background of Leaflet Map controls/containers to adapt dynamically */
+.leaflet-container {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+.dark .leaflet-container {
+  background-color: #0F0A0A !important;
+  border-color: rgba(255, 255, 255, 0.05) !important;
+}
+.leaflet-tile {
+  filter: none !important;
+}
+.dark .leaflet-tile {
+  filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%) !important;
+}
+.leaflet-popup-content-wrapper {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+.dark .leaflet-popup-content-wrapper {
+  background: #181212 !important;
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+.leaflet-popup-tip {
+  background: #ffffff !important;
+}
+.dark .leaflet-popup-tip {
+  background: #181212 !important;
+}
+
