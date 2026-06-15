@@ -289,3 +289,63 @@ option {
   color: #94a3b8 !important; /* light slate-400 in dark mode */
 }
 
+/* Blood drop falling and morphing animation */
+@keyframes blood-fall {
+  0% {
+    transform: translateY(-90px) scale(0.4, 0.8);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  40% {
+    transform: translateY(0) scale(1, 1);
+    opacity: 1;
+  }
+  48% {
+    transform: translateY(0) scale(1.4, 0.4); /* Splat stretching */
+    opacity: 0.8;
+  }
+  54% {
+    transform: translateY(0) scale(1.8, 0.1);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1.8, 0.1);
+    opacity: 0;
+  }
+}
+
+@keyframes logo-morph {
+  0%, 42% {
+    transform: scale(0) rotate(-15deg);
+    opacity: 0;
+    filter: brightness(1.5) blur(4px);
+  }
+  58% {
+    transform: scale(1.1) rotate(5deg);
+    opacity: 1;
+    filter: brightness(1) blur(0);
+  }
+  64% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  90% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+}
+
+.animate-blood-fall {
+  animation: blood-fall 2.5s infinite cubic-bezier(0.6, 0.04, 0.98, 0.335);
+}
+
+.animate-logo-morph {
+  animation: logo-morph 2.5s infinite ease-out;
+}
+
