@@ -129,7 +129,7 @@ export default function Logo({ size = 'md', showText = true, className = '', wid
           className="flex items-center select-none"
         >
           <span style={{ color: '#C0152A' }}>One</span>
-          <span style={{ color: '#ffffff' }}>Blood</span>
+          <span className="text-white">Blood</span>
         </span>
       )}
     </div>

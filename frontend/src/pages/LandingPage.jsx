@@ -138,7 +138,7 @@ const LandingPage = () => {
               <Link 
                 to={user ? "/noticeboard" : "/auth/signup?role=donor"}
                 state={{ role: 'donor' }}
-                className="px-10 py-5 text-lg rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-600 text-white font-bold hover:shadow-lg hover:shadow-slate-700/30 transition-all duration-200 flex items-center space-x-2.5 group"
+                className="px-10 py-5 text-lg rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-600 keep-white text-white font-bold hover:shadow-lg hover:shadow-slate-700/30 transition-all duration-200 flex items-center space-x-2.5 group"
               >
                 <span>I Want to Donate</span>
               </Link>

@@ -118,6 +118,9 @@
 .dark .text-white {
   color: #ffffff !important;
 }
+.keep-white, .keep-white * {
+  color: #ffffff !important;
+}
 
 /* Red / Emerald / Amber backgrounds and buttons MUST keep white text in both modes */
 .btn-primary,
