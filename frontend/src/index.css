@@ -245,10 +245,10 @@ option {
   border-color: rgba(255, 255, 255, 0.05) !important;
 }
 .leaflet-tile {
-  filter: none !important;
+  filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%) !important;
 }
 .dark .leaflet-tile {
-  filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%) !important;
+  filter: none !important;
 }
 .leaflet-popup-content-wrapper {
   background: #ffffff !important;
