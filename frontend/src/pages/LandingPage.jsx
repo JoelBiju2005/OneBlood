@@ -96,15 +96,7 @@ const LandingPage = () => {
           
           {/* Heading and Tagline */}
           <div className="space-y-8 flex flex-col items-center">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5 }}
-              className="inline-flex items-center space-x-2 bg-red-500/10 border border-red-500/20 rounded-full px-4 py-1.5 text-xs text-red-500 font-semibold"
-            >
-              <HeartPulse className="w-4 h-4 text-red-500 animate-pulse" />
-              <span>Real-time Blood Coordination Service</span>
-            </motion.div>
+
 
             <motion.div
               initial={{ y: 20, opacity: 0 }}
