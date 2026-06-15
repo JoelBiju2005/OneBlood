@@ -214,9 +214,9 @@ const Layout = () => {
                 <>
                   {/* Role Toggle Switch */}
                   {(user?.role === 'donor' || user?.role === 'patient') && (
-                    <div 
+                     <div 
                       onClick={handleRoleToggle}
-                      className="relative bg-slate-950/85 border border-white/10 rounded-full p-1 flex items-center h-8 w-32 cursor-pointer select-none mr-2"
+                      className="relative border rounded-full p-1 flex items-center h-8 w-32 cursor-pointer select-none mr-2 role-toggle-container"
                     >
                       {/* Active sliding background */}
                       <div 
@@ -229,14 +229,14 @@ const Layout = () => {
                       
                       {/* Seeker Option */}
                       <span className={`relative z-10 w-1/2 text-[10px] font-bold text-center transition-colors duration-300 ${
-                        user.role === 'patient' ? 'text-white' : 'text-slate-400'
+                        user.role === 'patient' ? 'role-toggle-active' : 'role-toggle-inactive'
                       }`}>
                         Seeker
                       </span>
 
                       {/* Donor Option */}
                       <span className={`relative z-10 w-1/2 text-[10px] font-bold text-center transition-colors duration-300 ${
-                        user.role === 'donor' ? 'text-white' : 'text-slate-400'
+                        user.role === 'donor' ? 'role-toggle-active' : 'role-toggle-inactive'
                       }`}>
                         Donor
                       </span>
@@ -618,9 +618,9 @@ const Layout = () => {
                 {(user?.role === 'donor' || user?.role === 'patient') && (
                   <div className="px-3 py-2 flex items-center justify-between border-b border-white/5 pb-3">
                     <span className="text-xs font-bold text-slate-400">View Mode</span>
-                    <div 
+                     <div 
                       onClick={handleRoleToggle}
-                      className="relative bg-slate-950/85 border border-white/10 rounded-full p-1 flex items-center h-8 w-32 cursor-pointer select-none"
+                      className="relative border rounded-full p-1 flex items-center h-8 w-32 cursor-pointer select-none role-toggle-container"
                     >
                       {/* Active sliding background */}
                       <div 
@@ -633,14 +633,14 @@ const Layout = () => {
                       
                       {/* Seeker Option */}
                       <span className={`relative z-10 w-1/2 text-[10px] font-bold text-center transition-colors duration-300 ${
-                        user.role === 'patient' ? 'text-white' : 'text-slate-400'
+                        user.role === 'patient' ? 'role-toggle-active' : 'role-toggle-inactive'
                       }`}>
                         Seeker
                       </span>
 
                       {/* Donor Option */}
                       <span className={`relative z-10 w-1/2 text-[10px] font-bold text-center transition-colors duration-300 ${
-                        user.role === 'donor' ? 'text-white' : 'text-slate-400'
+                        user.role === 'donor' ? 'role-toggle-active' : 'role-toggle-inactive'
                       }`}>
                         Donor
                       </span>

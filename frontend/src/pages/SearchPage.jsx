@@ -803,7 +803,11 @@ const SearchPage = () => {
                     <button 
                       key={bg} 
                       onClick={() => setBloodGroup(bg)}
-                      className={`py-1.5 text-xs font-bold border rounded-lg transition-all ${bloodGroup === bg ? 'border-oneblood-crimson bg-oneblood-crimson/15 text-white' : 'border-white/5 bg-slate-950/60 text-slate-400'}`}
+                      className={`py-1.5 text-xs font-bold border rounded-lg transition-all ${
+                        bloodGroup === bg 
+                          ? 'border-oneblood-crimson bg-oneblood-crimson/15 text-oneblood-crimson dark:text-white' 
+                          : 'border-slate-200 dark:border-white/5 bg-slate-100 dark:bg-slate-950/60 text-slate-600 dark:text-slate-400'
+                      }`}
                     >
                       {bg}
                     </button>
@@ -865,9 +869,9 @@ const SearchPage = () => {
           {donors.length > 0 && (
             <button
               onClick={() => openRequestModal(null)}
-              className="w-full py-2.5 bg-gradient-to-r from-red-600 to-[#C0152A] hover:from-red-700 hover:to-red-800 text-white font-extrabold rounded-xl text-xs transition-all shadow-lg flex items-center justify-center space-x-2 border border-red-500/20 cursor-pointer"
+              className="w-full py-2.5 bg-gradient-to-r from-red-600 to-[#C0152A] hover:from-red-700 hover:to-red-800 keep-white text-white font-extrabold rounded-xl text-xs transition-all shadow-lg flex items-center justify-center space-x-2 border border-red-500/20 cursor-pointer"
             >
-              <Send className="w-4 h-4 text-white shrink-0 animate-pulse" />
+              <Send className="w-4 h-4 text-white shrink-0 animate-pulse keep-white" />
               <span>Send Request to all the donors nearby with {bloodGroup} Blood Group</span>
             </button>
           )}

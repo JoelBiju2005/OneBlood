@@ -270,3 +270,15 @@ option {
   background: #181212 !important;
 }
 
+/* Specific custom overrides for the header role toggle switch to prevent theme-swap bugs */
+.role-toggle-container {
+  background-color: #1e293b !important; /* dark slate-800 in both modes */
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+.role-toggle-active {
+  color: #ffffff !important;
+}
+.role-toggle-inactive {
+  color: #94a3b8 !important;
+}
+
