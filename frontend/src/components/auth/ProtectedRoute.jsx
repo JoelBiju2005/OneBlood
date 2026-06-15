@@ -10,10 +10,6 @@ const FullPageSpinner = () => (
     <div className="flex flex-col items-center space-y-6 relative z-10">
       {/* Beating & Glowing Logo Wrapper */}
       <div className="relative flex items-center justify-center mb-2">
-        {/* Outer pulsing background glows */}
-        <div className="absolute w-28 h-28 bg-red-500/10 dark:bg-red-500/5 rounded-full animate-ping duration-[1600ms]" />
-        <div className="absolute w-24 h-24 bg-red-500/20 dark:bg-red-500/10 rounded-full animate-pulse duration-[1200ms]" />
-        
         {/* Falling Blood Drop */}
         <div className="absolute z-20 animate-blood-fall flex items-center justify-center">
           <svg viewBox="0 0 24 24" fill="#C0152A" className="w-12 h-12 drop-shadow-[0_2px_12px_rgba(192,21,42,0.4)]">
