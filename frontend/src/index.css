@@ -272,13 +272,20 @@ option {
 
 /* Specific custom overrides for the header role toggle switch to prevent theme-swap bugs */
 .role-toggle-container {
-  background-color: #1e293b !important; /* dark slate-800 in both modes */
+  background-color: #f1f5f9 !important; /* light slate-100 */
+  border-color: #cbd5e1 !important; /* light slate-300 */
+}
+.dark .role-toggle-container {
+  background-color: #020617 !important; /* dark slate-950 */
   border-color: rgba(255, 255, 255, 0.1) !important;
 }
 .role-toggle-active {
-  color: #ffffff !important;
+  color: #ffffff !important; /* white on red active background in both themes */
 }
 .role-toggle-inactive {
-  color: #94a3b8 !important;
+  color: #64748b !important; /* dark slate-500 in light mode */
+}
+.dark .role-toggle-inactive {
+  color: #94a3b8 !important; /* light slate-400 in dark mode */
 }
 
