@@ -5,7 +5,13 @@ const useAuthStore = create((set, get) => ({
   user: (() => {
     try {
       const u = localStorage.getItem('user');
-      return u ? JSON.parse(u) : null;
+      if (!u) return null;
+      const parsed = JSON.parse(u);
+      if (parsed && parsed.role === 'patient') {
+        parsed.role = 'seeker';
+        localStorage.setItem('user', JSON.stringify(parsed));
+      }
+      return parsed;
     } catch (_) {
       localStorage.removeItem('user');
       return null;
@@ -28,6 +34,7 @@ const useAuthStore = create((set, get) => ({
 
       const res = await api.get('/auth/me');
       const { user } = res.data;
+      if (user && user.role === 'patient') user.role = 'seeker';
       localStorage.setItem('user', JSON.stringify(user));
       set({ user, oneblood_token: accessToken, isAuthenticated: true, isLoading: false, isInitialized: true });
     } catch (err) {
@@ -44,6 +51,7 @@ const useAuthStore = create((set, get) => ({
       const res = await api.post('/auth/login', { onebloodId, email, password });
       const { accessToken, refreshToken, user } = res.data;
 
+      if (user && user.role === 'patient') user.role = 'seeker';
       setAccessToken(accessToken);
       localStorage.setItem('user', JSON.stringify(user));
       if (refreshToken) {
@@ -70,6 +78,7 @@ const useAuthStore = create((set, get) => ({
       const res = await api.post('/auth/register', { name, email, phone, password, role, city, ...extraData });
       const { accessToken, refreshToken, user } = res.data;
 
+      if (user && user.role === 'patient') user.role = 'seeker';
       setAccessToken(accessToken);
       localStorage.setItem('user', JSON.stringify(user));
       if (refreshToken) {
@@ -113,6 +122,7 @@ const useAuthStore = create((set, get) => ({
       const res = await api.post('/auth/switch-role');
       const { accessToken, refreshToken, user } = res.data;
 
+      if (user && user.role === 'patient') user.role = 'seeker';
       setAccessToken(accessToken);
       localStorage.setItem('user', JSON.stringify(user));
       if (refreshToken) {
@@ -137,6 +147,7 @@ const useAuthStore = create((set, get) => ({
     try {
       const res = await api.get('/auth/me');
       const { user } = res.data;
+      if (user && user.role === 'patient') user.role = 'seeker';
       localStorage.setItem('user', JSON.stringify(user));
       set({ user, isAuthenticated: true });
       return user;

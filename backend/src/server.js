@@ -47,6 +47,17 @@ socketService.init(io);
 // Connect to Database & Listen
 const startServer = async () => {
   await connectDB();
+
+  // Run database migration to rename role 'patient' to 'seeker'
+  try {
+    const User = require('./models/User');
+    const result = await User.updateMany({ role: 'patient' }, { role: 'seeker' });
+    if (result.modifiedCount > 0) {
+      console.log(`🧹 Database Migration: Updated ${result.modifiedCount} users from 'patient' to 'seeker' role.`);
+    }
+  } catch (migErr) {
+    console.error('Database role migration error:', migErr.message);
+  }
   
   // Initialize background tasks
   try {
