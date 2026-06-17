@@ -18,7 +18,7 @@ const SuccessPage = () => {
   const isNewUser = location.state?.isNewUser;
   const onebloodId = location.state?.onebloodId || user?.onebloodId || '';
   const name = location.state?.name || user?.name || 'User';
-  const role = location.state?.role || user?.role || 'patient';
+  const role = location.state?.role || user?.role || 'seeker';
 
   // Guard: if user is not authenticated, redirect to login
   useEffect(() => {
@@ -38,14 +38,14 @@ const SuccessPage = () => {
   const getPrimaryRoute = () => {
     if (!isNewUser) return '/home';
     if (role === 'donor') return '/donor/register';
-    if (role === 'patient') return '/search';
+    if (role === 'seeker') return '/search';
     if (role === 'blood_bank') return '/home';
     return '/home';
   };
 
   const getPrimaryLabel = () => {
     if (role === 'donor') return 'Complete Setup';
-    if (role === 'patient') return 'Find blood near me';
+    if (role === 'seeker') return 'Find blood near me';
     if (role === 'blood_bank') return 'Go to Dashboard';
     return 'Go to Home';
   };

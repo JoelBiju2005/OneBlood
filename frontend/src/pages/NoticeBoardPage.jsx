@@ -117,7 +117,7 @@ export default function NoticeBoardPage() {
               Open emergency calls for blood from patients across the platform. Every post is pre-screened and prioritized.
             </p>
           </div>
-          {user?.role === 'patient' && (
+          {user?.role === 'seeker' && (
             <button
               className="px-6 py-3.5 bg-oneblood-crimson hover:bg-red-700 text-white font-bold text-sm rounded-xl transition-all duration-200 shadow-lg shadow-red-700/20 hover:shadow-red-700/35 cursor-pointer"
               onClick={() => navigate('/noticeboard/post')}

@@ -25,7 +25,7 @@ const runTests = async () => {
     onebloodId: 'OB-SEEK99',
     name: 'Test Seeker',
     email: testEmail,
-    role: 'patient',
+    role: 'seeker',
     city: 'Hubballi'
   });
   console.log('🟢 Seeker Created:', seeker.onebloodId);

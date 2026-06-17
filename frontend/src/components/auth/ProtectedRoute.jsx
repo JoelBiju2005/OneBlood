@@ -66,7 +66,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
       blood_bank: '/dashboard/bank',
       hospital: '/dashboard/hospital',
       admin: '/admin',
-      patient: '/search'
+      seeker: '/search'
     };
     return <Navigate to={dashMap[user.role] || '/search'} replace />;
   }

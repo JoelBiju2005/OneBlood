@@ -91,7 +91,7 @@ const DonationInProgress = ({ compact = false }) => {
   const isHospital = user?.role === 'hospital';
   const isBloodBank = user?.role === 'blood_bank';
   const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
-  const isSeeker = user?.role === 'patient';
+  const isSeeker = user?.role === 'seeker';
   const isDonor = user?.role === 'donor';
 
   /**

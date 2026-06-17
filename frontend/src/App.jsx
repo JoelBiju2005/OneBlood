@@ -45,7 +45,7 @@ import DonorResponseConfirmPage from './pages/confirmations/DonorResponseConfirm
 const HomeRedirect = () => {
   const { user } = useAuthStore();
   if (!user) return <Navigate to="/auth/login" replace />;
-  const map = { donor: '/home/donor', patient: '/home/seeker', blood_bank: '/dashboard/bank', hospital: '/dashboard/hospital', admin: '/admin' };
+  const map = { donor: '/home/donor', seeker: '/home/seeker', blood_bank: '/dashboard/bank', hospital: '/dashboard/hospital', admin: '/admin' };
   return <Navigate to={map[user.role] || '/search'} replace />;
 };
 
@@ -92,7 +92,7 @@ function App() {
             {/* Notice Board Routes */}
             <Route path="/noticeboard" element={<NoticeBoardPage />} />
             <Route path="/noticeboard/post" element={
-              <ProtectedRoute allowedRoles={['patient']}>
+              <ProtectedRoute allowedRoles={['seeker']}>
                 <PostNoticePage />
               </ProtectedRoute>
             } />
@@ -120,7 +120,7 @@ function App() {
               </ProtectedRoute>
             } />
             <Route path="/home/seeker" element={
-              <ProtectedRoute allowedRoles={['patient']}>
+              <ProtectedRoute allowedRoles={['seeker']}>
                 <SeekerHomePage />
               </ProtectedRoute>
             } />
@@ -142,7 +142,7 @@ function App() {
               </ProtectedRoute>
             } />
             <Route path="/active-donations" element={
-              <ProtectedRoute allowedRoles={['patient', 'donor', 'hospital', 'blood_bank', 'admin']}>
+              <ProtectedRoute allowedRoles={['seeker', 'donor', 'hospital', 'blood_bank', 'admin']}>
                 <ActiveDonationsPage />
               </ProtectedRoute>
             } />

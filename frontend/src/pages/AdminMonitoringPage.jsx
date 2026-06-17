@@ -293,7 +293,7 @@ const AdminMonitoringPage = () => {
                       className="bg-slate-800 border border-white/10 px-4 py-3.5 rounded-xl text-xs text-white focus:outline-none"
                     >
                       <option value="all">All Roles</option>
-                      <option value="patient">Seeker (Patient)</option>
+                      <option value="seeker">Seeker</option>
                       <option value="donor">Donor</option>
                       <option value="blood_bank">Blood Bank Manager</option>
                       <option value="admin">Administrator</option>
@@ -354,7 +354,7 @@ const AdminMonitoringPage = () => {
                                   ) : (
                                     <span className="text-[9px] font-bold uppercase text-slate-500 bg-white/5 px-1.5 py-0.5 rounded">Setup Pending</span>
                                   ))}
-                                  {u.role === 'patient' && <span className="text-[9px] text-slate-500 font-bold uppercase bg-white/5 px-1.5 py-0.5 rounded">Standard Seeker</span>}
+                                  {u.role === 'seeker' && <span className="text-[9px] text-slate-500 font-bold uppercase bg-white/5 px-1.5 py-0.5 rounded">Standard Seeker</span>}
                                   {u.role === 'admin' && <span className="text-[9px] text-indigo-400 font-bold uppercase bg-indigo-500/5 px-1.5 py-0.5 rounded">Super Admin</span>}
                                 </div>
                               </td>

@@ -106,7 +106,7 @@ const AdminPortal = () => {
       name: user.name || '',
       email: user.email || '',
       phone: user.phone || '',
-      role: user.role || 'patient',
+      role: user.role || 'seeker',
       city: user.city || '',
       isVerified: user.isVerified || false
     });
@@ -147,7 +147,7 @@ const AdminPortal = () => {
   };
 
   const handleDeleteDonor = async (donorId) => {
-    if (!window.confirm('Delete this donor profile? The user account will remain but be downgraded to patient.')) return;
+    if (!window.confirm('Delete this donor profile? The user account will remain but be downgraded to seeker.')) return;
     setActionLoading(donorId);
     try {
       await api.delete(`/admin/donors/${donorId}`);
@@ -688,7 +688,7 @@ const AdminPortal = () => {
                     onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
                     className="w-full bg-slate-950 border border-white/10 p-2.5 rounded-xl text-xs text-white focus:outline-none"
                   >
-                    <option value="patient">Patient (Seeker)</option>
+                    <option value="seeker">Seeker</option>
                     <option value="donor">Blood Donor</option>
                     <option value="blood_bank">Blood Bank</option>
                     <option value="admin">Administrator</option>

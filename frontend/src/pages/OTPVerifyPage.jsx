@@ -91,7 +91,7 @@ const OTPVerifyPage = ({ email: propEmail, onVerified }) => {
         setTimeout(() => {
           if (user.role === 'donor') {
             navigate(user.donorProfileComplete ? '/home/donor' : '/donor/register');
-          } else if (user.role === 'patient') {
+          } else if (user.role === 'seeker') {
             navigate('/home/seeker');
           } else if (user.role === 'blood_bank') {
             navigate('/dashboard/bank');

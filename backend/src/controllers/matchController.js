@@ -439,7 +439,7 @@ const getMatchesInProgress = async (req, res, next) => {
     // Filter by role
     if (req.user.role === 'donor') {
       filter.donorId = req.user._id;
-    } else if (req.user.role === 'patient') {
+    } else if (req.user.role === 'seeker') {
       filter.seekerId = req.user._id;
     } else if (req.user.role === 'hospital') {
       const hosp = await Hospital.findOne({ userId: req.user._id });
@@ -471,7 +471,7 @@ const getMatchHistory = async (req, res, next) => {
 
     if (req.user.role === 'donor') {
       filter.donorId = req.user._id;
-    } else if (req.user.role === 'patient') {
+    } else if (req.user.role === 'seeker') {
       filter.seekerId = req.user._id;
     } else if (req.user.role === 'hospital') {
       const hosp = await Hospital.findOne({ userId: req.user._id });

@@ -121,8 +121,8 @@ const LandingPage = () => {
               className="flex flex-wrap justify-center gap-6"
             >
               <Link 
-                to={user ? "/home" : "/auth/signup?role=patient"}
-                state={{ role: 'patient' }}
+                to={user ? "/home" : "/auth/signup?role=seeker"}
+                state={{ role: 'seeker' }}
                 className="px-10 py-5 text-lg rounded-full bg-oneblood-crimson hover:bg-red-700 text-white font-bold hover:shadow-lg hover:shadow-red-700/30 transition-all duration-200 flex items-center space-x-2.5 group"
               >
                 <span>I Need Blood</span>

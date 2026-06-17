@@ -197,7 +197,7 @@ const ProfilePage = () => {
           <div>
             <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">{user?.name}</h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 capitalize">
-              {user?.role === 'blood_bank' ? 'Blood Bank Admin' : user?.role === 'patient' ? 'Seeker' : user?.role}
+              {user?.role === 'blood_bank' ? 'Blood Bank Admin' : user?.role === 'seeker' ? 'Seeker' : user?.role}
               {user?.role === 'donor' && profileData?.bloodGroup && `  •  ${profileData.bloodGroup}`}
               {(profileData?.city || user?.city) && `  •  ${profileData?.city || user?.city}`}
             </p>

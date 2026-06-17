@@ -244,7 +244,7 @@ const deleteDonor = async (req, res, next) => {
     }
 
     // Update user flag
-    await User.findByIdAndUpdate(donor.userId, { donorProfileComplete: false, role: 'patient' });
+    await User.findByIdAndUpdate(donor.userId, { donorProfileComplete: false, role: 'seeker' });
 
     // Delete the donor profile
     await Donor.findByIdAndDelete(id);
@@ -266,7 +266,7 @@ const deleteBank = async (req, res, next) => {
     }
 
     // Update user flag
-    await User.findByIdAndUpdate(bank.adminUserId, { bankProfileComplete: false, role: 'patient' });
+    await User.findByIdAndUpdate(bank.adminUserId, { bankProfileComplete: false, role: 'seeker' });
 
     // Delete the bank profile
     await BloodBank.findByIdAndDelete(id);

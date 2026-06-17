@@ -165,7 +165,7 @@ const Layout = () => {
                   </Link>
                 </>
               )}
-              {isAuthenticated && user?.role === 'patient' && (
+              {isAuthenticated && user?.role === 'seeker' && (
                 <>
                   <Link 
                     to="/search" 
@@ -213,7 +213,7 @@ const Layout = () => {
               {isAuthenticated ? (
                 <>
                   {/* Role Toggle Switch */}
-                  {(user?.role === 'donor' || user?.role === 'patient') && (
+                  {(user?.role === 'donor' || user?.role === 'seeker') && (
                      <div 
                       onClick={handleRoleToggle}
                       className="relative border rounded-full p-1 flex items-center h-8 w-32 cursor-pointer select-none mr-2 role-toggle-container"
@@ -222,14 +222,14 @@ const Layout = () => {
                       <div 
                         className="absolute top-1 bottom-1 rounded-full bg-oneblood-crimson transition-all duration-300 ease-out"
                         style={{
-                          left: user.role === 'patient' ? '4px' : 'calc(50% + 0px)',
+                          left: user.role === 'seeker' ? '4px' : 'calc(50% + 0px)',
                           width: 'calc(50% - 4px)',
                         }}
                       />
                       
                       {/* Seeker Option */}
                       <span className={`relative z-10 w-1/2 text-[10px] font-bold text-center transition-colors duration-300 ${
-                        user.role === 'patient' ? 'role-toggle-active' : 'role-toggle-inactive'
+                        user.role === 'seeker' ? 'role-toggle-active' : 'role-toggle-inactive'
                       }`}>
                         Seeker
                       </span>
@@ -362,7 +362,7 @@ const Layout = () => {
                             <span>Home</span>
                           </Link>
                         )}
-                        {user.role === 'patient' && (
+                        {user.role === 'seeker' && (
                           <Link 
                             to="/home/seeker"
                             className="flex items-center space-x-2.5 px-3 py-2 text-xs rounded-lg hover:bg-white/5 transition-colors"
@@ -420,7 +420,7 @@ const Layout = () => {
                           <Bell className="w-4 h-4 text-slate-400" />
                           <span>Notifications</span>
                         </Link>
-                        {(user.role === 'patient' || user.role === 'donor' || user.role === 'hospital' || user.role === 'blood_bank') && (
+                        {(user.role === 'seeker' || user.role === 'donor' || user.role === 'hospital' || user.role === 'blood_bank') && (
                           <Link 
                             to="/active-donations"
                             className="flex items-center space-x-2.5 px-3 py-2 text-xs rounded-lg hover:bg-white/5 transition-colors"
@@ -572,7 +572,7 @@ const Layout = () => {
                 </Link>
               </>
             )}
-            {isAuthenticated && user?.role === 'patient' && (
+            {isAuthenticated && user?.role === 'seeker' && (
               <>
                 <Link 
                   to="/search" 
@@ -615,7 +615,7 @@ const Layout = () => {
                   Account ({user.name})
                 </div>
                 {/* Mobile Role Toggle Switch */}
-                {(user?.role === 'donor' || user?.role === 'patient') && (
+                {(user?.role === 'donor' || user?.role === 'seeker') && (
                   <div className="px-3 py-2 flex items-center justify-between border-b border-white/5 pb-3">
                     <span className="text-xs font-bold text-slate-400">View Mode</span>
                      <div 
@@ -626,14 +626,14 @@ const Layout = () => {
                       <div 
                         className="absolute top-1 bottom-1 rounded-full bg-oneblood-crimson transition-all duration-300 ease-out"
                         style={{
-                          left: user.role === 'patient' ? '4px' : 'calc(50% + 0px)',
+                          left: user.role === 'seeker' ? '4px' : 'calc(50% + 0px)',
                           width: 'calc(50% - 4px)',
                         }}
                       />
                       
                       {/* Seeker Option */}
                       <span className={`relative z-10 w-1/2 text-[10px] font-bold text-center transition-colors duration-300 ${
-                        user.role === 'patient' ? 'role-toggle-active' : 'role-toggle-inactive'
+                        user.role === 'seeker' ? 'role-toggle-active' : 'role-toggle-inactive'
                       }`}>
                         Seeker
                       </span>
@@ -678,7 +678,7 @@ const Layout = () => {
                     <span>Home</span>
                   </Link>
                 )}
-                {user.role === 'patient' && (
+                {user.role === 'seeker' && (
                   <Link 
                     to="/home/seeker"
                     className="flex items-center space-x-2.5 px-3 py-2 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-white/5"
@@ -736,7 +736,7 @@ const Layout = () => {
                   <Bell className="w-4 h-4 text-slate-400" />
                   <span>Notifications</span>
                 </Link>
-                {(user?.role === 'patient' || user?.role === 'donor' || user?.role === 'hospital' || user?.role === 'blood_bank') && (
+                {(user?.role === 'seeker' || user?.role === 'donor' || user?.role === 'hospital' || user?.role === 'blood_bank') && (
                   <Link 
                     to="/active-donations"
                     className="flex items-center space-x-2.5 px-3 py-2 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-white/5"

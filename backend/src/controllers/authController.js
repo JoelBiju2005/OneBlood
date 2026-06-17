@@ -91,7 +91,7 @@ const register = async (req, res, next) => {
       email,
       phone: role === 'hospital' ? req.body.emergencyContact : phone,
       passwordHash,
-      role: role || 'patient',
+      role: role || 'seeker',
       city: city || 'Bengaluru',
       hospitalProfileComplete: role === 'hospital'
     });
@@ -343,7 +343,7 @@ const googleLogin = async (req, res, next) => {
         email: email.toLowerCase().trim(),
         phone: 'Not provided',
         passwordHash: 'GOOGLE_AUTH_NO_PASSWORD',
-        role: 'patient',
+        role: 'seeker',
         city: 'Bengaluru',
         avatar: picture || '',
       });
@@ -490,11 +490,11 @@ const switchRole = async (req, res, next) => {
     }
 
     if (user.role === 'donor') {
-      user.role = 'patient';
-    } else if (user.role === 'patient') {
+      user.role = 'seeker';
+    } else if (user.role === 'seeker') {
       user.role = 'donor';
     } else {
-      return res.status(400).json({ message: 'Role switching is only allowed between donor and patient (seeker) accounts.' });
+      return res.status(400).json({ message: 'Role switching is only allowed between donor and seeker accounts.' });
     }
 
     const accessToken = generateAccessToken(user);

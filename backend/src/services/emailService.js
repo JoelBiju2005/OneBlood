@@ -355,7 +355,7 @@ const sendMatchConfirmationEmail = async (to, seekerName, donorName, matchObid, 
           <td class="info-value"><span style="color: #C0152A; font-weight: 700; font-size: 15px;">{{matchObid}}</span></td>
         </tr>
         <tr>
-          <td class="info-label">Patient/Seeker:</td>
+          <td class="info-label">Seeker:</td>
           <td class="info-value"><strong>{{seekerName}}</strong></td>
         </tr>
         <tr>
@@ -394,7 +394,7 @@ const sendHospitalMatchEmail = async (to, seekerName, donorName, matchObid, faci
           <td class="info-value"><span style="color: #C0152A; font-weight: 700;">{{matchObid}}</span></td>
         </tr>
         <tr>
-          <td class="info-label">Seeker/Patient:</td>
+          <td class="info-label">Seeker:</td>
           <td class="info-value"><strong>{{seekerName}}</strong></td>
         </tr>
         <tr>
@@ -441,7 +441,7 @@ const sendBloodBankMatchEmail = async (to, seekerName, donorName, matchObid, fac
           <td class="info-value"><strong>{{facilityName}}</strong></td>
         </tr>
         <tr>
-          <td class="info-label">Seeker/Patient:</td>
+          <td class="info-label">Seeker:</td>
           <td class="info-value">{{seekerName}}</td>
         </tr>
         <tr>
