@@ -22,7 +22,7 @@ sequenceDiagram
     User->>Render: REST API: POST /api/auth/login (Credential verification)
     Render->>Mongo: Query user account
     Mongo-->>Render: Return User details
-    Render-->>User: Access Token (JSON body) & Refresh Token (localStorage/cookie)
+    Render-->>User: Access Token (JSON body) & Sets HTTP-Only Cookie (oneblood_refresh)
     
     User->>Render: WebSocket connection: io("wss://oneblood-nvg1.onrender.com")
     Render-->>User: Socket Connection established (Real-time communications active)
@@ -31,11 +31,13 @@ sequenceDiagram
 ### 🖥️ Frontend Hosting: Firebase Hosting
 - **Platform**: Hosted via Google Firebase Hosting.
 - **Characteristics**: Fast content delivery network (CDN), SSL configuration out of the box, and cache management rules defined in [firebase.json](file:///c:/Users/JOEL%20BIJU/Documents/OneBlood/firebase.json).
+- **Security Headers**: Custom Content Security Policy (CSP), `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`, and `Permissions-Policy` headers are strictly enforced at the CDN edge.
 - **Client-Side Routing**: SPA architecture redirects all traffic to `index.html` to let `react-router-dom` control URL states.
 
 ### ⚙️ Backend Hosting: Render
 - **Platform**: Hosted as a Web Service on Render (`https://oneblood-nvg1.onrender.com`).
 - **Characteristics**: Connected to the `master` git branch for automatic rebuilds. Runs node entrypoint `backend/src/server.js` with auto-scaling options.
+- **HTTPS Redirect**: All incoming HTTP traffic in production is redirected to HTTPS via a 301 redirect.
 - **WebSocket Gateway**: Exposes port `10000` to support persistent TCP sockets.
 
 ### 🔒 Secure Cross-Platform Interoperability (CORS & Tokens)
@@ -44,8 +46,8 @@ Since the frontend and backend are hosted on separate domains, secure cross-orig
    The backend Express app (`backend/src/app.js`) configures CORS using strict whitelisting:
    ```javascript
    const allowedOrigins = [
-     'https://oneblood-nvg1.web.app',
-     'https://oneblood-nvg1.firebaseapp.com',
+     'https://oneblood-app.web.app',
+     'https://oneblood-app.firebaseapp.com',
      'http://localhost:5173'
    ];
    app.use(cors({
@@ -59,11 +61,12 @@ Since the frontend and backend are hosted on separate domains, secure cross-orig
      credentials: true
    }));
    ```
-2. **Access Token & Refresh Token Flow**:
-   - **Access Token**: Short-lived JWT access tokens are saved solely in-memory within React state via [authStore.js](file:///c:/Users/JOEL%20BIJU/Documents/OneBlood/frontend/src/store/authStore.js).
-   - **Refresh Token**: A long-lived token is stored securely. Axios interceptors configured in [api.js](file:///c:/Users/JOEL%20BIJU/Documents/OneBlood/frontend/src/utils/api.js) automatically request a fresh access token from the backend `/api/auth/refresh` endpoint if a request returns `401 Unauthorized`.
+2. **Access Token & Refresh Token Flow (HTTP-Only Cookie Rotation)**:
+   - **Access Token**: Short-lived JWT access tokens (15-minute expiry) are saved solely in-memory within React state via [authStore.js](file:///c:/Users/JOEL%20BIJU/Documents/OneBlood/frontend/src/store/authStore.js) to eliminate local storage XSS theft vulnerabilities.
+   - **Refresh Token**: Long-lived refresh tokens are stored exclusively inside secure, HTTP-only cookies (`oneblood_refresh`) with `sameSite: 'none'` (for production cross-domain security) and `secure: true`.
+   - **Silent Refresh**: Axios interceptors configured in [api.js](file:///c:/Users/JOEL%20BIJU/Documents/OneBlood/frontend/src/utils/api.js) automatically request a fresh access token from the backend `/api/auth/refresh` endpoint on receiving a `401 Unauthorized` response. The browser attaches the cookie automatically due to the `withCredentials: true` configuration.
 3. **WebSocket Handshake Auth**:
-   Sockets are initialized with authorization headers passing the token directly. The backend validates this token before joining the client to any socket channels.
+   Sockets are initialized with authorization headers passing the token directly. The backend validates this token and verifies user identity against the database before joining the client to any socket channels.
 
 ---
 
@@ -84,24 +87,31 @@ Below is a detailed guide to every core folder in the monorepo workspace:
 - **`src/store/`**:
   - `authStore.js`: Global Zustand state managing current login profile details, token storage, and active role-toggles.
   - `notificationStore.jsx`: React Context hooks subscribing to real-time notification feeds.
-- **`src/utils/api.js`**: Preconfigured HTTP client utilizing interceptors for session refreshing.
+- **`src/utils/`**:
+  - `api.js`: Preconfigured HTTP client utilizing interceptors for session refreshing.
+  - `sanitize.js`: DOMPurify wrapper that sanitizes raw HTML elements to mitigate Cross-Site Scripting (XSS).
 
 ### ⚙️ Backend Structure (`/backend`)
 - **`src/server.js`**: Starts the HTTP listener, configures port routing, and binds the socket.io listener.
-- **`src/app.js`**: Sets up HTTP middlewares (such as security headers and body limiters).
+- **`src/app.js`**: Sets up HTTP middlewares (such as security headers, express-rate-limit 4-tier limits, Helmet CSP, Permissions-Policy, and body limiters).
 - **`src/config/`**:
   - `db.js`: Mongoose connector managing MongoDB connection pools.
   - `firebase.js`: Firebase Admin application initialiser.
   - `redis.js`: Caching connector falling back to standard RAM memory variables if Redis server is offline.
-- **`src/models/`**: Defins schemas for `User.js`, `Donor.js`, `BloodBank.js`, `BloodRequest.js`, `DonationMatch.js`, `Message.js`, and `NoticeBoard.js`.
+- **`src/middleware/`**:
+  - `auth.js`: Implements jwt authorization checks, including `optionalAuth` for selective data redaction.
+  - `validate.js`: Implements input validation rules for all routes via `express-validator`.
+  - `upload.js`: Wraps Multer, restricts file uploads to a 10MB limit, whitelist-filters allowed file MIME types (JPEG, PNG, WEBP, PDF), and handles errors securely.
+  - `errorHandler.js`: Production-safe global error handler that redacts stack traces and maps specific db validation/JWT/Multer exceptions to custom HTTP responses.
+- **`src/models/`**: Defines schemas for `User.js`, `Donor.js`, `BloodBank.js`, `Hospital.js`, `BloodRequest.js`, `DonationMatch.js`, `Message.js`, and `NoticeBoard.js`.
 - **`src/controllers/`**:
-  - `authController.js`: Registration, login, session validation, and JWT token rotation.
-  - `matchController.js`: Handlers managing donor acceptances, transit detours, state transitions, and PDF downloads.
+  - `authController.js`: Registration, login, session validation, JWT token rotation, password resets, and account lockout handling.
+  - `matchController.js`: Handlers managing donor acceptances, transit detours, state transitions, and secure PDF document streaming.
   - `hospitalController.js`: Direct hospital API handlers.
 - **`src/services/`**:
   - `pdfService.js`: Renders professional match slips using `pdfkit`.
   - `aiVerification.js`: Extracts clinical requisition metadata from document uploads.
-  - `escalationService.js`: Escalation triggers alert distributions dynamically.
+  - `escalationService.js`: Escalation triggers alert distributions dynamically to verified hospital admins.
   - `socketService.js`: Controls socket channel logic.
 
 ---
@@ -189,24 +199,15 @@ If a critical request is published on the Notice Board but receives no donor res
 - **First 30 minutes**: Sends push alerts to matching local donors in a 5KM radius.
 - **After 1 hour**: Broadcasts alert emails and expands the search radius to 15KM.
 - **After 2 hours**: Generates detour bank proposals suggesting redirecting the donor to a transit blood bank holding compatible stock.
+- **Email Verification Gate**: The escalation engine verifies if a hospital's email has been verified (`hospital.emailVerified === true`) before dispatching critical alerts, preventing silent alert delivery failures.
 
 ---
 
-### 📄 5. Custom PDF Slip Rendering Logic
-The PDF generation service utilizes standard vector graphics and coordinates in `pdfkit` to compile data fields into a professional card layout, without the use of pixelated image placeholders or external HTML converters.
-
-```javascript
-// Draws a custom vector checkmark in PDFKit
-const drawCheckmark = (doc, x, y) => {
-  doc.save();
-  doc.strokeColor('#10B981').lineWidth(1.8);
-  doc.moveTo(x, y + 5)
-     .lineTo(x + 3, y + 8)
-     .lineTo(x + 8, y + 2)
-     .stroke();
-  doc.restore();
-};
-```
+### 🔒 5. Hardened Authentication & Access Control Algorithms
+- **Account Enumeration Mitigation**: All authentication endpoints return a generic `"Invalid credentials."` message, irrespective of whether the email is missing or the password hash comparison failed.
+- **Per-Account Bruteforce Lockout**: The system counts failed logins (`failedLoginAttempts`). If attempts exceed 10, the account is locked (`lockoutUntil` is set to 30 minutes in the future) and a warning email is automatically dispatched.
+- **OneBlood ID Circuit Breaker**: The automatic unique ID generator is capped at a maximum of 10 retry loop cycles to prevent theoretical infinite collision loops.
+- **Secure PDF Streamer**: Direct static exposure of match PDFs is disabled. Accessing PDF coordination slips requires calling `GET /api/match/:matchedObId/document`. The handler fetches the `DonationMatch` document and checks if `req.userId` matches the `seekerId`, `donorId`, or the `userId` on the referenced `Hospital` profile. Only authorized users are streamed the file from disk via `res.sendFile()`.
 
 ---
 
@@ -244,73 +245,87 @@ sequenceDiagram
 
 ## 5. 🗄️ Database Schemas Catalog (MongoDB / Mongoose)
 
-Below are the structured data models implemented on the platform:
+Below are the key structured data models implemented on the platform:
 
 ### 👤 1. `User` Schema
-Tracks identities, core settings, and session refresh tokens.
+Tracks identities, core settings, login limits, and reset token parameters.
 ```javascript
 const userSchema = new mongoose.Schema({
   onebloodId: { type: String, unique: true, required: true },
   name: { type: String, required: true },
   email: { type: String, unique: true, required: true },
   phone: { type: String, required: true },
-  password: { type: String, required: true },
-  role: { type: String, enum: ['donor', 'patient', 'blood_bank', 'admin'], default: 'patient' },
+  passwordHash: { type: String, required: true },
+  role: { type: String, enum: ['donor', 'seeker', 'hospital', 'blood_bank', 'admin'], default: 'seeker' },
   city: { type: String, required: true },
-  refreshToken: { type: String },
-  isEmailVerified: { type: Boolean, default: false }
+  refreshTokenHash: { type: String },
+  failedLoginAttempts: { type: Number, default: 0 },
+  lockoutUntil: { type: Date },
+  resetTokenHash: { type: String },
+  resetTokenExpiry: { type: Date }
 }, { timestamps: true });
 ```
 
-### 🩸 2. `Donor` Schema
+### 🏥 2. `Hospital` Schema
+Enforces identity tracking, geolocation, and email validation status.
+```javascript
+const hospitalSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  hospitalName: { type: String, required: true },
+  registrationNumber: { type: String, required: true },
+  hospitalType: { type: String, required: true },
+  address: { type: String, required: true },
+  city: { type: String, required: true },
+  state: { type: String, required: true },
+  pincode: { type: String, required: true },
+  emergencyContact: { type: String, required: true },
+  emailVerified: { type: Boolean, default: false },
+  emailVerificationToken: { type: String },
+  verificationStatus: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+  location: {
+    type: { type: String, default: 'Point' },
+    coordinates: { type: [Number], required: true } // [longitude, latitude]
+  }
+}, { timestamps: true });
+```
+
+### 🩸 3. `Donor` Schema
 Stores donor-specific medical information and geolocation coordinates.
 ```javascript
 const donorSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   bloodGroup: { type: String, required: true },
   status: { type: String, enum: ['available', 'unavailable', 'suspended'], default: 'available' },
-  lastDonationDate: { type: Date },
+  lastDonated: { type: Date },
+  totalDonations: { type: Number, default: 0 },
+  age: { type: Number },
+  weight: { type: Number },
   city: { type: String, required: true },
   location: {
     type: { type: String, default: 'Point' },
-    coordinates: { type: [Number], required: true } // [longitude, latitude]
+    coordinates: { type: [Number], required: true }
   }
 });
 donorSchema.index({ location: '2dsphere' });
 ```
 
-### 🏥 3. `BloodBank` Schema
-Manages inventory states and hospital bank validations.
+### 🤝 4. `DonationMatch` Schema
+Stores and manages active match state transitions, evidence certificates, and protected slips.
 ```javascript
-const bloodBankSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  name: { type: String, required: true },
-  inventory: [{
-    bloodGroup: { type: String, required: true },
-    units: { type: Number, default: 0 }
-  }],
-  address: { type: String, required: true },
-  city: { type: String, required: true },
-  verified: { type: Boolean, default: false }
-});
-```
-
-### 📝 4. `BloodRequest` Schema
-Manages requisitions, verify flags, status stages, and candidate match lists.
-```javascript
-const bloodRequestSchema = new mongoose.Schema({
-  requesterId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  patientName: { type: String, required: true },
+const donationMatchSchema = new mongoose.Schema({
+  matchObid: { type: String, required: true, unique: true },
+  seekerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  donorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  destinationType: { type: String, enum: ['Hospital', 'BloodBank', 'BloodBankAndHospital'], default: 'Hospital' },
+  hospitalId: { type: mongoose.Schema.Types.ObjectId, ref: 'Hospital', required: true },
+  bloodBankId: { type: mongoose.Schema.Types.ObjectId, ref: 'BloodBank' },
+  requestId: { type: mongoose.Schema.Types.ObjectId, required: true },
+  requestType: { type: String, enum: ['BloodRequest', 'NoticeBoard'], default: 'BloodRequest' },
   bloodGroup: { type: String, required: true },
-  unitsRequired: { type: Number, default: 1 },
-  hospitalName: { type: String, required: true },
-  address: { type: String },
-  reason: { type: String },
-  doctorName: { type: String },
-  urgency: { type: String, enum: ['critical', 'urgent', 'moderate', 'planned'], default: 'moderate' },
-  documentUrl: { type: String },
-  isVerified: { type: Boolean, default: false },
-  status: { type: String, enum: ['pending', 'active', 'fulfilled', 'cancelled'], default: 'pending' }
+  units: { type: Number, required: true },
+  status: { type: String, enum: ['in_progress', 'completed', 'cancelled'], default: 'in_progress' },
+  stage: { type: String, enum: ['at_blood_bank', 'at_hospital', 'completed', 'cancelled'], default: 'at_hospital' },
+  pdfPath: { type: String }
 }, { timestamps: true });
 ```
 
@@ -318,9 +333,10 @@ const bloodRequestSchema = new mongoose.Schema({
 
 ## 6. 🏁 Summary of Platform Readiness
 
-With the codebase cleaned of development testing scripts, unnecessary upload structures, and previous system cache directories, **OneBlood** is ready for production deployment:
+The **OneBlood** system is optimized and ready for production deployment:
 
-1. **Frontend**: The React application builds into a optimized distribution bundle (`frontend/dist/`), hosted securely under global CDNs on Firebase Hosting.
-2. **Backend**: Express APIs and WebSocket coordinators run as robust daemons on Render, connected to an Atlas MongoDB cluster and fallback memory managers.
-3. **Algorithms**: Geospatial lookups, blood compatibility evaluations, and AI document scanning are fully optimized and operational.
-4. **PDF Generator**: Match verification documents generate professional, print-ready coordination slips for hospitals, blood banks, and donors.
+1. **Frontend**: The React application builds into a optimized production bundle (`frontend/dist/`), hosted securely under global CDNs on Firebase Hosting with hardened CSP headers.
+2. **Backend**: Express APIs and WebSocket coordinators run on Render, secured with rate limiters, strict CORS, and redirecting HTTP requests to HTTPS.
+3. **Identity Security**: Features per-account lockout, password reset flows, secure cookie-based JWT sessions, and hospital email verification.
+4. **Data Redaction**: Masking rules are applied to keep sensitive fields (e.g., hospital details) hidden from unauthenticated notice board visitors.
+5. **Secure PDF Generator**: Access to match documents is gated by role-based ownership, restricting static downloads to authorized coordination parties.
