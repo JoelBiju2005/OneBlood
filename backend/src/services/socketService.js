@@ -14,13 +14,14 @@ const init = (io) => {
       console.log(`👤 Authenticated user auto-registered: user_${socket.userId} on socket ${socket.id}`);
     }
 
-    // Register user to track direct notifications
+    // Register user to track direct notifications — verify identity
     socket.on('register_user', (userId) => {
-      if (userId) {
-        socket.userId = userId;
+      if (userId && socket.userId && userId === socket.userId) {
         userSockets.set(userId, socket.id);
         socket.join(`user_${userId}`);
         console.log(`👤 User registered and joined room user_${userId}: on socket ${socket.id}`);
+      } else {
+        console.log(`⛔ register_user rejected: socket user ${socket.userId} tried to register as ${userId}`);
       }
     });
 
@@ -32,11 +33,20 @@ const init = (io) => {
       }
     });
 
-    // Join direct donor room (donor_${donorId})
-    socket.on('join_donor_room_direct', (donorId) => {
-      if (donorId) {
-        socket.join(`donor_${donorId}`);
-        console.log(`🚪 Client ${socket.id} joined donor room: donor_${donorId}`);
+    // Join direct donor room (donor_${donorId}) — verify user is actually this donor
+    socket.on('join_donor_room_direct', async (donorId) => {
+      if (!donorId || !socket.userId) return;
+      try {
+        const Donor = require('../models/Donor');
+        const donor = await Donor.findById(donorId);
+        if (donor && donor.userId.toString() === socket.userId) {
+          socket.join(`donor_${donorId}`);
+          console.log(`🚪 Client ${socket.id} joined donor room: donor_${donorId}`);
+        } else {
+          console.log(`⛔ Unauthorized donor room join: User ${socket.userId} tried donor_${donorId}`);
+        }
+      } catch (err) {
+        console.error('join_donor_room_direct error:', err.message);
       }
     });
 
@@ -49,11 +59,20 @@ const init = (io) => {
       }
     });
 
-    socket.on('join_bank_room', (bankId) => {
-      if (bankId) {
-        const roomName = `bloodbank:${bankId}`;
-        socket.join(roomName);
-        console.log(`🚪 Client ${socket.id} joined blood bank room: ${roomName}`);
+    socket.on('join_bank_room', async (bankId) => {
+      if (!bankId || !socket.userId) return;
+      try {
+        const BloodBank = require('../models/BloodBank');
+        const bank = await BloodBank.findById(bankId);
+        if (bank && bank.adminUserId.toString() === socket.userId) {
+          const roomName = `bloodbank:${bankId}`;
+          socket.join(roomName);
+          console.log(`🚪 Client ${socket.id} joined blood bank room: ${roomName}`);
+        } else {
+          console.log(`⛔ Unauthorized bank room join: User ${socket.userId} tried bank_${bankId}`);
+        }
+      } catch (err) {
+        console.error('join_bank_room error:', err.message);
       }
     });
 

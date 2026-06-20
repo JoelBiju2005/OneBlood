@@ -29,20 +29,50 @@ app.set('trust proxy', 1);
 
 const isDev = process.env.NODE_ENV !== 'production';
 
-// Rate limiters
-const apiLimiter = rateLimit({
+// ─── HTTPS Redirect (production only) ────────────────────────────────────────
+if (!isDev) {
+  app.use((req, res, next) => {
+    if (req.headers['x-forwarded-proto'] !== 'https') {
+      return res.redirect(301, `https://${req.hostname}${req.url}`);
+    }
+    next();
+  });
+}
+
+// ─── Rate Limiters ───────────────────────────────────────────────────────────
+const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 min
-  max: isDev ? 10000 : 500, // Increased to 500 to prevent false limits on production
-  message: { error: 'Too many requests. Try again in 15 minutes.' }
+  max: isDev ? 10000 : 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests. Please try again in 15 minutes.' }
 });
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: isDev ? 10000 : 100, // Increased to 100 to allow normal navigation/refresh cycles
-  message: { error: 'Too many requests. Try again in 15 minutes.' }
+  max: isDev ? 10000 : 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many authentication attempts. Please try again in 15 minutes.' }
 });
 
-// CORS allowed origins config
+const sensitiveAuthLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: isDev ? 10000 : 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Rate limit exceeded for this action. Please try again later.' }
+});
+
+const uploadLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: isDev ? 10000 : 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many uploads. Limit is 20 per hour.' }
+});
+
+// ─── CORS ────────────────────────────────────────────────────────────────────
 const allowedOrigins = [
   process.env.FRONTEND_URL || 'http://localhost:5173',
   'http://localhost:5173',
@@ -51,7 +81,6 @@ const allowedOrigins = [
   'https://oneblood-app.firebaseapp.com',
 ];
 
-// CORS must be registered early so rate limiters and auth filters send proper CORS headers on termination
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
@@ -65,17 +94,50 @@ app.use(cors({
   credentials: true,
 }));
 
-// Standard express and security middleware
-app.use(helmet());
+// ─── Security Middleware ─────────────────────────────────────────────────────
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://*.tile.openstreetmap.org"],
+      connectSrc: [
+        "'self'",
+        process.env.FRONTEND_URL || 'http://localhost:5173',
+        "wss://oneblood-nvg1.onrender.com",
+        "https://router.project-osrm.org",
+        "https://ipapi.co"
+      ],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
+      upgradeInsecureRequests: []
+    }
+  },
+  crossOriginEmbedderPolicy: false,
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
+}));
+
+// Permissions-Policy header
+app.use((req, res, next) => {
+  res.setHeader('Permissions-Policy', 'camera=(self), microphone=(), geolocation=(self)');
+  next();
+});
+
 app.use(mongoSanitize());
 app.use(cookieParser());
-app.use('/api/', apiLimiter);
+app.use(generalLimiter);
 app.use('/api/auth/', authLimiter);
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve local static uploaded files in dev when no S3 is configured
+// Block direct static access to pdfs and docs directories
+app.use('/uploads/pdfs', (req, res) => res.status(403).json({ message: 'Access denied' }));
+app.use('/uploads/docs', (req, res) => res.status(403).json({ message: 'Access denied' }));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Root health check endpoint
@@ -87,7 +149,11 @@ app.get('/health', (req, res) => {
   });
 });
 
-// API Routes
+// ─── API Routes ──────────────────────────────────────────────────────────────
+const { protect } = require('./middleware/auth');
+const matchController = require('./controllers/matchController');
+app.get('/api/match/:matchedObId/document', protect, matchController.getMatchDocument);
+
 app.use('/api/auth', authRoutes);
 app.use('/api/donors', donorRoutes);
 app.use('/api/banks', bankRoutes);

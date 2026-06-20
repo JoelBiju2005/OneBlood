@@ -51,9 +51,8 @@ api.interceptors.response.use(
 
       originalRequest._retry = true;
       try {
-        // Call auth refresh endpoint (cookie is automatically sent, body sent as localStorage fallback)
-        const storedRefreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
-        const res = await axios.post(`${API_URL}/auth/refresh`, { refreshToken: storedRefreshToken }, { withCredentials: true });
+        // Cookie is sent automatically — no body needed
+        const res = await axios.post(`${API_URL}/auth/refresh`, {}, { withCredentials: true });
         const { accessToken: newAccessToken } = res.data;
 
         setAccessToken(newAccessToken);
@@ -62,7 +61,6 @@ api.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return api(originalRequest);
       } catch (refreshError) {
-        // Clear token and trigger logout
         setAccessToken(null);
         window.dispatchEvent(new Event('auth-logout'));
         return Promise.reject(refreshError);

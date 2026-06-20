@@ -40,7 +40,31 @@ const restrictTo = (...roles) => {
   };
 };
 
+/**
+ * Optional authentication — sets req.user if valid token present, otherwise continues.
+ * Used for endpoints that return different data based on auth status (e.g., noticeboard redaction).
+ */
+const optionalAuth = async (req, res, next) => {
+  let token;
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+  if (!token) return next();
+
+  const decoded = verifyAccessToken(token);
+  if (!decoded) return next();
+
+  try {
+    const user = await User.findById(decoded.id).select('-passwordHash');
+    if (user) req.user = user;
+  } catch (_) {
+    // silently continue as unauthenticated
+  }
+  next();
+};
+
 module.exports = {
   protect,
-  restrictTo
+  restrictTo,
+  optionalAuth
 };

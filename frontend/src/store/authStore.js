@@ -26,9 +26,8 @@ const useAuthStore = create((set, get) => ({
   initializeAuth: async () => {
     set({ isLoading: true });
     try {
-      // Try to silently refresh token on page load
-      const storedRefreshToken = localStorage.getItem('refreshToken');
-      const refreshRes = await api.post('/auth/refresh', { refreshToken: storedRefreshToken });
+      // Silent refresh — cookie sent automatically by browser
+      const refreshRes = await api.post('/auth/refresh');
       const { accessToken } = refreshRes.data;
       setAccessToken(accessToken);
 
@@ -40,7 +39,6 @@ const useAuthStore = create((set, get) => ({
     } catch (err) {
       setAccessToken(null);
       localStorage.removeItem('user');
-      localStorage.removeItem('refreshToken');
       set({ user: null, oneblood_token: null, isAuthenticated: false, isLoading: false, isInitialized: true });
     }
   },
@@ -49,14 +47,11 @@ const useAuthStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const res = await api.post('/auth/login', { onebloodId, email, password });
-      const { accessToken, refreshToken, user } = res.data;
+      const { accessToken, user } = res.data;
 
       if (user && user.role === 'patient') user.role = 'seeker';
       setAccessToken(accessToken);
       localStorage.setItem('user', JSON.stringify(user));
-      if (refreshToken) {
-        localStorage.setItem('refreshToken', refreshToken);
-      }
 
       set({
         user,
@@ -76,14 +71,11 @@ const useAuthStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const res = await api.post('/auth/register', { name, email, phone, password, role, city, ...extraData });
-      const { accessToken, refreshToken, user } = res.data;
+      const { accessToken, user } = res.data;
 
       if (user && user.role === 'patient') user.role = 'seeker';
       setAccessToken(accessToken);
       localStorage.setItem('user', JSON.stringify(user));
-      if (refreshToken) {
-        localStorage.setItem('refreshToken', refreshToken);
-      }
 
       set({
         user,
@@ -107,7 +99,6 @@ const useAuthStore = create((set, get) => ({
     }
     setAccessToken(null);
     localStorage.removeItem('user');
-    localStorage.removeItem('refreshToken');
     set({
       user: null,
       oneblood_token: null,
@@ -120,14 +111,11 @@ const useAuthStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const res = await api.post('/auth/switch-role');
-      const { accessToken, refreshToken, user } = res.data;
+      const { accessToken, user } = res.data;
 
       if (user && user.role === 'patient') user.role = 'seeker';
       setAccessToken(accessToken);
       localStorage.setItem('user', JSON.stringify(user));
-      if (refreshToken) {
-        localStorage.setItem('refreshToken', refreshToken);
-      }
 
       set({
         user,

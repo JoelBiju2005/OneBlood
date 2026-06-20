@@ -134,7 +134,7 @@ const approveDonorAndSelectFacility = async (req, res, next) => {
     let pdfPath = '';
     try {
       pdfPath = await generateMatchPDF(match, seekerUser, donorUser, facility, detourBank, donorProfile);
-      match.pdfPath = `/uploads/pdfs/match_${matchObid}.pdf`;
+      match.pdfPath = `/api/match/${matchObid}/document`;
       await match.save();
     } catch (pdfErr) {
       console.error('Failed to generate PDF:', pdfErr.message);
@@ -204,7 +204,7 @@ const approveDonorAndSelectFacility = async (req, res, next) => {
       success: true,
       message: 'Donor approved and DonationMatch established',
       match,
-      pdfUrl: `/uploads/pdfs/match_${matchObid}.pdf`
+      pdfUrl: `/api/match/${matchObid}/document`
     });
   } catch (error) {
     next(error);
@@ -529,10 +529,60 @@ const downloadMatchPDF = async (req, res, next) => {
     const newPath = await generateMatchPDF(match, seeker, donor, facility, detourBank, donorProfile);
     
     // Save path in match
-    match.pdfPath = `/uploads/pdfs/match_${match.matchObid}.pdf`;
+    match.pdfPath = `/api/match/${match.matchObid}/document`;
     await match.save();
 
     return res.download(newPath, fileName);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getMatchDocument = async (req, res, next) => {
+  try {
+    const { matchedObId } = req.params;
+    const match = await DonationMatch.findOne({ matchObid: matchedObId });
+    if (!match) {
+      return res.status(404).json({ message: 'Donation match not found' });
+    }
+
+    // Access check: seeker, donor, or hospital user, or admin
+    const hosp = await Hospital.findById(match.hospitalId);
+    const isSeeker = match.seekerId.toString() === req.user._id.toString();
+    const isDonor = match.donorId.toString() === req.user._id.toString();
+    const isHospital = hosp && hosp.userId && hosp.userId.toString() === req.user._id.toString();
+    const isAdmin = req.user.role === 'admin';
+
+    if (!isSeeker && !isDonor && !isHospital && !isAdmin) {
+      return res.status(403).json({ message: 'Unauthorized to access this document' });
+    }
+
+    const pdfDir = path.join(__dirname, '../../uploads/pdfs');
+    const fileName = `match_${match.matchObid}.pdf`;
+    const filePath = path.join(pdfDir, fileName);
+
+    if (fs.existsSync(filePath)) {
+      return res.sendFile(filePath);
+    }
+
+    // Otherwise, generate it on-the-fly!
+    const seeker = await User.findById(match.seekerId);
+    const donor = await User.findById(match.donorId);
+    const donorProfile = await Donor.findOne({ userId: match.donorId });
+    const detourBank = match.bloodBankId ? await BloodBank.findById(match.bloodBankId) : null;
+
+    if (!seeker || !donor || !hosp) {
+      return res.status(400).json({ message: 'Required data to generate PDF is missing' });
+    }
+
+    console.log(`Re-generating PDF for match ${match.matchObid} on-the-fly...`);
+    const newPath = await generateMatchPDF(match, seeker, donor, hosp, detourBank, donorProfile);
+    
+    // Save path in match
+    match.pdfPath = `/api/match/${match.matchObid}/document`;
+    await match.save();
+
+    return res.sendFile(newPath);
   } catch (error) {
     next(error);
   }
@@ -544,5 +594,6 @@ module.exports = {
   cancelMatch,
   getMatchesInProgress,
   getMatchHistory,
-  downloadMatchPDF
+  downloadMatchPDF,
+  getMatchDocument
 };

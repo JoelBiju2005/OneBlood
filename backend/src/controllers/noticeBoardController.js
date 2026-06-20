@@ -16,6 +16,15 @@ exports.getAllNotices = async (req, res) => {
       .sort({ urgency: 1, createdAt: -1 }) // critical first, then newest
       .limit(50)
       .lean();
+
+    // 14.6 — Redact hospital name for unauthenticated viewers
+    if (!req.user) {
+      for (const notice of notices) {
+        if (notice.hospital) notice.hospital = '[Hidden — sign in to view]';
+        if (notice.hospitalName) notice.hospitalName = '[Hidden — sign in to view]';
+      }
+    }
+
     res.json(notices);
   } catch (err) {
     res.status(500).json({ message: 'Failed to fetch notices.' });
@@ -195,9 +204,12 @@ exports.getMyNotices = async (req, res) => {
 
 exports.closeNotice = async (req, res) => {
   try {
-    const notice = await NoticeBoard.findOne({ _id: req.params.id, seekerId: req.user._id });
+    const notice = await NoticeBoard.findById(req.params.id);
     if (!notice) {
-      return res.status(404).json({ message: 'Notice not found or unauthorized.' });
+      return res.status(404).json({ message: 'Notice not found.' });
+    }
+    if (notice.seekerId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Unauthorized to close this notice.' });
     }
     notice.status = 'fulfilled';
     await notice.save();

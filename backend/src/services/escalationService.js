@@ -49,6 +49,10 @@ const runEscalationCheck = async () => {
       // 1. Notify nearby Approved Hospitals
       const approvedHospitals = await Hospital.find({ verificationStatus: 'approved' }).populate('userId');
       for (const hosp of approvedHospitals) {
+        if (!hosp.emailVerified) {
+          console.warn(`[Escalation Warning] Hospital ${hosp.hospitalName} email is unverified. Skipping critical alert.`);
+          continue;
+        }
         let isClose = true;
         if (reqLat && reqLng && hosp.location?.coordinates) {
           const dist = getDistance(reqLat, reqLng, hosp.location.coordinates[1], hosp.location.coordinates[0]);

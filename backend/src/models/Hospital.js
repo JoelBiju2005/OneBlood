@@ -14,6 +14,8 @@ const hospitalSchema = new mongoose.Schema({
   authorizedPersonName: { type: String, required: true },
   designation: { type: String, required: true },
   verificationStatus: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+  emailVerified: { type: Boolean, default: false },
+  emailVerificationToken: { type: String },
   documents: {
     registrationCertificate: { type: String },
     govApproval: { type: String }
