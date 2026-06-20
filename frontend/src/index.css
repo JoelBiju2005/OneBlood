@@ -20,7 +20,7 @@
   }
   
   .glass-card-hover {
-    @apply hover:shadow-md dark:hover:shadow-2xl hover:border-slate-300 dark:hover:border-white/10 dark:hover:shadow-oneblood-crimson/10;
+    @apply hover:shadow-lg dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.3)] hover:border-slate-300 dark:hover:border-white/10 hover:-translate-y-1 hover:scale-[1.005] duration-300 ease-out;
   }
   
   .btn-primary {

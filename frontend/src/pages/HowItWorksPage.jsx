@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   HeartPulse, ShieldAlert, Heart, Landmark, ShieldCheck,
   ChevronDown, ChevronUp, FileText, Fingerprint, Activity,
@@ -11,10 +12,10 @@ import {
 
 const Step = ({ number, title, description, color = 'red', badge, children }) => {
   const colors = {
-    red: 'border-red-600/40 text-red-600 dark:text-red-500 bg-red-500/5',
-    emerald: 'border-emerald-600/40 text-emerald-600 dark:text-emerald-400 bg-emerald-500/5',
-    blue: 'border-blue-600/40 text-blue-600 dark:text-blue-400 bg-blue-500/5',
-    purple: 'border-purple-600/40 text-purple-600 dark:text-purple-400 bg-purple-500/5',
+    red: 'border-red-650/40 text-red-650 dark:text-red-500 bg-red-500/[0.03]',
+    emerald: 'border-emerald-650/40 text-emerald-650 dark:text-emerald-400 bg-emerald-500/[0.03]',
+    blue: 'border-blue-655/40 text-blue-655 dark:text-blue-400 bg-blue-500/[0.03]',
+    purple: 'border-purple-650/40 text-purple-650 dark:text-purple-400 bg-purple-500/[0.03]',
   };
 
   return (
@@ -23,16 +24,16 @@ const Step = ({ number, title, description, color = 'red', badge, children }) =>
         {number}
       </span>
       <div className="flex flex-wrap items-center gap-2">
-        <h3 className="text-sm font-bold text-slate-900 dark:text-white">{title}</h3>
+        <h3 className="text-sm font-bold text-slate-850 dark:text-white">{title}</h3>
         {badge && (
           <span className="text-[9px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-white/10 text-slate-600 dark:text-slate-400 font-mono font-bold tracking-wider">
             {badge}
           </span>
         )}
       </div>
-      <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{description}</p>
+      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{description}</p>
       {children && (
-        <div className="mt-2 p-3 bg-slate-100/50 dark:bg-slate-950/60 border border-slate-200 dark:border-white/5 rounded-xl text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed space-y-1">
+        <div className="mt-2 p-3 bg-slate-100/50 dark:bg-slate-900/60 border border-slate-200 dark:border-white/5 rounded-xl text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed space-y-1">
           {children}
         </div>
       )}
@@ -83,17 +84,22 @@ const HowItWorksPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-16 px-4 sm:px-6 lg:px-8 space-y-20 transition-colors duration-300">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-16 px-4 sm:px-6 lg:px-8 space-y-20 transition-colors duration-300 relative overflow-hidden">
       {/* Decorative gradients */}
-      <div className="absolute top-10 right-0 w-[40vw] h-[40vw] rounded-full bg-red-600/5 blur-[130px] pointer-events-none" />
-      <div className="absolute bottom-20 left-0 w-[30vw] h-[30vw] rounded-full bg-blue-600/4 blur-[120px] pointer-events-none" />
+      <div className="absolute top-10 right-0 w-[40vw] h-[40vw] rounded-full bg-red-600/[0.02] blur-[130px] pointer-events-none" />
+      <div className="absolute bottom-20 left-0 w-[30vw] h-[30vw] rounded-full bg-blue-650/[0.015] blur-[120px] pointer-events-none" />
 
       {/* ── Hero Header ── */}
-      <div className="max-w-4xl mx-auto text-center space-y-4">
-        <div className="inline-flex p-3 bg-red-500/10 border border-red-500/25 rounded-2xl text-red-600 dark:text-red-500 mb-2">
-          <HeartPulse className="w-8 h-8 animate-pulse" />
+      <motion.div 
+        initial={{ opacity: 0, y: 25 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="max-w-4xl mx-auto text-center space-y-4"
+      >
+        <div className="inline-flex p-2.5 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-[#C0152A] mb-2 shadow-sm">
+          <HeartPulse className="w-8 h-8 text-[#C0152A] animate-pulse" />
         </div>
-        <h1 className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white leading-tight">
+        <h1 className="text-3xl sm:text-5xl font-black text-slate-850 dark:text-white leading-tight font-display">
           How OneBlood Works
         </h1>
         <p className="text-base sm:text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
@@ -104,32 +110,38 @@ const HowItWorksPage = () => {
         <div className="inline-flex flex-wrap items-center justify-center gap-4 mt-4 px-6 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl shadow-sm">
           <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
             <Fingerprint className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-            <span><span className="font-bold text-slate-900 dark:text-white">OneBlood ID</span> — OB-XXXXXXX</span>
+            <span><span className="font-bold text-slate-850 dark:text-white">OneBlood ID</span> — OB-XXXXXXX</span>
           </div>
           <div className="w-px h-4 bg-slate-200 dark:bg-white/10 hidden sm:block" />
           <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
-            <BadgeCheck className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
-            <span><span className="font-bold text-slate-900 dark:text-white">Match ID</span> — MOB-XXXXXXX</span>
+            <BadgeCheck className="w-4 h-4 text-emerald-550 dark:text-emerald-400" />
+            <span><span className="font-bold text-slate-850 dark:text-white">Match ID</span> — MOB-XXXXXXX</span>
           </div>
           <div className="w-px h-4 bg-slate-200 dark:bg-white/10 hidden sm:block" />
           <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
-            <BarChart3 className="w-4 h-4 text-blue-500 dark:text-blue-400" />
-            <span><span className="font-bold text-slate-900 dark:text-white">Progress Bar</span> — Live Sync</span>
+            <BarChart3 className="w-4 h-4 text-blue-500 dark:text-blue-450" />
+            <span><span className="font-bold text-slate-850 dark:text-white">Progress Bar</span> — Live Sync</span>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* ── Seeker + Donor Columns ── */}
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16">
 
         {/* Section 1 — For Seekers */}
-        <div className="space-y-8 text-left">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center space-x-2 pb-2 border-b border-slate-200 dark:border-white/5">
+        <motion.div 
+          initial={{ opacity: 0, x: -30 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6 }}
+          className="space-y-8 text-left"
+        >
+          <h2 className="text-xl font-bold text-slate-850 dark:text-white flex items-center space-x-2 pb-2 border-b border-slate-200 dark:border-white/5">
             <Heart className="w-5 h-5 text-amber-500" />
             <span>For Seekers (Looking for Blood)</span>
           </h2>
 
-          <div className="relative pl-8 space-y-8 border-l-2 border-dashed border-red-500/30">
+          <div className="relative pl-8 space-y-8 border-l-2 border-dashed border-red-500/20">
 
             <Step number="1" color="red" title="Register & Get Your OneBlood ID"
               description="Sign up with your details. Instantly receive a unique OneBlood ID (OB-XXXXXXX) that identifies you across the platform and on all official match documents.">
@@ -141,7 +153,7 @@ const HowItWorksPage = () => {
 
             <Step number="3" color="red" title="Geospatial Matching & Alert Dispatch"
               description="The system scans for eligible donors within your set radius using geospatial queries. Matched donors receive instant real-time push notifications and email alerts with full request details.">
-              <span>You can also target a <span className="text-slate-900 dark:text-white font-semibold">specific donor</span> directly from the map by clicking their pin — the request goes exclusively to them.</span>
+              <span>You can also target a <span className="text-slate-850 dark:text-white font-semibold">specific donor</span> directly from the map by clicking their pin — the request goes exclusively to them.</span>
             </Step>
 
             <Step number="4" color="red" title="Donor Responds — You Review & Approve"
@@ -195,11 +207,11 @@ const HowItWorksPage = () => {
                   <span className="text-slate-700 dark:text-slate-300">Match Confirmed</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-purple-500/20 border border-purple-500/40 text-purple-600 dark:text-purple-400 text-[9px] font-black flex items-center justify-center shrink-0">2</span>
+                  <span className="w-5 h-5 rounded-full bg-purple-500/20 border border-purple-500/40 text-purple-650 dark:text-purple-400 text-[9px] font-black flex items-center justify-center shrink-0">2</span>
                   <span className="text-slate-700 dark:text-slate-300">Collected at Blood Bank <span className="text-slate-400 dark:text-slate-600">(if transit route)</span></span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-blue-500/20 border border-blue-500/40 text-blue-600 dark:text-blue-400 text-[9px] font-black flex items-center justify-center shrink-0">3</span>
+                  <span className="w-5 h-5 rounded-full bg-blue-500/20 border border-blue-500/40 text-blue-600 dark:text-blue-450 text-[9px] font-black flex items-center justify-center shrink-0">3</span>
                   <span className="text-slate-700 dark:text-slate-300">En-route to Hospital</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -213,20 +225,26 @@ const HowItWorksPage = () => {
               description="Once the hospital confirms receipt, the match is fully closed and stored in your Past Donations history — accessible from your seeker dashboard and the Active Donations page. All 4 parties (seeker, donor, blood bank, hospital) retain a full record." />
 
           </div>
-        </div>
+        </motion.div>
 
         {/* Section 2 — For Donors */}
-        <div className="space-y-8 text-left">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center space-x-2 pb-2 border-b border-slate-200 dark:border-white/5">
-            <HeartPulse className="w-5 h-5 text-red-500" />
+        <motion.div 
+          initial={{ opacity: 0, x: 30 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6 }}
+          className="space-y-8 text-left"
+        >
+          <h2 className="text-xl font-bold text-slate-850 dark:text-white flex items-center space-x-2 pb-2 border-b border-slate-200 dark:border-white/5">
+            <HeartPulse className="w-5 h-5 text-[#C0152A]" />
             <span>For Donors (Ready to Donate)</span>
           </h2>
 
-          <div className="relative pl-8 space-y-8 border-l-2 border-dashed border-emerald-500/30">
+          <div className="relative pl-8 space-y-8 border-l-2 border-dashed border-emerald-500/20">
 
             <Step number="1" color="emerald" title="Register & Complete Your Donor Profile"
               description="Sign up and fill in your blood group, age, weight, city, and contact preferences. You receive a unique OneBlood ID (OB-XXXXXXX) which identifies you on all match slips and communications.">
-              <span>The system automatically enforces the <span className="text-slate-900 dark:text-white font-semibold">56-day cooldown rule</span> — your eligibility date is tracked and displayed on your dashboard.</span>
+              <span>The system automatically enforces the <span className="text-slate-850 dark:text-white font-semibold">56-day cooldown rule</span> — your eligibility date is tracked and displayed on your dashboard.</span>
             </Step>
 
             <Step number="2" color="emerald" title="Set Your Availability"
@@ -244,7 +262,7 @@ const HowItWorksPage = () => {
                   <span className="text-slate-700 dark:text-white font-semibold">Exclusive requests</span>
                 </li>
               </ul>
-              <p className="pt-1 text-slate-500 dark:text-slate-500">Only requests explicitly addressed to you appear here — not all requests for your blood group.</p>
+              <p className="pt-1 text-slate-500 dark:text-slate-550">Only requests explicitly addressed to you appear here — not all requests for your blood group.</p>
             </Step>
 
             <Step number="4" color="emerald" title="Review Full Patient & Hospital Details"
@@ -261,7 +279,7 @@ const HowItWorksPage = () => {
             <Step number="6" color="emerald" title="Receive Match ID & PDF Slip"
               description="Upon seeker approval, you receive a notification containing the Match ID (MOB-XXXXXXX) and a downloadable PDF match slip. The slip includes both the seeker's and your own verified details, the donation route, and destination."
               badge="MOB-XXXXXXX">
-              <span className="font-mono text-emerald-600 dark:text-emerald-400 block">Example: Match ID MOB-4829371</span>
+              <span className="font-mono text-emerald-600 dark:text-emerald-450 block">Example: Match ID MOB-4829371</span>
             </Step>
 
             <Step number="7" color="emerald" title="Track Progress on Your Dashboard"
@@ -271,25 +289,30 @@ const HowItWorksPage = () => {
               description="Every completed donation increases your lifetime total. Earn badges like First Drop, Life Saver, Century Club, and Guardian Angel based on your donation count. Each donation is estimated to save 3 lives." />
 
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* ── Section 3: Blood Banks & Hospitals ── */}
-      <div className="max-w-6xl mx-auto space-y-6">
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center space-x-2 pb-2 border-b border-slate-200 dark:border-white/5 max-w-6xl mx-auto">
-          <Landmark className="w-5 h-5 text-blue-500 dark:text-blue-400" />
+      <motion.div 
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        className="max-w-6xl mx-auto space-y-6"
+      >
+        <h2 className="text-xl font-bold text-slate-850 dark:text-white flex items-center space-x-2 pb-2 border-b border-slate-200 dark:border-white/5 max-w-6xl mx-auto">
+          <Landmark className="w-5 h-5 text-blue-500 dark:text-blue-450" />
           <span>For Blood Banks & Hospitals</span>
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 
           {/* Blood Banks */}
-          <div className="bg-white/70 dark:bg-slate-900/60 border border-slate-200 dark:border-purple-500/10 rounded-2xl p-6 text-left space-y-5 shadow-sm">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-6 text-left space-y-5 shadow-sm hover:border-slate-300 dark:hover:border-white/10 hover:shadow-md transition-all duration-300">
             <div className="flex items-center gap-2">
               <FlaskConical className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">Blood Banks</h3>
+              <h3 className="text-base font-bold text-slate-850 dark:text-white">Blood Banks</h3>
             </div>
-            <div className="relative pl-7 space-y-5 border-l-2 border-dashed border-purple-500/35 text-xs text-slate-600 dark:text-slate-400">
+            <div className="relative pl-7 space-y-5 border-l-2 border-dashed border-purple-500/20 text-xs text-slate-500 dark:text-slate-400">
               {[
                 {
                   n: '1',
@@ -319,11 +342,11 @@ const HowItWorksPage = () => {
                 }
               ].map(s => (
                 <div key={s.n} className="relative space-y-1">
-                  <span className="absolute -left-10 top-0.5 w-7 h-7 bg-white dark:bg-slate-900 border border-purple-500/35 rounded-full flex items-center justify-center text-[10px] font-bold text-purple-600 dark:text-purple-400">
+                  <span className="absolute -left-10 top-0.5 w-7 h-7 bg-white dark:bg-slate-950 border border-purple-500/20 rounded-full flex items-center justify-center text-[10px] font-bold text-purple-605 dark:text-purple-400">
                     {s.n}
                   </span>
                   <div className="flex flex-wrap items-center gap-2">
-                    <h4 className="text-xs font-bold text-slate-900 dark:text-white">{s.t}</h4>
+                    <h4 className="text-xs font-bold text-slate-850 dark:text-white">{s.t}</h4>
                     {s.badge && (
                       <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400 font-mono font-bold">
                         {s.badge}
@@ -334,18 +357,18 @@ const HowItWorksPage = () => {
                 </div>
               ))}
             </div>
-            <Link to="/auth/signup" className="inline-block mt-2 px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-xl transition-all">
+            <Link to="/auth/signup" className="inline-block mt-2 px-5 py-2 bg-purple-605 hover:bg-purple-700 text-white text-xs font-bold rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all">
               Register your Blood Bank
             </Link>
           </div>
 
           {/* Hospitals */}
-          <div className="bg-white/70 dark:bg-slate-900/60 border border-slate-200 dark:border-blue-500/10 rounded-2xl p-6 text-left space-y-5 shadow-sm">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-6 text-left space-y-5 shadow-sm hover:border-slate-300 dark:hover:border-white/10 hover:shadow-md transition-all duration-300">
             <div className="flex items-center gap-2">
-              <Hospital className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">Hospitals</h3>
+              <Hospital className="w-5 h-5 text-blue-600 dark:text-blue-450" />
+              <h3 className="text-base font-bold text-slate-855 dark:text-white">Hospitals</h3>
             </div>
-            <div className="relative pl-7 space-y-5 border-l-2 border-dashed border-blue-500/35 text-xs text-slate-600 dark:text-slate-400">
+            <div className="relative pl-7 space-y-5 border-l-2 border-dashed border-blue-500/20 text-xs text-slate-500 dark:text-slate-400">
               {[
                 {
                   n: '1',
@@ -375,13 +398,13 @@ const HowItWorksPage = () => {
                 }
               ].map(s => (
                 <div key={s.n} className="relative space-y-1">
-                  <span className="absolute -left-10 top-0.5 w-7 h-7 bg-white dark:bg-slate-900 border border-blue-500/35 rounded-full flex items-center justify-center text-[10px] font-bold text-blue-600 dark:text-blue-400">
+                  <span className="absolute -left-10 top-0.5 w-7 h-7 bg-white dark:bg-slate-955 border border-blue-500/20 rounded-full flex items-center justify-center text-[10px] font-bold text-blue-600 dark:text-blue-450">
                     {s.n}
                   </span>
                   <div className="flex flex-wrap items-center gap-2">
-                    <h4 className="text-xs font-bold text-slate-900 dark:text-white">{s.t}</h4>
+                    <h4 className="text-xs font-bold text-slate-855 dark:text-white">{s.t}</h4>
                     {s.badge && (
-                      <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 font-mono font-bold">
+                      <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-455 font-mono font-bold">
                         {s.badge}
                       </span>
                     )}
@@ -390,38 +413,43 @@ const HowItWorksPage = () => {
                 </div>
               ))}
             </div>
-            <Link to="/auth/signup" className="inline-block mt-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all">
+            <Link to="/auth/signup" className="inline-block mt-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all">
               Register your Hospital
             </Link>
           </div>
 
         </div>
-      </div>
+      </motion.div>
 
       {/* ── Section 4: The Match ID Explainer ── */}
-      <div className="max-w-4xl mx-auto bg-white/70 dark:bg-gradient-to-br from-slate-900 to-slate-900/60 border border-slate-200 dark:border-white/5 rounded-3xl p-8 text-left space-y-6 shadow-sm">
+      <motion.div 
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        className="max-w-4xl mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-3xl p-8 text-left space-y-6 shadow-sm hover:border-slate-300 dark:hover:border-white/10 transition-all duration-300"
+      >
         <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-xl">
-            <BadgeCheck className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+          <div className="p-2.5 bg-slate-105 dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-amber-500 rounded-xl shadow-sm">
+            <BadgeCheck className="w-6 h-6 text-amber-500" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">The Match ID System — MOB-XXXXXXX</h2>
+            <h2 className="text-lg font-bold text-slate-855 dark:text-white font-display">The Match ID System — MOB-XXXXXXX</h2>
             <p className="text-xs text-slate-500 dark:text-slate-500 mt-0.5">Every approved donation gets a unique, tamper-proof identifier</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-slate-600 dark:text-slate-400">
-          <div className="bg-slate-100/50 dark:bg-slate-950/60 border border-slate-200 dark:border-white/5 rounded-xl p-4 space-y-2">
-            <span className="font-mono text-amber-600 dark:text-amber-400 font-black text-sm block">MOB-4829371</span>
-            <p>Generated <span className="text-slate-900 dark:text-white font-semibold">automatically</span> the instant a seeker approves a donor. No manual steps needed.</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-slate-500 dark:text-slate-400">
+          <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-white/5 rounded-xl p-4 space-y-2">
+            <span className="font-mono text-amber-600 dark:text-amber-450 font-black text-sm block">MOB-4829371</span>
+            <p>Generated <span className="text-slate-855 dark:text-white font-semibold">automatically</span> the instant a seeker approves a donor. No manual steps needed.</p>
           </div>
-          <div className="bg-slate-100/50 dark:bg-slate-950/60 border border-slate-200 dark:border-white/5 rounded-xl p-4 space-y-2">
-            <FileText className="w-4 h-4 text-blue-500 dark:text-blue-400" />
-            <p>Embedded in the <span className="text-slate-900 dark:text-white font-semibold">downloadable PDF match slip</span> along with all party details, addresses, and medical verification notes.</p>
+          <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-white/5 rounded-xl p-4 space-y-2">
+            <FileText className="w-4 h-4 text-blue-500 dark:text-blue-450" />
+            <p>Embedded in the <span className="text-slate-855 dark:text-white font-semibold">downloadable PDF match slip</span> along with all party details, addresses, and medical verification notes.</p>
           </div>
-          <div className="bg-slate-100/50 dark:bg-slate-950/60 border border-slate-200 dark:border-white/5 rounded-xl p-4 space-y-2">
-            <Activity className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
-            <p>Tracks the full journey — visible on <span className="text-slate-900 dark:text-white font-semibold">all 4 dashboards</span> (seeker, donor, blood bank, hospital) simultaneously via real-time sync.</p>
+          <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-white/5 rounded-xl p-4 space-y-2">
+            <Activity className="w-4 h-4 text-emerald-550 dark:text-emerald-400" />
+            <p>Tracks the full journey — visible on <span className="text-slate-855 dark:text-white font-semibold">all 4 dashboards</span> (seeker, donor, blood bank, hospital) simultaneously via real-time sync.</p>
           </div>
         </div>
 
@@ -440,10 +468,10 @@ const HowItWorksPage = () => {
               <ArrowRight key={i} className="w-3.5 h-3.5 text-slate-400 dark:text-slate-600 shrink-0" />
             ) : (
               <div key={i} className={`px-3 py-1.5 rounded-lg border text-[10px] font-bold flex items-center gap-1.5 ${
-                item.color === 'emerald' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400' :
-                item.color === 'purple' ? 'bg-purple-500/10 border-purple-500/20 text-purple-600 dark:text-purple-400' :
-                item.color === 'amber' ? 'bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400' :
-                'bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400'
+                item.color === 'emerald' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-450' :
+                item.color === 'purple' ? 'bg-purple-500/10 border-purple-500/20 text-purple-605 dark:text-purple-405' :
+                item.color === 'amber' ? 'bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-500' :
+                'bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-450'
               }`}>
                 <span className="w-4 h-4 rounded-full bg-white/5 flex items-center justify-center text-[8px]">{item.icon}</span>
                 {item.label}
@@ -452,42 +480,52 @@ const HowItWorksPage = () => {
           </div>
           <p className="text-[10px] text-slate-400 dark:text-slate-500">For direct hospital donations (no transit bank), Stage 2 is skipped — the bar moves from Match Confirmed → En-route → Received.</p>
         </div>
-      </div>
+      </motion.div>
 
       {/* ── Section 5: Safety & Privacy ── */}
-      <div className="max-w-4xl mx-auto text-left space-y-6">
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center space-x-2 pb-2 border-b border-slate-200 dark:border-white/5">
-          <Heart className="w-5 h-5 text-emerald-500" />
+      <motion.div 
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        className="max-w-4xl mx-auto text-left space-y-6"
+      >
+        <h2 className="text-xl font-bold text-slate-850 dark:text-white flex items-center space-x-2 pb-2 border-b border-slate-200 dark:border-white/5">
+          <Heart className="w-5 h-5 text-emerald-555" />
           <span>Safety & Privacy Standards</span>
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white/75 dark:bg-slate-900 border border-slate-200 dark:border-white/5 p-6 rounded-2xl space-y-2 shadow-sm">
-            <h4 className="text-sm font-bold text-slate-900 dark:text-white">Private Contacts</h4>
-            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 p-6 rounded-2xl space-y-2 shadow-sm hover:border-slate-300 dark:hover:border-white/10 hover:shadow-md transition-all duration-300">
+            <h4 className="text-sm font-bold text-slate-850 dark:text-white">Private Contacts</h4>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
               Donor phone numbers and emails are hidden from all public views. They are exposed only to the specific seeker who formally approved that donor after matching.
             </p>
           </div>
-          <div className="bg-white/75 dark:bg-slate-900 border border-slate-200 dark:border-white/5 p-6 rounded-2xl space-y-2 shadow-sm">
-            <h4 className="text-sm font-bold text-slate-900 dark:text-white">Document Evidence</h4>
-            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 p-6 rounded-2xl space-y-2 shadow-sm hover:border-slate-300 dark:hover:border-white/10 hover:shadow-md transition-all duration-300">
+            <h4 className="text-sm font-bold text-slate-855 dark:text-white">Document Evidence</h4>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
               Doctor's prescription letters are uploaded and stored securely. They are attached to the match PDF and visible to all matched parties, providing verifiable medical evidence of need.
             </p>
           </div>
-          <div className="bg-white/75 dark:bg-slate-900 border border-slate-200 dark:border-white/5 p-6 rounded-2xl space-y-2 shadow-sm">
-            <h4 className="text-sm font-bold text-slate-900 dark:text-white">Encrypted Records</h4>
-            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 p-6 rounded-2xl space-y-2 shadow-sm hover:border-slate-300 dark:hover:border-white/10 hover:shadow-md transition-all duration-300">
+            <h4 className="text-sm font-bold text-slate-855 dark:text-white">Encrypted Records</h4>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
               All user data, match records, and communications are stored securely. Donation history is permanently preserved for all 4 parties even after completion.
             </p>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* ── Section 6: FAQ ── */}
-      <div className="max-w-3xl mx-auto text-left space-y-6">
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white text-center">Frequently Asked Questions</h2>
+      <motion.div 
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        className="max-w-3xl mx-auto text-left space-y-6"
+      >
+        <h2 className="text-xl font-bold text-slate-850 dark:text-white text-center">Frequently Asked Questions</h2>
 
-        <div className="bg-white/75 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-3xl divide-y divide-slate-200 dark:divide-white/5 overflow-hidden shadow-sm">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-3xl divide-y divide-slate-200 dark:divide-white/5 overflow-hidden shadow-sm">
           {faqData.map((faq, index) => {
             const isOpen = openFaq === index;
             return (
@@ -496,40 +534,55 @@ const HowItWorksPage = () => {
                   onClick={() => toggleFaq(index)}
                   className="w-full flex justify-between items-center p-6 text-left focus:outline-none gap-4"
                 >
-                  <span className="text-sm font-bold text-slate-900 dark:text-white">{faq.q}</span>
+                  <span className="text-sm font-bold text-slate-855 dark:text-white">{faq.q}</span>
                   {isOpen ? <ChevronUp className="w-4 h-4 text-slate-500 shrink-0" /> : <ChevronDown className="w-4 h-4 text-slate-500 shrink-0" />}
                 </button>
-                {isOpen && (
-                  <div className="px-6 pb-6 text-xs text-slate-600 dark:text-slate-400 leading-relaxed animate-fadeIn">
-                    {faq.a}
-                  </div>
-                )}
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.25, ease: "easeInOut" }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-6 pb-6 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                        {faq.a}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             );
           })}
         </div>
-      </div>
+      </motion.div>
 
       {/* ── CTA Footer ── */}
-      <div className="max-w-2xl mx-auto text-center space-y-4">
-        <p className="text-slate-600 dark:text-slate-400 text-sm">Ready to be part of the network?</p>
+      <motion.div 
+        initial={{ opacity: 0, y: 25 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        className="max-w-2xl mx-auto text-center space-y-4"
+      >
+        <p className="text-slate-500 dark:text-slate-400 text-sm">Ready to be part of the network?</p>
         <div className="flex flex-wrap justify-center gap-3">
           <Link
             to="/auth/signup"
-            className="px-6 py-3 bg-[#C0152A] hover:bg-red-700 text-white font-bold rounded-xl text-sm transition-all flex items-center gap-1.5"
+            className="px-6 py-3 bg-[#C0152A] hover:bg-red-700 text-white font-bold rounded-xl text-sm hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-1.5"
           >
             <span>Register as Donor</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
             to="/search"
-            className="px-6 py-3 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-bold rounded-xl text-sm transition-all flex items-center gap-1.5"
+            className="px-6 py-3 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-bold rounded-xl text-sm hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-1.5"
           >
             <span>Search Blood Map</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
-      </div>
+      </motion.div>
 
     </div>
   );

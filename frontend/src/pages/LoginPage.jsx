@@ -51,19 +51,19 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-80px)] flex items-center justify-center relative overflow-hidden bg-slate-950 px-4 py-12">
+    <div className="min-h-[calc(100vh-80px)] flex items-center justify-center relative overflow-hidden bg-slate-50 dark:bg-slate-950 px-4 py-12 transition-colors duration-300">
       {/* Decorative Blur Backgrounds */}
-      <div className="absolute top-[-10%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-red-600/10 blur-[130px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[45vw] h-[45vw] rounded-full bg-amber-500/5 blur-[130px] pointer-events-none" />
+      <div className="absolute top-[-10%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-red-600/[0.02] blur-[130px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[45vw] h-[45vw] rounded-full bg-amber-500/[0.01] blur-[130px] pointer-events-none" />
 
-      <div className="w-full max-w-md bg-slate-900/60 border border-white/5 backdrop-blur-xl p-8 rounded-2xl shadow-2xl space-y-6">
+      <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 p-8 rounded-2xl shadow-xl space-y-6">
         {/* Header Title */}
         <div className="text-center space-y-2">
-          <div className="inline-flex p-3 bg-red-500/10 border border-red-500/25 rounded-2xl text-red-500 mb-2">
-            <HeartPulse className="w-8 h-8 text-red-500 animate-pulse" />
+          <div className="inline-flex p-2.5 bg-slate-100 dark:bg-slate-800 border border-slate-205 dark:border-white/10 rounded-xl text-[#C0152A] mb-2 shadow-sm">
+            <HeartPulse className="w-8 h-8 text-[#C0152A] animate-pulse" />
           </div>
-          <h2 className="text-2xl font-bold tracking-tight text-white font-display">Sign in to OneBlood</h2>
-          <p className="text-xs text-slate-400">Enter your credentials to manage your requests and inventory</p>
+          <h2 className="text-2xl font-bold tracking-tight text-slate-855 dark:text-white font-display">Sign in to OneBlood</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Enter your credentials to manage your requests and inventory</p>
         </div>
 
         {/* Input Form */}

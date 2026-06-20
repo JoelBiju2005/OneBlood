@@ -121,23 +121,22 @@ const SuccessPage = () => {
 
   if (!isNewUser) {
     return (
-      <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-slate-950 px-4 py-16 font-sans">
-        <div className="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-[#C0152A]/10 blur-[150px] pointer-events-none" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-slate-900 blur-[150px] pointer-events-none" />
+      <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-slate-50 dark:bg-slate-950 px-4 py-16 font-sans transition-colors duration-300">
+        <div className="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-[#C0152A]/[0.02] blur-[150px] pointer-events-none" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-slate-200/[0.01] blur-[150px] pointer-events-none" />
 
         <div className="w-full max-w-md relative z-10 animate-fade-in">
-          <div className="bg-[#111] border border-[#C0152A]/30 rounded-3xl p-8 md:p-10 shadow-2xl text-center space-y-6"
-               style={{ boxShadow: '0 0 40px rgba(192,21,42,0.15)' }}>
+          <div className="bg-white dark:bg-[#111] border border-slate-200 dark:border-white/10 rounded-3xl p-8 md:p-10 shadow-xl text-center space-y-6">
             
-            <div className="inline-flex p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-full text-emerald-400">
-              <Check className="w-8 h-8" />
+            <div className="inline-flex p-3 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-full text-emerald-555 shadow-sm">
+              <Check className="w-8 h-8 text-emerald-500" />
             </div>
             
             <div className="space-y-2">
-              <h1 className="text-2xl font-extrabold text-white tracking-tight">
+              <h1 className="text-2xl font-extrabold text-slate-855 dark:text-white tracking-tight">
                 Successfully Logged In
               </h1>
-              <p className="text-slate-400 text-lg">
+              <p className="text-slate-500 dark:text-slate-400 text-lg">
                 Welcome back, {name}!
               </p>
             </div>
@@ -165,24 +164,23 @@ const SuccessPage = () => {
   const firstName = name.split(' ')[0];
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-slate-950 px-4 py-16 font-sans">
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-slate-50 dark:bg-slate-950 px-4 py-16 font-sans transition-colors duration-300">
       {/* Visual Accents */}
-      <div className="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-[#C0152A]/10 blur-[150px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-slate-900 blur-[150px] pointer-events-none" />
+      <div className="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-[#C0152A]/[0.02] blur-[150px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-slate-200/[0.01] blur-[150px] pointer-events-none" />
 
       <div className="w-full max-w-xl relative z-10 animate-fade-in">
-        <div className="bg-[#111] border border-[#C0152A]/30 rounded-3xl p-8 md:p-10 shadow-2xl relative"
-             style={{ boxShadow: '0 0 40px rgba(192,21,42,0.15)' }}>
+        <div className="bg-white dark:bg-[#111] border border-slate-200 dark:border-white/10 rounded-3xl p-8 md:p-10 shadow-xl relative">
           
           {/* Header */}
           <div className="text-center space-y-4 mb-8">
-            <div className="inline-flex p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-full text-emerald-400">
-              <Check className="w-8 h-8" strokeWidth={3} />
+            <div className="inline-flex p-3 bg-slate-100 dark:bg-slate-900 border border-slate-205 dark:border-white/10 rounded-full text-emerald-555 shadow-sm">
+              <Check className="w-8 h-8 text-emerald-500" strokeWidth={3} />
             </div>
-            <h1 className="text-3xl font-extrabold text-white tracking-tight">
+            <h1 className="text-3xl font-extrabold text-slate-855 dark:text-white tracking-tight font-display">
               You're now part of OneBlood
             </h1>
-            <p className="text-slate-400 text-lg">
+            <p className="text-slate-505 dark:text-slate-400 text-lg">
               Welcome, {firstName}!
             </p>
             <p className="text-slate-500 text-sm">
@@ -191,9 +189,8 @@ const SuccessPage = () => {
           </div>
 
           {/* Monospace Crimson ID Card */}
-          <div className="bg-black/40 border border-[#C0152A]/40 rounded-2xl p-6 md:p-8 mb-8 text-center relative overflow-hidden"
-               style={{ boxShadow: '0 0 25px rgba(192,21,42,0.1)' }}>
-            <div className="text-slate-400 font-bold text-xs uppercase tracking-widest mb-3">
+          <div className="bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-[#C0152A]/40 rounded-2xl p-6 md:p-8 mb-8 text-center relative overflow-hidden">
+            <div className="text-slate-500 dark:text-slate-400 font-bold text-xs uppercase tracking-widest mb-3">
               Your OneBlood ID
             </div>
             

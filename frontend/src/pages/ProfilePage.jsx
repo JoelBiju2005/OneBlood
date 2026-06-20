@@ -174,17 +174,17 @@ const ProfilePage = () => {
   return (
     <div className="min-h-[calc(100vh-80px)] bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-white py-12 px-4 relative overflow-hidden transition-colors duration-300">
       {/* Background gradients */}
-      <div className="absolute top-[-10%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-red-600/5 blur-[130px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[45vw] h-[45vw] rounded-full bg-amber-500/5 blur-[130px] pointer-events-none" />
+      <div className="absolute top-[-10%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-red-600/[0.02] blur-[130px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[45vw] h-[45vw] rounded-full bg-amber-500/[0.01] blur-[130px] pointer-events-none" />
 
       <div className="max-w-4xl mx-auto space-y-8 relative z-10 w-full">
         {/* Header */}
         <div className="flex items-center space-x-4">
-          <div className="p-3 bg-red-500/10 border border-red-500/25 rounded-2xl text-red-500">
+          <div className="p-2.5 bg-slate-105 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-[#C0152A] shadow-sm">
             {user?.role === 'blood_bank' ? <Building className="w-8 h-8" /> : <User className="w-8 h-8" />}
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Edit Profile</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-display">Edit Profile</h1>
             <p className="text-xs text-slate-500 dark:text-slate-400">Keep your personal and geospatial contact details up to date</p>
           </div>
         </div>

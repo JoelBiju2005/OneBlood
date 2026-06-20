@@ -173,20 +173,20 @@ const SignupPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-slate-950 px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-slate-50 dark:bg-slate-950 px-4 py-12 transition-colors duration-300">
       {/* Background gradients */}
-      <div className="absolute top-[-10%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-red-600/10 blur-[130px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[45vw] h-[45vw] rounded-full bg-amber-500/5 blur-[130px] pointer-events-none" />
+      <div className="absolute top-[-10%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-red-600/[0.02] blur-[130px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[45vw] h-[45vw] rounded-full bg-amber-500/[0.01] blur-[130px] pointer-events-none" />
 
-      <div className="w-full max-w-2xl bg-slate-900/60 border border-white/5 backdrop-blur-xl p-8 rounded-2xl shadow-2xl space-y-8">
+      <div className="w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 p-8 rounded-2xl shadow-xl space-y-8">
         
         {!selectedRole ? (
           <>
             <div className="text-center space-y-2">
-              <div className="inline-flex p-3 bg-red-500/10 border border-red-500/25 rounded-2xl text-red-500 mb-2">
-                <HeartPulse className="w-8 h-8 text-red-500 animate-pulse" />
+              <div className="inline-flex p-2.5 bg-slate-100 dark:bg-slate-800 border border-slate-205 dark:border-white/10 rounded-xl text-[#C0152A] mb-2 shadow-sm">
+                <HeartPulse className="w-8 h-8 text-[#C0152A] animate-pulse" />
               </div>
-              <h2 className="text-3xl font-extrabold tracking-tight text-white">
+              <h2 className="text-3xl font-extrabold tracking-tight text-slate-855 dark:text-white font-display">
                 Join OneBlood
               </h2>
               <p className="text-sm text-slate-400">
@@ -203,20 +203,20 @@ const SignupPage = () => {
                 {/* Panel 1: I'm a Donor */}
                 <div
                   onClick={() => handleRoleSelect('donor')}
-                  className="border-2 border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:border-white/20 rounded-2xl p-6 flex flex-col justify-between items-center text-center cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:border-red-500/30"
+                  className="border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 hover:border-[#C0152A]/30 dark:hover:border-[#C0152A]/30 rounded-2xl p-6 flex flex-col justify-between items-center text-center cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg dark:hover:shadow-[0_15px_30px_rgba(0,0,0,0.3)]"
                 >
                   <div className="flex flex-col items-center">
-                    <div className="p-4 rounded-full mb-4 bg-white/5 text-slate-400">
-                      <HeartPulse className="w-10 h-10 text-red-500" />
+                    <div className="p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-xl mb-4 text-slate-500">
+                      <HeartPulse className="w-8 h-8 text-[#C0152A]" />
                     </div>
-                    <span className="text-lg font-bold text-white mb-2">I want to donate</span>
-                    <span className="text-xs text-slate-400 leading-relaxed">
+                    <span className="text-lg font-bold text-slate-855 dark:text-white mb-2">I want to donate</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                       Help someone in need. Register as a donor and save lives when it counts.
                     </span>
                   </div>
                   <button
                     type="button"
-                    className="mt-6 px-6 py-2.5 rounded-xl font-bold text-xs bg-white/10 text-slate-300 hover:bg-white/20 transition-all cursor-pointer"
+                    className="mt-6 px-6 py-2.5 rounded-xl font-bold text-xs bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-white/25 transition-all cursor-pointer"
                   >
                     I'm a Donor
                   </button>
@@ -225,20 +225,20 @@ const SignupPage = () => {
                 {/* Panel 2: I Need Blood */}
                 <div
                   onClick={() => handleRoleSelect('seeker')}
-                  className="border-2 border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:border-white/20 rounded-2xl p-6 flex flex-col justify-between items-center text-center cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:border-red-500/30"
+                  className="border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 hover:border-[#C0152A]/30 dark:hover:border-[#C0152A]/30 rounded-2xl p-6 flex flex-col justify-between items-center text-center cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg dark:hover:shadow-[0_15px_30px_rgba(0,0,0,0.3)]"
                 >
                   <div className="flex flex-col items-center">
-                    <div className="p-4 rounded-full mb-4 bg-white/5 text-slate-400">
-                      <Heart className="w-10 h-10 text-amber-400" />
+                    <div className="p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-xl mb-4 text-slate-500">
+                      <Heart className="w-8 h-8 text-amber-500" />
                     </div>
-                    <span className="text-lg font-bold text-white mb-2">I'm looking for blood</span>
-                    <span className="text-xs text-slate-400 leading-relaxed">
+                    <span className="text-lg font-bold text-slate-855 dark:text-white mb-2">I'm looking for blood</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                       Someone needs help. Now. Find nearby donors and blood banks instantly.
                     </span>
                   </div>
                   <button
                     type="button"
-                    className="mt-6 px-6 py-2.5 rounded-xl font-bold text-xs bg-white/10 text-slate-300 hover:bg-white/20 transition-all cursor-pointer"
+                    className="mt-6 px-6 py-2.5 rounded-xl font-bold text-xs bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-white/25 transition-all cursor-pointer"
                   >
                     I Need Blood
                   </button>
@@ -247,23 +247,23 @@ const SignupPage = () => {
 
               {/* Panel 3 & 4: Blood Bank & Hospital managers */}
               <div className="text-center pt-2">
-                <span className="text-xs text-slate-500">── or ──</span>
+                <span className="text-xs text-slate-400 dark:text-slate-500">── or ──</span>
                 <div className="mt-3 flex flex-col md:flex-row justify-center gap-4">
                   <button
                     type="button"
                     onClick={() => handleRoleSelect('blood_bank')}
-                    className="flex items-center justify-center space-x-2 px-6 py-3 border-2 border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:border-white/20 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] cursor-pointer"
+                    className="flex items-center justify-center space-x-2 px-6 py-3 border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-blue-500/30 dark:hover:border-blue-500/30 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] cursor-pointer"
                   >
-                    <Landmark className="w-4 h-4 text-blue-400" />
+                    <Landmark className="w-4 h-4 text-blue-500 dark:text-blue-400" />
                     <span>I manage a blood bank</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => handleRoleSelect('hospital')}
-                    className="flex items-center justify-center space-x-2 px-6 py-3 border-2 border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:border-white/20 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] cursor-pointer"
+                    className="flex items-center justify-center space-x-2 px-6 py-3 border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-emerald-500/30 dark:hover:border-emerald-500/30 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] cursor-pointer"
                   >
-                    <Landmark className="w-4 h-4 text-emerald-400" />
+                    <Landmark className="w-4 h-4 text-emerald-600 dark:text-emerald-450" />
                     <span>I manage a hospital</span>
                   </button>
                 </div>
