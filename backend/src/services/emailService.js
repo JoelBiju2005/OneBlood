@@ -560,10 +560,14 @@ const sendEmailViaBrevo = async ({ to, toName, subject, html }) => {
     return { success: true };
   }
 
+  // Get verified sender configurations from settings database
+  const settings = await SystemSettings.getSettings().catch(() => ({}));
+  const fromEmail = settings.fromEmail || 'oneblood.officialteam@gmail.com';
+
   const sendSmtpEmail = {
     sender: {
       name: process.env.EMAIL_FROM_NAME || 'OneBlood',
-      email: process.env.EMAIL_FROM_ADDRESS || 'noreply@oneblood.in'
+      email: fromEmail
     },
     to: [{ email: to, name: toName || to }],
     subject,
