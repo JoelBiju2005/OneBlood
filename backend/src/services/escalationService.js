@@ -70,7 +70,25 @@ const runEscalationCheck = async () => {
             await sendEmail(
               hosp.userId.email,
               `🚨 OneBlood Critical Request Escalation: ${request.bloodGroup}`,
-              `<p>Dear Hospital Administrator,</p><p>A critical requirement for <strong>${request.bloodGroup}</strong> blood remains unfulfilled within 15 km of your location.</p><p>Hospital Name: ${request.hospitalName}</p>`
+              `<h2 style="color:#C0152A;margin-top:0;font-size:20px;font-weight:700;">🚨 Critical Request Escalation</h2>
+               <p>Dear Hospital Administrator,</p>
+               <p>A critical requirement for <strong>${request.bloodGroup}</strong> blood remains unfulfilled within 15 km of your location.</p>
+               <div class="info-card" style="border-left-color:#C0152A;background-color:#fcfcfc;padding:16px 20px;margin:24px 0;border-radius:0 8px 8px 0;">
+                 <div style="font-weight:700;color:#1e293b;margin-bottom:12px;font-size:13px;text-transform:uppercase;letter-spacing:0.05em;">Requirement Details</div>
+                 <table style="width:100%;border-collapse:collapse;">
+                   <tr>
+                     <td style="padding:6px 0;font-size:14px;color:#64748b;font-weight:600;width:140px;">Blood Group:</td>
+                     <td style="padding:6px 0;font-size:14px;color:#0f172a;"><strong>${request.bloodGroup}</strong></td>
+                   </tr>
+                   <tr>
+                     <td style="padding:6px 0;font-size:14px;color:#64748b;font-weight:600;width:140px;">Hospital:</td>
+                     <td style="padding:6px 0;font-size:14px;color:#0f172a;">${request.hospitalName}</td>
+                   </tr>
+                 </table>
+               </div>
+               <div style="text-align:center;margin:24px 0;">
+                 <a href="${process.env.FRONTEND_URL || 'https://oneblood-app.web.app'}/search" class="button">View Search Map</a>
+               </div>`
             );
           }
         }
@@ -96,7 +114,25 @@ const runEscalationCheck = async () => {
             await sendEmail(
               bank.adminUserId.email,
               `🚨 OneBlood Critical Request Escalation: ${request.bloodGroup}`,
-              `<p>Dear Blood Bank Administrator,</p><p>A critical requirement for <strong>${request.bloodGroup}</strong> blood remains unfulfilled nearby.</p><p>Hospital Name: ${request.hospitalName}</p>`
+              `<h2 style="color:#C0152A;margin-top:0;font-size:20px;font-weight:700;">🚨 Critical Request Escalation</h2>
+               <p>Dear Blood Bank Administrator,</p>
+               <p>A critical requirement for <strong>${request.bloodGroup}</strong> blood remains unfulfilled nearby.</p>
+               <div class="info-card" style="border-left-color:#C0152A;background-color:#fcfcfc;padding:16px 20px;margin:24px 0;border-radius:0 8px 8px 0;">
+                 <div style="font-weight:700;color:#1e293b;margin-bottom:12px;font-size:13px;text-transform:uppercase;letter-spacing:0.05em;">Requirement Details</div>
+                 <table style="width:100%;border-collapse:collapse;">
+                   <tr>
+                     <td style="padding:6px 0;font-size:14px;color:#64748b;font-weight:600;width:140px;">Blood Group:</td>
+                     <td style="padding:6px 0;font-size:14px;color:#0f172a;"><strong>${request.bloodGroup}</strong></td>
+                   </tr>
+                   <tr>
+                     <td style="padding:6px 0;font-size:14px;color:#64748b;font-weight:600;width:140px;">Hospital:</td>
+                     <td style="padding:6px 0;font-size:14px;color:#0f172a;">${request.hospitalName}</td>
+                   </tr>
+                 </table>
+               </div>
+               <div style="text-align:center;margin:24px 0;">
+                 <a href="${process.env.FRONTEND_URL || 'https://oneblood-app.web.app'}/search" class="button">View Search Map</a>
+               </div>`
             );
           }
         }

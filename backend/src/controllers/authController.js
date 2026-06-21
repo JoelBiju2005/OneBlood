@@ -151,16 +151,13 @@ const register = async (req, res, next) => {
         await sendEmail(
           email,
           'Verify Your Hospital Email — OneBlood',
-          `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px;">
-            <h2 style="color:#C0152A;">Verify Hospital Email</h2>
-            <p>Hi ${hospitalName},</p>
-            <p>Thank you for registering your hospital with OneBlood. Please verify your email address to receive critical blood request escalations.</p>
-            <div style="text-align:center;margin:24px 0;">
-              <a href="${verifyUrl}" style="display:inline-block;background:#C0152A;color:#fff;padding:12px 28px;text-decoration:none;border-radius:6px;font-weight:bold;">Verify Email</a>
-            </div>
-            <p style="color:#6b7280;font-size:13px;">If you did not register this hospital, please ignore this email.</p>
-            <p style="color:#6b7280;font-size:13px;">Support: <a href="mailto:oneblood.officialteam@gmail.com" style="color:#C0152A;">oneblood.officialteam@gmail.com</a></p>
-          </div>`,
+          `<h2 style="color:#111827;margin-top:0;font-size:20px;font-weight:700;">Verify Hospital Email</h2>
+           <p>Hi ${hospitalName},</p>
+           <p>Thank you for registering your hospital with OneBlood. Please verify your email address to receive critical blood request escalations.</p>
+           <div style="text-align:center;margin:24px 0;">
+             <a href="${verifyUrl}" class="button">Verify Email</a>
+           </div>
+           <p style="color:#6b7280;font-size:13px;">If you did not register this hospital, please ignore this email.</p>`,
           'hospital_email_verify',
           null,
           'hospital_email_verify'
@@ -272,16 +269,13 @@ const login = async (req, res, next) => {
             await sendEmail(
               user.email,
               'Suspicious Login Activity — OneBlood',
-              `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px;">
-                <h2 style="color:#C0152A;">⚠️ Suspicious Login Activity</h2>
-                <p>Hi ${user.name},</p>
-                <p>We detected <strong>10 or more failed login attempts</strong> on your OneBlood account. Your account has been temporarily locked for 30 minutes.</p>
-                <p>If this was you, please wait and try again later. If this wasn't you, please secure your account immediately.</p>
-                <div style="text-align:center;margin:24px 0;">
-                  <a href="${getFrontendUrl()}/auth/login" style="display:inline-block;background:#C0152A;color:#fff;padding:12px 28px;text-decoration:none;border-radius:6px;font-weight:bold;">This Wasn't Me — Secure My Account</a>
-                </div>
-                <p style="color:#6b7280;font-size:13px;">If you need help, contact us at <a href="mailto:oneblood.officialteam@gmail.com" style="color:#C0152A;">oneblood.officialteam@gmail.com</a></p>
-              </div>`,
+              `<h2 style="color:#111827;margin-top:0;font-size:20px;font-weight:700;">⚠️ Suspicious Login Activity</h2>
+               <p>Hi ${user.name},</p>
+               <p>We detected <strong>10 or more failed login attempts</strong> on your OneBlood account. Your account has been temporarily locked for 30 minutes.</p>
+               <p>If this was you, please wait and try again later. If this wasn't you, please secure your account immediately.</p>
+               <div style="text-align:center;margin:24px 0;">
+                 <a href="${getFrontendUrl()}/auth/login" class="button">Secure My Account</a>
+               </div>`,
               'suspicious_login',
               null,
               'security_alert'

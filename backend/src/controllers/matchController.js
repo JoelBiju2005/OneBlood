@@ -408,7 +408,14 @@ const cancelMatch = async (req, res, next) => {
     const donor = await User.findById(match.donorId);
 
     const alertSubject = `OneBlood Donation Match Cancelled - ID: ${match.matchObid}`;
-    const alertBody = `<p>We regret to inform you that Donation Match <strong>${match.matchObid}</strong> has been cancelled.</p><p>Reason: ${match.cancellationReason}</p>`;
+    const alertBody = `
+      <h2 style="color:#111827;margin-top:0;font-size:20px;font-weight:700;">🚨 Donation Match Cancelled</h2>
+      <p>We regret to inform you that Donation Match <strong>${match.matchObid}</strong> has been cancelled.</p>
+      <div class="info-card" style="border-left-color:#C0152A;background-color:#fcfcfc;padding:16px 20px;margin:24px 0;border-radius:0 8px 8px 0;">
+        <div style="font-weight:700;color:#1e293b;margin-bottom:12px;font-size:13px;text-transform:uppercase;letter-spacing:0.05em;">Cancellation Reason</div>
+        <p style="margin:0;color:#0f172a;font-size:14px;">${match.cancellationReason}</p>
+      </div>
+    `;
 
     if (seeker) {
       await createNotification({ recipientId: seeker._id, type: 'system', title: '🚨 Match Cancelled', message: `Match ${match.matchObid} was cancelled.` });

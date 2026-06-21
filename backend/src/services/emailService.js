@@ -4,7 +4,6 @@ const EmailTemplate = require('../models/EmailTemplate');
 const EmailLog = require('../models/EmailLog');
 const SystemSettings = require('../models/SystemSettings');
 const BrevoClient = require('@getbrevo/brevo').BrevoClient;
-const { passwordResetOTPTemplate, passwordResetConfirmTemplate } = require('./emailTemplates');
 
 const getFrontendUrl = () => {
   if (process.env.FRONTEND_URL) {
@@ -163,6 +162,12 @@ const wrapEmail = (title, contentHtml) => {
  * Falls back to console mock in dev/local if API key is missing or mock.
  */
 const sendEmail = async (to, subject, htmlBody, templateName = 'custom', attachments = null, emailType = null) => {
+  // Auto-wrap plain/partial HTML content in the premium OneBlood branding wrapper
+  let formattedHtml = htmlBody;
+  if (htmlBody && !htmlBody.trim().toLowerCase().startsWith('<!doctype') && !htmlBody.trim().toLowerCase().startsWith('<html')) {
+    formattedHtml = wrapEmail(subject, htmlBody);
+  }
+
   const settings = await SystemSettings.getSettings();
   const fromEmail = settings.fromEmail || 'oneblood.officialteam@gmail.com';
   const apiKey = process.env.BREVO_API_KEY;
@@ -215,7 +220,7 @@ const sendEmail = async (to, subject, htmlBody, templateName = 'custom', attachm
         sender: { name: "OneBlood", email: fromEmail },
         to: [{ email: to }],
         subject: subject,
-        htmlContent: htmlBody
+        htmlContent: formattedHtml
       };
 
       if (brevoAttachments.length > 0) {
@@ -254,7 +259,7 @@ const sendEmail = async (to, subject, htmlBody, templateName = 'custom', attachm
     console.log(`To:      ${to}`);
     console.log(`Subject: ${subject}`);
     console.log('--------------------------- BODY -------------------------------');
-    console.log(htmlBody.replace(/<[^>]*>/g, '').trim().substring(0, 500) + '...');
+    console.log(formattedHtml.replace(/<[^>]*>/g, '').trim().substring(0, 500) + '...');
     console.log('==========================================================\n');
     emailSent = true; // Mark as sent to prevent infinite retry loops in local dev
   }
@@ -611,20 +616,58 @@ const sendEmailViaBrevo = async ({ to, toName, subject, html, templateName = 'pa
 };
 
 const sendPasswordResetOTPEmail = async ({ name, email, otp }) => {
+  const html = wrapEmail(`${otp} is your OneBlood password reset code`, `
+    <h2 style="color: #111827; margin-top: 0; font-size: 20px; font-weight: 700;">Password Reset Request</h2>
+    <p>Hi ${name},</p>
+    <p>We received a request to reset the password for your OneBlood account. Use the code below to proceed. This code is valid for <strong>10 minutes</strong>.</p>
+    
+    <div style="background-color: #fff5f5; border: 2px solid #C0152A; border-radius: 12px; padding: 24px; text-align: center; margin: 24px 0;">
+      <p style="color: #888; font-size: 11px; margin: 0 0 8px 0; text-transform: uppercase; letter-spacing: 3px;">Your One-Time Password</p>
+      <p style="color: #C0152A; font-size: 40px; font-weight: 800; margin: 0; font-family: 'Courier New', Courier, monospace; letter-spacing: 12px;">${otp}</p>
+      <p style="color: #aaa; font-size: 12px; margin: 8px 0 0 0;">Expires in 10 minutes</p>
+    </div>
+    
+    <div class="info-card" style="border-left-color: #C0152A; background-color: #fcfcfc;">
+      <p style="color: #6b7280; font-size: 13px; margin: 0; line-height: 1.6;">
+        🔒 <strong>Never share this code with anyone</strong> — OneBlood staff will never ask for it.<br>
+        If you didn't request a password reset, you can safely ignore this email. Your account remains secure.
+      </p>
+    </div>
+  `);
+
   return sendEmailViaBrevo({
     to: email,
     toName: name,
     subject: `${otp} is your OneBlood password reset code`,
-    html: passwordResetOTPTemplate({ name, otp })
+    html,
+    templateName: 'password_reset_otp',
+    emailType: 'password_reset_otp'
   });
 };
 
 const sendPasswordResetConfirmEmail = async ({ name, email }) => {
+  const html = wrapEmail('Your OneBlood password has been successfully updated', `
+    <h2 style="color: #111827; margin-top: 0; font-size: 20px; font-weight: 700;">Password Reset Confirmed</h2>
+    <p>Hi ${name},</p>
+    <p>This is a confirmation that the password for your OneBlood account has been successfully updated.</p>
+    
+    <div class="info-card" style="border-left-color: #10b981; background-color: #f0fdf4; border-radius: 4px; padding: 16px 20px; margin: 24px 0;">
+      <p style="color: #14532d; font-size: 14px; margin: 0; line-height: 1.6; font-weight: bold;">
+        ✅ Your password was successfully updated.
+      </p>
+      <p style="color: #14532d; font-size: 13px; margin: 4px 0 0; line-height: 1.6;">
+        If you did not make this change, please contact our support team immediately.
+      </p>
+    </div>
+    
+    <p>You can now log in to your account with your new password.</p>
+  `);
+
   return sendEmailViaBrevo({
     to: email,
     toName: name,
     subject: 'Your OneBlood password has been successfully updated',
-    html: passwordResetConfirmTemplate({ name }),
+    html,
     templateName: 'password_reset_confirm',
     emailType: 'password_reset_confirm'
   });
