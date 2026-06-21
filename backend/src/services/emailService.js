@@ -4,7 +4,7 @@ const EmailTemplate = require('../models/EmailTemplate');
 const EmailLog = require('../models/EmailLog');
 const SystemSettings = require('../models/SystemSettings');
 const BrevoClient = require('@getbrevo/brevo').BrevoClient;
-const { passwordResetOTPTemplate } = require('./emailTemplates');
+const { passwordResetOTPTemplate, passwordResetConfirmTemplate } = require('./emailTemplates');
 
 const getFrontendUrl = () => {
   if (process.env.FRONTEND_URL) {
@@ -619,6 +619,15 @@ const sendPasswordResetOTPEmail = async ({ name, email, otp }) => {
   });
 };
 
+const sendPasswordResetConfirmEmail = async ({ name, email }) => {
+  return sendEmailViaBrevo({
+    to: email,
+    toName: name,
+    subject: 'Your OneBlood password has been successfully updated',
+    html: passwordResetConfirmTemplate({ name })
+  });
+};
+
 module.exports = {
   sendEmail,
   sendTemplateEmail,
@@ -629,6 +638,7 @@ module.exports = {
   sendDonationCompletedEmail,
   runEmailRetryJob,
   sendEmailViaBrevo,
-  sendPasswordResetOTPEmail
+  sendPasswordResetOTPEmail,
+  sendPasswordResetConfirmEmail
 };
 

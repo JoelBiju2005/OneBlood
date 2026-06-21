@@ -103,6 +103,87 @@ const passwordResetOTPTemplate = ({ name, otp }) => `
 </body>
 </html>`;
 
+const passwordResetConfirmTemplate = ({ name }) => `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your OneBlood password has been updated</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0"
+        style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;
+               overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+        <!-- HEADER -->
+        <tr>
+          <td style="background:#C0152A;padding:28px 40px;text-align:center;">
+            <h1 style="color:#fff;margin:0;font-size:28px;font-weight:800;letter-spacing:-0.5px;">
+              One<span style="font-weight:400;">Blood</span>
+            </h1>
+            <p style="color:rgba(255,255,255,0.75);margin:6px 0 0;font-size:11px;
+                      letter-spacing:3px;text-transform:uppercase;">
+              Emergency Blood Resource Platform
+            </p>
+          </td>
+        </tr>
+
+        <!-- BODY -->
+        <tr>
+          <td style="padding:40px 40px 24px;">
+
+            <h2 style="color:#1a1a1a;font-size:20px;margin:0 0 12px;">
+              Password Reset Confirmed
+            </h2>
+
+            <p style="color:#555;font-size:15px;line-height:1.6;margin:0 0 28px;">
+              Hi ${name},<br><br>
+              This is a confirmation that the password for your OneBlood account has been successfully updated.
+            </p>
+
+            <table width="100%" cellpadding="0" cellspacing="0"
+              style="background:#f0fdf4;border-left:4px solid #10b981;border-radius:4px;margin:0 0 28px;">
+              <tr>
+                <td style="padding:16px 20px;">
+                  <p style="color:#14532d;font-size:14px;margin:0;line-height:1.6;font-weight:bold;">
+                    ✅ Your password was successfully updated.
+                  </p>
+                  <p style="color:#14532d;font-size:13px;margin:4px 0 0;line-height:1.6;">
+                    If you did not make this change, please contact our support team immediately.
+                  </p>
+                </td>
+              </tr>
+            </table>
+
+            <p style="color:#555;font-size:15px;line-height:1.6;margin:0 0 28px;">
+              You can now log in to your account with your new password.
+            </p>
+
+          </td>
+        </tr>
+
+        <!-- FOOTER -->
+        <tr>
+          <td style="background:#1a1a1a;padding:20px 40px;text-align:center;">
+            <p style="color:#888;font-size:12px;margin:0 0 6px;">
+              OneBlood · Connecting lives, one drop at a time.
+            </p>
+            <p style="color:#555;font-size:11px;margin:0;">
+              This is an automated message — do not reply directly to this email.
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
 module.exports = {
-  passwordResetOTPTemplate
+  passwordResetOTPTemplate,
+  passwordResetConfirmTemplate
 };

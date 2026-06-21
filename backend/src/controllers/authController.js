@@ -661,8 +661,12 @@ const resetPassword = async (req, res, next) => {
     // Reset the lockout state too — fresh start
     user.failedLoginAttempts = 0;
     user.lockoutUntil        = undefined;
-
     await user.save();
+
+    // Send password reset confirmation email (non-blocking)
+    const { sendPasswordResetConfirmEmail } = require('../services/emailService');
+    sendPasswordResetConfirmEmail({ name: user.name, email: user.email })
+      .catch(err => console.error('[Email] Password reset confirmation email failed:', err));
 
     return res.status(200).json({ success: true, message: 'Password updated successfully. Please log in with your new password.' });
   } catch (err) {
