@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline } from 'react-leaflet';
 import { useDropzone } from 'react-dropzone';
+import { motion, AnimatePresence } from 'framer-motion';
 import L from 'leaflet';
 import api, { ASSETS_URL } from '../utils/api';
 import useAuthStore from '../store/authStore';
@@ -621,66 +622,66 @@ const SearchPage = () => {
   };
 
   return (
-    <div className="h-[calc(100vh-80px)] flex flex-col md:flex-row relative bg-oneblood-midnight overflow-hidden">
+    <div className="h-[calc(100vh-80px)] flex flex-col md:flex-row relative bg-oneblood-midnight overflow-hidden transition-colors duration-300">
       
       {/* 1. Left Sidebar: Interactive Filters & Listings */}
       <div 
         ref={listContainerRef} 
-        className={`w-full md:w-5/12 bg-slate-950 border-t md:border-t-0 md:border-r border-white/5 flex flex-col relative z-20 overflow-y-auto order-2 md:order-1 transition-all duration-300 ${
+        className={`w-full md:w-5/12 bg-slate-50 dark:bg-[#07070A]/90 backdrop-blur-md border-t md:border-t-0 md:border-r border-slate-200 dark:border-white/[0.06] flex flex-col relative z-20 overflow-y-auto order-2 md:order-1 transition-all duration-300 ${
           mobileShowMap ? 'h-[35%] md:h-full' : 'h-[70%] md:h-full'
         }`}
       >
         
         {/* Pulsing Emergency Banner */}
-        <div className="bg-oneblood-crimson/15 border-b border-oneblood-crimson/25 p-3 flex items-center justify-between animate-pulse">
-          <span className="text-[11px] font-bold text-white flex items-center space-x-1.5">
-            <HeartPulse className="w-4 h-4 text-oneblood-crimson" />
+        <div className="bg-[#C0152A]/10 border-b border-[#C0152A]/20 p-3.5 flex items-center justify-between animate-pulse">
+          <span className="text-[11px] font-bold text-[#C0152A] dark:text-red-400 flex items-center space-x-1.5 font-body">
+            <HeartPulse className="w-4 h-4 text-[#C0152A] dark:text-red-500" />
             <span>EMERGENCY? Upload doctor prescription for instant matches.</span>
           </span>
         </div>
 
         {/* Tab Toggle */}
-        <div className="flex border-b border-white/5">
+        <div className="flex p-1 bg-slate-100 dark:bg-black/40 border-b border-slate-200 dark:border-white/[0.04]">
           <button 
             onClick={() => setSearchMode('smart')}
-            className={`flex-1 py-3 text-xs font-bold transition-all border-b-2 cursor-pointer ${searchMode === 'smart' ? 'border-oneblood-crimson text-white bg-white/5' : 'border-transparent text-slate-400 hover:text-white'}`}
+            className={`flex-1 py-2.5 text-xs font-bold transition-all rounded-xl cursor-pointer font-body ${searchMode === 'smart' ? 'bg-[#C0152A] text-white keep-white shadow-md' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'}`}
           >
             Smart Search
           </button>
           <button 
             onClick={() => setSearchMode('manual')}
-            className={`flex-1 py-3 text-xs font-bold transition-all border-b-2 cursor-pointer ${searchMode === 'manual' ? 'border-oneblood-crimson text-white bg-white/5' : 'border-transparent text-slate-400 hover:text-white'}`}
+            className={`flex-1 py-2.5 text-xs font-bold transition-all rounded-xl cursor-pointer font-body ${searchMode === 'manual' ? 'bg-[#C0152A] text-white keep-white shadow-md' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'}`}
           >
             Manual Search
           </button>
         </div>
 
         {/* Tab Content */}
-        <div className="p-4 border-b border-white/5 bg-slate-900/30">
+        <div className="p-4 border-b border-slate-205 dark:border-white/[0.06] bg-slate-100/40 dark:bg-[#0F0F1A]/20">
           {searchMode === 'smart' ? (
             <div className="space-y-4">
               {ocrStatus === 'idle' && (
                 <div 
                   {...getRootProps()} 
-                  className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${isDragActive ? 'border-oneblood-crimson bg-oneblood-crimson/5' : 'border-white/10 bg-white/5 hover:border-white/20'}`}
+                  className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all ${isDragActive ? 'border-[#C0152A] bg-[#C0152A]/5' : 'border-slate-300 dark:border-white/[0.08] bg-slate-50 dark:bg-white/[0.02] hover:border-slate-400 dark:hover:border-white/[0.15]'}`}
                 >
                   <input {...getInputProps()} accept="image/*,application/pdf" capture="environment" />
-                  <Upload className="w-8 h-8 mx-auto text-slate-400 mb-2" />
-                  <p className="text-xs text-white font-medium">Drop prescription letter here</p>
-                  <p className="text-[10px] text-slate-500 mt-0.5">PDF, JPG, PNG &bull; Mobile Camera supported 📷</p>
+                  <Upload className="w-8 h-8 mx-auto text-slate-400 dark:text-slate-500 mb-2" />
+                  <p className="text-xs text-slate-800 dark:text-white font-bold font-body">Drop prescription letter here</p>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-450 mt-0.5 font-body">PDF, JPG, PNG &bull; Mobile Camera supported 📷</p>
                 </div>
               )}
 
               {/* Progress logs */}
               {['reading', 'group', 'doctor'].includes(ocrStatus) && (
-                <div className="p-5 bg-white/5 rounded-xl border border-white/5 text-left space-y-3">
+                <div className="p-5 bg-white/5 rounded-2xl border border-white/[0.05] text-left space-y-3 shadow-inner">
                   <div className="flex items-center space-x-3">
-                    <div className="w-5 h-5 border-2 border-oneblood-crimson border-t-transparent rounded-full animate-spin shrink-0" />
-                    <span className="text-xs font-bold text-white">AI Processing Document...</span>
+                    <div className="w-5 h-5 border-2 border-[#C0152A] border-t-transparent rounded-full animate-spin shrink-0" />
+                    <span className="text-xs font-bold text-slate-900 dark:text-white font-body">AI Processing Document...</span>
                   </div>
-                  <ul className="text-[10px] space-y-2 font-medium text-slate-400">
+                  <ul className="text-[10px] space-y-2 font-bold text-slate-500 dark:text-slate-400 font-mono uppercase tracking-wider">
                     <li className="flex items-center">
-                      <span className={`flex items-center gap-1.5 ${ocrStatus === 'reading' ? 'text-oneblood-gold' : 'text-emerald-400'}`}>
+                      <span className={`flex items-center gap-1.5 ${ocrStatus === 'reading' ? 'text-amber-500' : 'text-emerald-500'}`}>
                         {ocrStatus === 'reading' ? (
                           <>
                             <Activity className="w-3.5 h-3.5 animate-pulse text-amber-500" />
@@ -695,7 +696,7 @@ const SearchPage = () => {
                       </span>
                     </li>
                     <li className="flex items-center">
-                      <span className={`flex items-center gap-1.5 ${ocrStatus === 'group' ? 'text-oneblood-gold' : ocrStatus === 'doctor' || ocrStatus === 'done' ? 'text-emerald-400' : 'text-slate-600'}`}>
+                      <span className={`flex items-center gap-1.5 ${ocrStatus === 'group' ? 'text-amber-500' : ocrStatus === 'doctor' || ocrStatus === 'done' ? 'text-emerald-500' : 'text-slate-400'}`}>
                         {ocrStatus === 'group' ? (
                           <>
                             <Activity className="w-3.5 h-3.5 animate-pulse text-amber-500" />
@@ -708,14 +709,14 @@ const SearchPage = () => {
                           </>
                         ) : (
                           <>
-                            <span className="w-1.5 h-1.5 rounded-full bg-slate-600 ml-1 mr-1" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-400 ml-1 mr-1 animate-pulse" />
                             <span>Detect blood group</span>
                           </>
                         )}
                       </span>
                     </li>
                     <li className="flex items-center">
-                      <span className={`flex items-center gap-1.5 ${ocrStatus === 'doctor' ? 'text-oneblood-gold' : ocrStatus === 'done' ? 'text-emerald-400' : 'text-slate-600'}`}>
+                      <span className={`flex items-center gap-1.5 ${ocrStatus === 'doctor' ? 'text-amber-500' : ocrStatus === 'done' ? 'text-emerald-500' : 'text-slate-400'}`}>
                         {ocrStatus === 'doctor' ? (
                           <>
                             <Activity className="w-3.5 h-3.5 animate-pulse text-amber-500" />
@@ -728,7 +729,7 @@ const SearchPage = () => {
                           </>
                         ) : (
                           <>
-                            <span className="w-1.5 h-1.5 rounded-full bg-slate-600 ml-1 mr-1" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-400 ml-1 mr-1 animate-pulse" />
                             <span>Verify doctor details</span>
                           </>
                         )}
@@ -739,46 +740,46 @@ const SearchPage = () => {
               )}
 
               {ocrStatus === 'done' && aiExtractedData && (
-                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl space-y-3 text-left">
+                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl space-y-3 text-left">
                   <div className="flex justify-between items-center">
-                    <span className="text-xs font-bold text-emerald-400 flex items-center space-x-1">
+                    <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center space-x-1 font-body">
                       <ShieldCheck className="w-4.5 h-4.5" />
                       <span>AI Extracted Details</span>
                     </span>
                     <button 
                       onClick={() => setIsEditingAi(!isEditingAi)} 
-                      className="text-[10px] text-slate-400 hover:text-white underline font-bold"
+                      className="text-[10px] text-slate-500 dark:text-slate-400 hover:text-[#C0152A] dark:hover:text-white underline font-bold cursor-pointer"
                     >
                       {isEditingAi ? 'Save' : 'Edit'}
                     </button>
                   </div>
 
                   {isEditingAi ? (
-                    <div className="grid grid-cols-2 gap-2 text-[10px]">
+                    <div className="grid grid-cols-2 gap-2 text-[10px] font-body">
                       <input type="text" value={bloodGroup} onChange={(e) => setBloodGroup(e.target.value)} className="bg-slate-950 px-2 py-1 rounded text-white" />
                       <input type="text" value={component} onChange={(e) => setComponent(e.target.value)} className="bg-slate-950 px-2 py-1 rounded text-white" />
                       <input type="text" value={hospitalName} onChange={(e) => setHospitalName(e.target.value)} className="bg-slate-950 px-2 py-1 rounded text-white col-span-2" />
                     </div>
                   ) : (
-                    <div className="grid grid-cols-2 gap-3 text-[11px] text-slate-300">
-                      <div><span className="text-slate-500 block">Blood Group</span> <strong className="text-white text-xs">{bloodGroup}</strong></div>
-                      <div><span className="text-slate-500 block">Component</span> <strong className="text-white text-xs uppercase">{component.replace('_', ' ')}</strong></div>
-                      <div><span className="text-slate-500 block">Units Required</span> <strong className="text-white text-xs">{unitsNeeded} Unit(s)</strong></div>
-                      <div><span className="text-slate-500 block">Urgency</span> <strong className="text-oneblood-crimson text-xs capitalize">{urgency}</strong></div>
-                      <div className="col-span-2"><span className="text-slate-500 block">Hospital</span> <strong className="text-white text-xs">{hospitalName}</strong></div>
+                    <div className="grid grid-cols-2 gap-3 text-[11px] text-slate-600 dark:text-slate-300 font-body">
+                      <div><span className="text-slate-400 dark:text-slate-500 block">Blood Group</span> <strong className="text-slate-900 dark:text-white text-xs">{bloodGroup}</strong></div>
+                      <div><span className="text-slate-400 dark:text-slate-500 block">Component</span> <strong className="text-slate-900 dark:text-white text-xs uppercase">{component.replace('_', ' ')}</strong></div>
+                      <div><span className="text-slate-400 dark:text-slate-500 block">Units Required</span> <strong className="text-slate-900 dark:text-white text-xs">{unitsNeeded} Unit(s)</strong></div>
+                      <div><span className="text-slate-400 dark:text-slate-500 block">Urgency</span> <strong className="text-[#C0152A] dark:text-[#FF4D6A] text-xs capitalize">{urgency}</strong></div>
+                      <div className="col-span-2"><span className="text-slate-400 dark:text-slate-500 block">Hospital</span> <strong className="text-slate-900 dark:text-white text-xs">{hospitalName}</strong></div>
                     </div>
                   )}
 
-                  <div className="flex justify-between space-x-2 pt-1.5">
+                  <div className="flex justify-between space-x-2 pt-1.5 font-body">
                     <button 
                       onClick={() => { setOcrStatus('idle'); setAiExtractedData(null); }} 
-                      className="flex-1 py-1.5 border border-white/10 hover:bg-white/5 rounded-lg text-[10px] text-center text-slate-400 font-bold"
+                      className="flex-1 py-1.5 border border-slate-205 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl text-[10px] text-center text-slate-500 dark:text-slate-400 font-bold"
                     >
                       Reset Upload
                     </button>
                     <button 
                       onClick={executeSearch} 
-                      className="flex-1 py-1.5 bg-oneblood-crimson hover:bg-red-700 text-white rounded-lg text-[10px] text-center font-bold"
+                      className="flex-1 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl text-[10px] text-center font-bold shadow-sm keep-white"
                     >
                       Find matches now
                     </button>
@@ -787,9 +788,9 @@ const SearchPage = () => {
               )}
 
               {ocrStatus === 'error' && (
-                <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center justify-between text-left">
-                  <span className="text-xs text-oneblood-crimson font-medium">Verification failed. Try manual search.</span>
-                  <button onClick={() => setOcrStatus('idle')} className="text-xs text-slate-400 underline font-bold">Retry</button>
+                <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-between text-left">
+                  <span className="text-xs text-[#C0152A] dark:text-red-400 font-bold font-body">Verification failed. Try manual search.</span>
+                  <button onClick={() => setOcrStatus('idle')} className="text-xs text-slate-500 dark:text-slate-400 underline font-bold">Retry</button>
                 </div>
               )}
             </div>
@@ -797,16 +798,16 @@ const SearchPage = () => {
             /* Manual Search Form */
             <div className="space-y-4 text-left">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Blood Group</label>
+                <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block font-mono">Blood Group</label>
                 <div className="grid grid-cols-4 gap-1.5">
                   {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(bg => (
                     <button 
                       key={bg} 
                       onClick={() => setBloodGroup(bg)}
-                      className={`py-1.5 text-xs font-bold border rounded-lg transition-all ${
+                      className={`py-2 text-xs font-bold border rounded-xl transition-all cursor-pointer font-body ${
                         bloodGroup === bg 
-                          ? 'border-oneblood-crimson bg-oneblood-crimson/15 text-oneblood-crimson dark:text-white' 
-                          : 'border-slate-200 dark:border-white/5 bg-slate-100 dark:bg-slate-950/60 text-slate-600 dark:text-slate-400'
+                          ? 'border-[#C0152A] bg-[#C0152A]/10 text-[#C0152A] dark:text-white font-black' 
+                          : 'border-slate-200 dark:border-white/[0.06] bg-slate-50 dark:bg-white/[0.02] text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.04]'
                       }`}
                     >
                       {bg}
@@ -817,11 +818,11 @@ const SearchPage = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Component</label>
+                  <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block font-mono">Component</label>
                   <select 
                     value={component}
                     onChange={(e) => setComponent(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-950 border border-white/10 rounded-lg text-xs text-white focus:outline-none"
+                    className="w-full px-3 py-2 rounded-xl text-xs"
                   >
                     <option value="whole_blood">Whole Blood</option>
                     <option value="prbc">Packed RBC</option>
@@ -832,11 +833,11 @@ const SearchPage = () => {
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Radius</label>
+                  <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block font-mono">Radius</label>
                   <select 
                     value={radius}
                     onChange={(e) => setRadius(parseInt(e.target.value))}
-                    className="w-full px-3 py-2 bg-slate-950 border border-white/10 rounded-lg text-xs text-white focus:outline-none"
+                    className="w-full px-3 py-2 rounded-xl text-xs"
                   >
                     <option value="10">10 km</option>
                     <option value="25">25 km</option>
@@ -847,39 +848,40 @@ const SearchPage = () => {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Your Location</label>
-                <div className="flex space-x-2">
-                  <span className="flex-grow px-3 py-2 bg-slate-950 border border-white/10 rounded-lg text-xs text-slate-300 flex items-center overflow-hidden truncate">
-                    {locationLabel}
+                <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block font-mono">Your Location</label>
+                <div className="flex space-x-2 font-body">
+                  <span className="flex-grow px-3 py-2 bg-slate-50 dark:bg-black/30 border border-slate-200 dark:border-white/[0.04] rounded-xl text-xs text-slate-600 dark:text-slate-350 flex items-center overflow-hidden truncate">
+                    <MapPin className="w-3.5 h-3.5 text-[#C0152A] dark:text-[#FF4D6A] mr-1.5 shrink-0" />
+                    <span>{locationLabel}</span>
                   </span>
                 </div>
               </div>
             </div>
           )}
         </div>
-
-        {/* Results Panel */}
-        <div className="flex-grow p-4 space-y-4">
+        <div className="flex-grow p-5 space-y-5">
           
-          <div className="pb-1 border-b border-white/5 flex justify-between items-center text-xs text-slate-400">
-            <span>Unified Results within {radius} km</span>
-            <span>({banks.length} banks · {donors.length} donors)</span>
+          <div className="pb-2 border-b border-slate-200 dark:border-white/5 flex justify-between items-center text-xs text-slate-400 dark:text-slate-400">
+            <span className="font-semibold">Unified Results within {radius} km</span>
+            <span className="font-mono text-[10px] bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded-full">({banks.length} banks · {donors.length} donors)</span>
           </div>
 
           {donors.length > 0 && (
-            <button
+            <motion.button
+              whileHover={{ scale: 1.01, translateY: -1 }}
+              whileTap={{ scale: 0.99 }}
               onClick={() => openRequestModal(null)}
-              className="w-full py-2.5 bg-gradient-to-r from-red-600 to-[#C0152A] hover:from-red-700 hover:to-red-800 keep-white text-white font-extrabold rounded-xl text-xs transition-all shadow-lg flex items-center justify-center space-x-2 border border-red-500/20 cursor-pointer"
+              className="w-full py-3 bg-gradient-to-r from-red-600 to-[#C0152A] hover:from-red-700 hover:to-red-800 keep-white text-white font-extrabold rounded-xl text-xs transition-all shadow-lg flex items-center justify-center space-x-2 border border-red-500/20 cursor-pointer"
             >
               <Send className="w-4 h-4 text-white shrink-0 animate-pulse keep-white" />
               <span>Send Request to all the donors nearby with {bloodGroup} Blood Group</span>
-            </button>
+            </motion.button>
           )}
 
           {loading ? (
             <div className="py-12 space-y-4">
               {[1, 2, 3].map(i => (
-                <div key={i} className="p-4 bg-slate-900/40 border border-white/5 rounded-xl space-y-3 animate-pulse">
+                <div key={i} className="p-5 bg-slate-900/40 border border-white/5 rounded-2xl space-y-3 animate-pulse glass-card">
                   <div className="h-4 bg-white/10 rounded w-2/3" />
                   <div className="h-3 bg-white/5 rounded w-1/2" />
                   <div className="h-8 bg-white/5 rounded w-full" />
@@ -887,59 +889,78 @@ const SearchPage = () => {
               ))}
             </div>
           ) : banks.length === 0 && donors.length === 0 ? (
-            <div className="py-12 text-center text-xs text-slate-500 space-y-2">
-              <AlertTriangle className="w-8 h-8 text-oneblood-gold mx-auto" />
-              <p>No results found in this range. Try raising the radius limit.</p>
+            <div className="py-16 text-center text-xs text-slate-500 space-y-3 glass-card p-8">
+              <AlertTriangle className="w-10 h-10 text-oneblood-gold mx-auto animate-bounce" />
+              <p className="font-semibold text-slate-400">No results found in this range.</p>
+              <p className="text-[11px] text-slate-500">Try raising the radius limit or search for a different blood group.</p>
             </div>
           ) : (
-            <div className="space-y-3.5">
-              {/* Blood Banks */}
-              {banks.map(bank => {
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="space-y-4"
+            >
+              {banks.map((bank, index) => {
                 const qty = getComponentQty(bank, component, bloodGroup);
                 const isSelected = selectedItem?._id === bank._id;
                 const isExpanded = expandedCardId === bank._id;
                 return (
-                  <div 
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
                     key={bank._id}
                     ref={isSelected ? selectedCardRef : null}
                     onClick={() => handleItemClick(bank)}
-                    className={`p-4 rounded-xl border text-left cursor-pointer transition-all duration-200 ${isSelected ? 'bg-slate-900 border-blue-500 shadow-xl shadow-blue-900/20 ring-1 ring-blue-500/30' : 'bg-slate-900/40 border-white/5 hover:border-white/10'}`}
+                    className={`p-5 rounded-2xl border text-left cursor-pointer transition-all duration-300 glass-card ${
+                      isSelected 
+                        ? 'border-blue-500/50 bg-blue-500/5 shadow-xl shadow-blue-500/5 ring-1 ring-blue-500/30' 
+                        : 'glass-card-hover'
+                    }`}
                   >
-                    {/* Selected indicator */}
                     {isSelected && (
-                      <div className="flex items-center space-x-1.5 mb-2 text-[10px] font-bold text-blue-400 animate-pulse">
+                      <div className="flex items-center space-x-1.5 mb-2.5 text-[10px] font-bold text-blue-500 dark:text-blue-400 animate-pulse">
                         <span className="w-1.5 h-1.5 rounded-full bg-blue-400"/>
                         <span>Selected on map</span>
                       </div>
                     )}
                     <div className="flex justify-between items-start">
-                      <div className="flex-1 min-w-0 pr-2">
-                        <h4 className="font-bold text-sm text-white flex items-center space-x-1.5">
-                          <Landmark className="w-4 h-4 text-blue-400 shrink-0" />
+                      <div className="flex-1 min-w-0 pr-3">
+                        <h4 className="font-bold text-sm text-slate-900 dark:text-white flex items-center space-x-2">
+                          <Landmark className="w-4 h-4 text-blue-500 shrink-0" />
                           <span className="truncate">{bank.name}</span>
                         </h4>
-                        <p className="text-[11px] text-slate-400 mt-1">{bank.address}</p>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">{bank.address}</p>
                       </div>
-                      <span className={`text-[10px] font-black px-2 py-0.5 rounded border shrink-0 ${qty >= 5 ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : qty > 0 ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-red-500/20 text-red-400 border-red-500/30'}`}>
+                      <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border shrink-0 ${
+                        qty >= 5 
+                          ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' 
+                          : qty > 0 
+                          ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' 
+                          : 'bg-red-500/10 text-red-500 border-red-500/20'
+                      }`}>
                         {qty} Units
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between mt-4 pt-3.5 border-t border-white/5" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex space-x-3 text-[10px] text-slate-400">
-                        <span className="flex items-center space-x-1.5"><Phone className="w-3.5 h-3.5 text-slate-500" /> <span>{bank.phone}</span></span>
+                    <div className="flex items-center justify-between mt-4 pt-3.5 border-t border-slate-200 dark:border-white/5" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex space-x-3 text-[10px] text-slate-500 dark:text-slate-400">
+                        <span className="flex items-center space-x-1.5">
+                          <Phone className="w-3.5 h-3.5 text-slate-400" /> 
+                          <span className="font-mono">{bank.phone}</span>
+                        </span>
                       </div>
                       
                       <div className="flex space-x-2">
                         <a 
                           href={`tel:${bank.phone}`}
-                          className="px-3 py-1.5 bg-emerald-600/10 border border-emerald-500/20 hover:bg-emerald-600/20 text-emerald-400 font-bold rounded-lg text-xs"
+                          className="px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 text-emerald-500 font-bold rounded-xl text-xs transition-colors"
                         >
                           Call
                         </a>
                         <Link
                           to={`/blood-bank/${bank._id}#inventory`}
-                          className="px-3 py-1.5 bg-blue-600/10 border border-blue-500/20 hover:bg-blue-600/20 text-blue-400 font-bold rounded-lg text-xs flex items-center space-x-1"
+                          className="px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 text-blue-500 font-bold rounded-xl text-xs flex items-center space-x-1 transition-colors"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <ExternalLink className="w-3 h-3" />
@@ -953,15 +974,16 @@ const SearchPage = () => {
                               handleItemClick(bank);
                             }
                           }}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                            isExpanded ? 'bg-red-600 text-white' : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                            isExpanded 
+                              ? 'bg-red-600 hover:bg-red-700 text-white keep-white' 
+                              : 'bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300'
                           }`}
                         >
                           {isExpanded ? 'Hide Route' : '🗺 Directions'}
                         </button>
                       </div>
                     </div>
-
                     {isExpanded && (
                       <CardDirections
                         item={bank}
@@ -971,61 +993,69 @@ const SearchPage = () => {
                         donorIcon={donorIcon}
                       />
                     )}
-                  </div>
+                  </motion.div>
                 );
               })}
 
-              {/* Donors */}
-              {donors.map(donor => {
+              {donors.map((donor, index) => {
                 const isSelected = selectedItem?._id === donor._id;
                 const isExpanded = expandedCardId === donor._id;
                 return (
-                  <div 
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: (banks.length + index) * 0.05 }}
                     key={donor._id}
                     ref={isSelected ? selectedCardRef : null}
                     onClick={() => handleItemClick(donor)}
-                    className={`p-4 rounded-xl border text-left cursor-pointer transition-all duration-200 ${isSelected ? 'bg-slate-900 border-oneblood-crimson shadow-xl shadow-red-900/20 ring-1 ring-red-500/30' : 'bg-slate-900/40 border-white/5 hover:border-white/10'}`}
+                    className={`p-5 rounded-2xl border text-left cursor-pointer transition-all duration-300 glass-card ${
+                      isSelected 
+                        ? 'border-oneblood-crimson/50 bg-oneblood-crimson/5 shadow-xl shadow-oneblood-crimson/5 ring-1 ring-oneblood-crimson/30' 
+                        : 'glass-card-hover'
+                    }`}
                   >
-                    {/* Selected indicator */}
                     {isSelected && (
-                      <div className="flex items-center space-x-1.5 mb-2 text-[10px] font-bold text-oneblood-crimson animate-pulse">
+                      <div className="flex items-center space-x-1.5 mb-2.5 text-[10px] font-bold text-oneblood-crimson animate-pulse">
                         <span className="w-1.5 h-1.5 rounded-full bg-oneblood-crimson"/>
                         <span>Selected on map</span>
                       </div>
                     )}
                     <div className="flex justify-between items-start">
-                      <div className="flex-1 min-w-0 pr-2">
-                        <h4 className="font-bold text-sm text-white flex items-center space-x-1.5">
+                      <div className="flex-1 min-w-0 pr-3">
+                        <h4 className="font-bold text-sm text-slate-900 dark:text-white flex items-center space-x-2">
                           <HeartPulse className="w-4 h-4 text-oneblood-crimson animate-pulse shrink-0" />
                           <span className="truncate">{donor.name}</span>
                         </h4>
-                        <p className="text-[11px] text-slate-400 mt-1">{donor.city}</p>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">{donor.city}</p>
                       </div>
-                      <span className="text-xs font-black px-2.5 py-0.5 bg-oneblood-crimson/20 border border-oneblood-crimson/30 text-oneblood-crimson rounded-full shrink-0">
+                      <span className="text-xs font-black px-3 py-0.5 bg-oneblood-crimson/10 border border-oneblood-crimson/25 text-oneblood-crimson rounded-full shrink-0">
                         {donor.bloodGroup}
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between text-[10px] text-slate-500 mt-3.5 pt-3.5 border-t border-white/5">
-                      <span className="flex items-center space-x-1 text-slate-400">
+                    <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 mt-3.5 pt-3.5 border-t border-slate-200 dark:border-white/5">
+                      <span className="flex items-center space-x-1.5 font-medium">
                         <ShieldCheck className="w-4 h-4 text-oneblood-gold" />
                         <span>Eligible & Active &bull; {donor.totalDonations} donations</span>
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between mt-4 pt-3.5 border-t border-white/5" onClick={(e) => e.stopPropagation()}>
-                      <span className="text-[10px] text-oneblood-gold italic font-bold">🟢 Available Now</span>
+                    <div className="flex items-center justify-between mt-4 pt-3.5 border-t border-slate-200 dark:border-white/5" onClick={(e) => e.stopPropagation()}>
+                      <span className="text-[10px] text-emerald-500 font-bold flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping" />
+                        <span>Available Now</span>
+                      </span>
                       
                       <div className="flex space-x-2">
                         <button 
                           onClick={() => openRequestModal(donor)}
-                          className="px-3 py-1.5 bg-[#C0152A] hover:bg-red-700 text-white rounded-lg text-xs font-bold"
+                          className="px-3 py-1.5 bg-[#C0152A] hover:bg-red-700 text-white keep-white rounded-xl text-xs font-bold transition-colors"
                         >
                           Request
                         </button>
                         <Link 
                           to={`/donor/${donor._id}`}
-                          className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-bold"
+                          className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition-colors"
                         >
                           Profile
                         </Link>
@@ -1037,15 +1067,16 @@ const SearchPage = () => {
                               handleItemClick(donor);
                             }
                           }}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                            isExpanded ? 'bg-red-600 text-white' : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                            isExpanded 
+                              ? 'bg-red-600 hover:bg-red-700 text-white keep-white' 
+                              : 'bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300'
                           }`}
                         >
                           {isExpanded ? 'Hide Route' : '🗺 Directions'}
                         </button>
                       </div>
                     </div>
-
                     {isExpanded && (
                       <CardDirections
                         item={donor}
@@ -1055,15 +1086,14 @@ const SearchPage = () => {
                         donorIcon={donorIcon}
                       />
                     )}
-                  </div>
+                  </motion.div>
                 );
               })}
-            </div>
+            </motion.div>
           )}
         </div>
       </div>
 
-      {/* 2. Right Panel: Stunning Map Overlay */}
       <div 
         className={`w-full md:w-7/12 relative order-1 md:order-2 transition-all duration-300 ${
           mobileShowMap ? 'h-[65%] md:h-full' : 'h-[30%] md:h-full'
@@ -1076,15 +1106,12 @@ const SearchPage = () => {
           />
           <ChangeMapView center={userLocation} triggerInvalidate={mobileShowMap} />
 
-          {/* Current Search Center */}
           <Marker position={userLocation} icon={centerIcon} />
 
-          {/* Route line visual representation */}
           {routeCoordinates.length > 0 && (
             <Polyline positions={routeCoordinates} color="#B91C1C" weight={5} opacity={0.8} />
           )}
 
-          {/* Blood Banks markers */}
           {banks.map(bank => {
             const coords = getItemCoords(bank);
             if (!coords) return null;
@@ -1105,7 +1132,6 @@ const SearchPage = () => {
             );
           })}
 
-          {/* Donors markers */}
           {donors.map(donor => {
             const coords = getItemCoords(donor);
             if (!coords) return null;
@@ -1129,7 +1155,6 @@ const SearchPage = () => {
 
       </div>
 
-      {/* Mobile Floating Resize Map/List Toggle */}
       <button 
         onClick={() => setMobileShowMap(!mobileShowMap)}
         className="md:hidden fixed bottom-4 right-4 z-30 bg-oneblood-crimson hover:bg-red-700 text-white font-bold text-xs px-4 py-2.5 rounded-full shadow-2xl flex items-center gap-1.5 cursor-pointer"
@@ -1147,262 +1172,269 @@ const SearchPage = () => {
         )}
       </button>
 
-      {/* 3. Send Request Gated modal */}
-      {isRequestModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-lg bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden text-left animate-fadeIn max-h-[92vh] flex flex-col">
-            <div className="p-5 border-b border-white/5 flex justify-between items-center bg-slate-950/40">
-              <h3 className="text-sm font-bold text-white flex items-center space-x-1.5">
-                <FileText className="w-4.5 h-4.5 text-oneblood-crimson" />
-                <span>{selectedDonor ? `Send Blood Request to ${selectedDonor.name}` : `Send Request to all nearby ${bloodGroup} donors`}</span>
-              </h3>
-              <button onClick={() => setIsRequestModalOpen(false)} className="text-slate-400 hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSendRequest} className="p-5 space-y-3 overflow-y-auto flex-1">
-
-              {/* ── Section: Patient Information ── */}
-              <div className="pb-1">
-                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
-                  <span className="w-3 h-px bg-slate-700 block" />
-                  Patient Information
-                  <span className="flex-1 h-px bg-slate-700 block" />
-                </p>
-                <div className="space-y-2.5">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Patient Full Name <span className="text-red-500">*</span></label>
-                    <input
-                      type="text"
-                      value={patientName}
-                      onChange={(e) => setPatientName(e.target.value)}
-                      placeholder="Enter patient full name"
-                      className="w-full px-3 py-2 bg-slate-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-red-500/50 transition-colors"
-                      required
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Patient Age</label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="120"
-                        value={patientAge}
-                        onChange={(e) => setPatientAge(e.target.value)}
-                        placeholder="e.g. 45"
-                        className="w-full px-3 py-2 bg-slate-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-red-500/50 transition-colors"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Patient Gender</label>
-                      <select
-                        value={patientGender}
-                        onChange={(e) => setPatientGender(e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-red-500/50 transition-colors"
-                      >
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                        <option value="other">Other</option>
-                        <option value="unknown">Prefer not to say</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
+      <AnimatePresence>
+        {isRequestModalOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden text-left max-h-[92vh] flex flex-col glass-card"
+            >
+              <div className="p-5 border-b border-slate-205 dark:border-white/5 flex justify-between items-center bg-slate-50 dark:bg-slate-950/40">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+                  <FileText className="w-4.5 h-4.5 text-oneblood-crimson" />
+                  <span>{selectedDonor ? `Send Blood Request to ${selectedDonor.name}` : `Send Request to all nearby ${bloodGroup} donors`}</span>
+                </h3>
+                <button onClick={() => setIsRequestModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
-              {/* ── Section: Blood Requirement ── */}
-              <div className="pb-1">
-                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
-                  <span className="w-3 h-px bg-slate-700 block" />
-                  Blood Requirement
-                  <span className="flex-1 h-px bg-slate-700 block" />
-                </p>
-                <div className="space-y-2.5">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Blood Component</label>
-                    <select
-                      value={modalBloodComponent}
-                      onChange={(e) => setModalBloodComponent(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-red-500/50 transition-colors"
-                    >
-                      <option value="whole_blood">Whole Blood</option>
-                      <option value="prbc">Packed RBC (PRBC)</option>
-                      <option value="plasma">Fresh Frozen Plasma</option>
-                      <option value="platelets">Platelets</option>
-                      <option value="cryoprecipitate">Cryoprecipitate</option>
-                      <option value="sdp">Single Donor Platelets (SDP)</option>
-                    </select>
-                  </div>
+              <form onSubmit={handleSendRequest} className="p-5 space-y-4 overflow-y-auto flex-1">
 
-                  <div className="grid grid-cols-2 gap-3">
+                <div className="pb-1">
+                  <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                    <span className="w-3 h-px bg-slate-200 dark:bg-slate-700 block" />
+                    Patient Information
+                    <span className="flex-1 h-px bg-slate-200 dark:bg-slate-700 block" />
+                  </p>
+                  <div className="space-y-3">
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Units Needed</label>
-                      <div className="flex items-center space-x-2 bg-slate-950 border border-white/10 rounded-xl px-2">
-                        <button type="button" onClick={() => setUnitsNeeded(Math.max(1, unitsNeeded - 1))} className="p-1.5 text-slate-400 hover:text-white"><Minus className="w-3.5 h-3.5" /></button>
-                        <span className="flex-grow text-center text-xs font-bold text-white">{unitsNeeded}</span>
-                        <button type="button" onClick={() => setUnitsNeeded(unitsNeeded + 1)} className="p-1.5 text-slate-400 hover:text-white"><Plus className="w-3.5 h-3.5" /></button>
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Urgency <span className="text-red-500">*</span></label>
-                      <select
-                        value={urgency}
-                        onChange={(e) => setUrgency(e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-red-500/50 transition-colors"
-                      >
-                        <option value="critical">🚨 Critical</option>
-                        <option value="urgent">Urgent</option>
-                        <option value="moderate">Moderate</option>
-                        <option value="scheduled">Scheduled</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* ── Section: Hospital & Doctor Details ── */}
-              <div className="pb-1">
-                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
-                  <span className="w-3 h-px bg-slate-700 block" />
-                  Hospital & Doctor Details
-                  <span className="flex-1 h-px bg-slate-700 block" />
-                </p>
-                <div className="space-y-2.5">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Hospital Name <span className="text-red-500">*</span></label>
-                    <input
-                      type="text"
-                      value={hospitalName}
-                      onChange={(e) => setHospitalName(e.target.value)}
-                      placeholder="e.g. KLE Hospital, Bengaluru"
-                      className="w-full px-3 py-2 bg-slate-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-red-500/50 transition-colors"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Hospital Address</label>
-                    <input
-                      type="text"
-                      value={hospitalAddress}
-                      onChange={(e) => setHospitalAddress(e.target.value)}
-                      placeholder="Full address of the hospital"
-                      className="w-full px-3 py-2 bg-slate-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-red-500/50 transition-colors"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Doctor's Name</label>
+                      <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Patient Full Name <span className="text-red-500">*</span></label>
                       <input
                         type="text"
-                        value={doctorName}
-                        onChange={(e) => setDoctorName(e.target.value)}
-                        placeholder="Dr. Full Name"
-                        className="w-full px-3 py-2 bg-slate-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-red-500/50 transition-colors"
+                        value={patientName}
+                        onChange={(e) => setPatientName(e.target.value)}
+                        placeholder="Enter patient full name"
+                        className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-red-500/50 transition-colors"
+                        required
                       />
                     </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Doctor's Contact</label>
-                      <input
-                        type="tel"
-                        value={doctorContact}
-                        onChange={(e) => setDoctorContact(e.target.value)}
-                        placeholder="+91 XXXXX XXXXX"
-                        className="w-full px-3 py-2 bg-slate-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-red-500/50 transition-colors"
-                      />
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Patient Age</label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="120"
+                          value={patientAge}
+                          onChange={(e) => setPatientAge(e.target.value)}
+                          placeholder="e.g. 45"
+                          className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-red-500/50 transition-colors"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Patient Gender</label>
+                        <select
+                          value={patientGender}
+                          onChange={(e) => setPatientGender(e.target.value)}
+                          className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-red-500/50 transition-colors"
+                        >
+                          <option value="male">Male</option>
+                          <option value="female">Female</option>
+                          <option value="other">Other</option>
+                          <option value="unknown">Prefer not to say</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* ── Section: Doctor's Letter Upload ── */}
-              <div className="pb-1">
-                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
-                  <span className="w-3 h-px bg-slate-700 block" />
-                  Doctor's Prescription Letter
-                  <span className="flex-1 h-px bg-slate-700 block" />
-                </p>
-                <label
-                  htmlFor="modal-letter-upload"
-                  className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-xl p-4 cursor-pointer transition-all ${
-                    modalLetterPreview
-                      ? 'border-emerald-500/40 bg-emerald-500/5'
-                      : 'border-white/10 bg-slate-950/60 hover:border-red-500/30 hover:bg-slate-950'
-                  }`}
-                >
-                  {modalLetterPreview ? (
-                    <>
-                      {modalLetterFile?.type?.startsWith('image/') ? (
-                        <img
-                          src={modalLetterPreview}
-                          alt="Prescription preview"
-                          className="max-h-32 w-full object-contain rounded-lg"
-                        />
-                      ) : (
-                        <div className="flex items-center gap-2 text-emerald-400">
-                          <FileText className="w-5 h-5" />
-                          <span className="text-xs font-bold truncate max-w-[200px]">{modalLetterFile?.name}</span>
+                <div className="pb-1">
+                  <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                    <span className="w-3 h-px bg-slate-200 dark:bg-slate-700 block" />
+                    Blood Requirement
+                    <span className="flex-1 h-px bg-slate-200 dark:bg-slate-700 block" />
+                  </p>
+                  <div className="space-y-3">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Blood Component</label>
+                      <select
+                        value={modalBloodComponent}
+                        onChange={(e) => setModalBloodComponent(e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-red-500/50 transition-colors"
+                      >
+                        <option value="whole_blood">Whole Blood</option>
+                        <option value="prbc">Packed RBC (PRBC)</option>
+                        <option value="plasma">Fresh Frozen Plasma</option>
+                        <option value="platelets">Platelets</option>
+                        <option value="cryoprecipitate">Cryoprecipitate</option>
+                        <option value="sdp">Single Donor Platelets (SDP)</option>
+                      </select>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Units Needed</label>
+                        <div className="flex items-center space-x-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-xl px-2">
+                          <button type="button" onClick={() => setUnitsNeeded(Math.max(1, unitsNeeded - 1))} className="p-1.5 text-slate-500 dark:text-slate-450 hover:text-slate-800 dark:hover:text-white"><Minus className="w-3.5 h-3.5" /></button>
+                          <span className="flex-grow text-center text-xs font-bold text-slate-900 dark:text-white">{unitsNeeded}</span>
+                          <button type="button" onClick={() => setUnitsNeeded(unitsNeeded + 1)} className="p-1.5 text-slate-500 dark:text-slate-450 hover:text-slate-800 dark:hover:text-white"><Plus className="w-3.5 h-3.5" /></button>
                         </div>
-                      )}
-                      <span className="text-[10px] text-emerald-400 font-bold">✓ Letter attached — tap to replace</span>
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="w-5 h-5 text-slate-500" />
-                      <span className="text-[10px] text-slate-400 font-semibold text-center">
-                        Click to upload doctor's prescription<br />
-                        <span className="text-slate-600">JPG, PNG or PDF accepted</span>
-                      </span>
-                    </>
-                  )}
-                  <input
-                    id="modal-letter-upload"
-                    type="file"
-                    accept="image/*,.pdf"
-                    onChange={handleModalLetterSelect}
-                    className="hidden"
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Urgency <span className="text-red-500">*</span></label>
+                        <select
+                          value={urgency}
+                          onChange={(e) => setUrgency(e.target.value)}
+                          className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-red-500/50 transition-colors"
+                        >
+                          <option value="critical">🚨 Critical</option>
+                          <option value="urgent">Urgent</option>
+                          <option value="moderate">Moderate</option>
+                          <option value="scheduled">Scheduled</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pb-1">
+                  <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                    <span className="w-3 h-px bg-slate-200 dark:bg-slate-700 block" />
+                    Hospital & Doctor Details
+                    <span className="flex-1 h-px bg-slate-200 dark:bg-slate-700 block" />
+                  </p>
+                  <div className="space-y-3">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Hospital Name <span className="text-red-500">*</span></label>
+                      <input
+                        type="text"
+                        value={hospitalName}
+                        onChange={(e) => setHospitalName(e.target.value)}
+                        placeholder="e.g. KLE Hospital, Bengaluru"
+                        className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-red-500/50 transition-colors"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Hospital Address</label>
+                      <input
+                        type="text"
+                        value={hospitalAddress}
+                        onChange={(e) => setHospitalAddress(e.target.value)}
+                        placeholder="Full address of the hospital"
+                        className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-red-500/50 transition-colors"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Doctor's Name</label>
+                        <input
+                          type="text"
+                          value={doctorName}
+                          onChange={(e) => setDoctorName(e.target.value)}
+                          placeholder="Dr. Full Name"
+                          className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-red-500/50 transition-colors"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Doctor's Contact</label>
+                        <input
+                          type="tel"
+                          value={doctorContact}
+                          onChange={(e) => setDoctorContact(e.target.value)}
+                          placeholder="+91 XXXXX XXXXX"
+                          className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-red-500/50 transition-colors"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pb-1">
+                  <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                    <span className="w-3 h-px bg-slate-200 dark:bg-slate-700 block" />
+                    Doctor's Prescription Letter
+                    <span className="flex-1 h-px bg-slate-200 dark:bg-slate-700 block" />
+                  </p>
+                  <label
+                    htmlFor="modal-letter-upload"
+                    className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-xl p-4 cursor-pointer transition-all ${
+                      modalLetterPreview
+                        ? 'border-emerald-500/40 bg-emerald-500/5'
+                        : 'border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-950/60 hover:border-red-500/30 hover:bg-slate-100 dark:hover:bg-slate-950'
+                    }`}
+                  >
+                    {modalLetterPreview ? (
+                      <>
+                        {modalLetterFile?.type?.startsWith('image/') ? (
+                          <img
+                            src={modalLetterPreview}
+                            alt="Prescription preview"
+                            className="max-h-32 w-full object-contain rounded-lg"
+                          />
+                        ) : (
+                          <div className="flex items-center gap-2 text-emerald-500">
+                            <FileText className="w-5 h-5" />
+                            <span className="text-xs font-bold truncate max-w-[200px]">{modalLetterFile?.name}</span>
+                          </div>
+                        )}
+                        <span className="text-[10px] text-emerald-500 font-bold">✓ Letter attached — tap to replace</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-5 h-5 text-slate-400 dark:text-slate-500" />
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold text-center">
+                          Click to upload doctor's prescription<br />
+                          <span className="text-slate-400 dark:text-slate-600">JPG, PNG or PDF accepted</span>
+                        </span>
+                      </>
+                    )}
+                    <input
+                      id="modal-letter-upload"
+                      type="file"
+                      accept="image/*,.pdf"
+                      onChange={handleModalLetterSelect}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Additional Notes</label>
+                  <textarea
+                    value={messageText}
+                    onChange={(e) => setMessageText(e.target.value)}
+                    placeholder="Any additional details, directives, or special instructions..."
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-red-500/50 transition-colors h-16 resize-none"
                   />
-                </label>
-              </div>
+                </div>
 
-              {/* ── Additional Notes ── */}
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Additional Notes</label>
-                <textarea
-                  value={messageText}
-                  onChange={(e) => setMessageText(e.target.value)}
-                  placeholder="Any additional details, directives, or special instructions..."
-                  className="w-full px-3 py-2 bg-slate-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-red-500/50 transition-colors h-14 resize-none"
-                />
-              </div>
-
-              {/* ── Action Buttons ── */}
-              <div className="flex space-x-2 pt-1">
-                <button
-                  type="button"
-                  onClick={() => setIsRequestModalOpen(false)}
-                  className="flex-1 py-2.5 border border-white/10 hover:bg-white/5 text-slate-400 text-xs font-bold rounded-xl text-center transition-all"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={modalLetterUploading}
-                  className="flex-1 py-2.5 bg-oneblood-crimson hover:bg-red-700 disabled:opacity-60 text-white text-xs font-bold rounded-xl text-center flex items-center justify-center space-x-1.5 cursor-pointer transition-all"
-                >
-                  {modalLetterUploading ? (
-                    <><Loader2 className="w-3.5 h-3.5 animate-spin" /><span>Uploading...</span></>
-                  ) : (
-                    <><Send className="w-3.5 h-3.5" /><span>Send Request</span></>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+                {/* ── Action Buttons ── */}
+                <div className="flex space-x-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsRequestModalOpen(false)}
+                    className="flex-1 py-2.5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 text-slate-500 dark:text-slate-400 text-xs font-bold rounded-xl text-center transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={modalLetterUploading}
+                    className="flex-1 py-2.5 bg-oneblood-crimson hover:bg-red-700 disabled:opacity-60 text-white keep-white text-xs font-bold rounded-xl text-center flex items-center justify-center space-x-1.5 cursor-pointer transition-all shadow-md shadow-oneblood-crimson/10"
+                  >
+                    {modalLetterUploading ? (
+                      <><Loader2 className="w-3.5 h-3.5 animate-spin" /><span>Uploading...</span></>
+                    ) : (
+                      <><Send className="w-3.5 h-3.5" /><span>Send Request</span></>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
     </div>
   );

@@ -173,50 +173,50 @@ const SignupPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-slate-50 dark:bg-slate-950 px-4 py-12 transition-colors duration-300">
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-slate-50 dark:bg-[#07070A] px-4 py-12 transition-colors duration-300">
       {/* Background gradients */}
-      <div className="absolute top-[-10%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-red-600/[0.02] blur-[130px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[45vw] h-[45vw] rounded-full bg-amber-500/[0.01] blur-[130px] pointer-events-none" />
+      <div className="absolute top-[-10%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-red-600/[0.03] blur-[130px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[45vw] h-[45vw] rounded-full bg-amber-500/[0.015] blur-[130px] pointer-events-none" />
 
-      <div className="w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 p-8 rounded-2xl shadow-xl space-y-8">
+      <div className="w-full max-w-2xl bg-white dark:bg-[#0F0F1A]/60 border border-slate-200 dark:border-white/[0.05] p-10 rounded-3xl shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)] backdrop-blur-md space-y-8 hover:border-slate-350 dark:hover:border-white/[0.1] transition-all duration-300">
         
         {!selectedRole ? (
           <>
-            <div className="text-center space-y-2">
-              <div className="inline-flex p-2.5 bg-slate-100 dark:bg-slate-800 border border-slate-205 dark:border-white/10 rounded-xl text-[#C0152A] mb-2 shadow-sm">
-                <HeartPulse className="w-8 h-8 text-[#C0152A] animate-pulse" />
+            <div className="text-center space-y-3">
+              <div className="inline-flex p-3 bg-red-50 dark:bg-white/[0.03] border border-red-100 dark:border-white/[0.06] rounded-2xl text-[#C0152A] dark:text-[#FF4D6A] mb-2 shadow-sm">
+                <HeartPulse className="w-8 h-8 animate-pulse" />
               </div>
-              <h2 className="text-3xl font-extrabold tracking-tight text-slate-855 dark:text-white font-display">
+              <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white font-display">
                 Join OneBlood
               </h2>
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-slate-500 dark:text-slate-400 font-body">
                 Let's start with a simple question to get you to the right place.
               </p>
             </div>
 
             {/* Part 2A: Split Selection Panels */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-bold text-slate-300 text-center uppercase tracking-wider">
+            <div className="space-y-6">
+              <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 text-center uppercase tracking-widest">
                 Are you a donor, or are you looking for one?
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Panel 1: I'm a Donor */}
                 <div
                   onClick={() => handleRoleSelect('donor')}
-                  className="border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 hover:border-[#C0152A]/30 dark:hover:border-[#C0152A]/30 rounded-2xl p-6 flex flex-col justify-between items-center text-center cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg dark:hover:shadow-[0_15px_30px_rgba(0,0,0,0.3)]"
+                  className="border border-slate-200 dark:border-white/[0.05] bg-slate-50 dark:bg-black/30 hover:bg-slate-100 dark:hover:bg-white/[0.02] hover:border-[#C0152A]/30 dark:hover:border-oneblood-crimson/30 rounded-3xl p-8 flex flex-col justify-between items-center text-center cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg dark:hover:shadow-[0_15px_30px_rgba(192,21,42,0.06)] group"
                 >
                   <div className="flex flex-col items-center">
-                    <div className="p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-xl mb-4 text-slate-500">
-                      <HeartPulse className="w-8 h-8 text-[#C0152A]" />
+                    <div className="p-3.5 bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] rounded-2xl mb-5 text-[#C0152A] dark:text-[#FF4D6A] group-hover:scale-110 transition-transform">
+                      <HeartPulse className="w-8 h-8" />
                     </div>
-                    <span className="text-lg font-bold text-slate-855 dark:text-white mb-2">I want to donate</span>
-                    <span className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                    <span className="text-xl font-bold text-slate-900 dark:text-white mb-2 font-display">I want to donate</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-body">
                       Help someone in need. Register as a donor and save lives when it counts.
                     </span>
                   </div>
                   <button
                     type="button"
-                    className="mt-6 px-6 py-2.5 rounded-xl font-bold text-xs bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-white/25 transition-all cursor-pointer"
+                    className="mt-6 px-6 py-2.5 rounded-xl font-bold text-xs bg-slate-200 dark:bg-white/[0.05] text-slate-700 dark:text-slate-350 hover:bg-slate-300 dark:hover:bg-white/[0.1] transition-all cursor-pointer"
                   >
                     I'm a Donor
                   </button>
@@ -225,20 +225,20 @@ const SignupPage = () => {
                 {/* Panel 2: I Need Blood */}
                 <div
                   onClick={() => handleRoleSelect('seeker')}
-                  className="border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 hover:border-[#C0152A]/30 dark:hover:border-[#C0152A]/30 rounded-2xl p-6 flex flex-col justify-between items-center text-center cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg dark:hover:shadow-[0_15px_30px_rgba(0,0,0,0.3)]"
+                  className="border border-slate-200 dark:border-white/[0.05] bg-slate-50 dark:bg-black/30 hover:bg-slate-100 dark:hover:bg-white/[0.02] hover:border-[#C0152A]/30 dark:hover:border-oneblood-crimson/30 rounded-3xl p-8 flex flex-col justify-between items-center text-center cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg dark:hover:shadow-[0_15px_30px_rgba(192,21,42,0.06)] group"
                 >
                   <div className="flex flex-col items-center">
-                    <div className="p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-xl mb-4 text-slate-500">
-                      <Heart className="w-8 h-8 text-amber-500" />
+                    <div className="p-3.5 bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] rounded-2xl mb-5 text-amber-500 group-hover:scale-110 transition-transform">
+                      <Heart className="w-8 h-8" />
                     </div>
-                    <span className="text-lg font-bold text-slate-855 dark:text-white mb-2">I'm looking for blood</span>
-                    <span className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                    <span className="text-xl font-bold text-slate-900 dark:text-white mb-2 font-display">I'm looking for blood</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-body">
                       Someone needs help. Now. Find nearby donors and blood banks instantly.
                     </span>
                   </div>
                   <button
                     type="button"
-                    className="mt-6 px-6 py-2.5 rounded-xl font-bold text-xs bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-white/25 transition-all cursor-pointer"
+                    className="mt-6 px-6 py-2.5 rounded-xl font-bold text-xs bg-slate-200 dark:bg-white/[0.05] text-slate-700 dark:text-slate-350 hover:bg-slate-300 dark:hover:bg-white/[0.1] transition-all cursor-pointer"
                   >
                     I Need Blood
                   </button>
@@ -246,13 +246,13 @@ const SignupPage = () => {
               </div>
 
               {/* Panel 3 & 4: Blood Bank & Hospital managers */}
-              <div className="text-center pt-2">
+              <div className="text-center pt-4">
                 <span className="text-xs text-slate-400 dark:text-slate-500">── or ──</span>
-                <div className="mt-3 flex flex-col md:flex-row justify-center gap-4">
+                <div className="mt-4 flex flex-col md:flex-row justify-center gap-4">
                   <button
                     type="button"
                     onClick={() => handleRoleSelect('blood_bank')}
-                    className="flex items-center justify-center space-x-2 px-6 py-3 border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-blue-500/30 dark:hover:border-blue-500/30 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] cursor-pointer"
+                    className="flex items-center justify-center space-x-2 px-6 py-3.5 border border-slate-200 dark:border-white/[0.05] bg-slate-50 dark:bg-black/30 text-slate-700 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.02] hover:border-blue-500/30 dark:hover:border-blue-500/30 rounded-2xl text-xs font-bold transition-all hover:scale-[1.02] cursor-pointer"
                   >
                     <Landmark className="w-4 h-4 text-blue-500 dark:text-blue-400" />
                     <span>I manage a blood bank</span>
@@ -261,7 +261,7 @@ const SignupPage = () => {
                   <button
                     type="button"
                     onClick={() => handleRoleSelect('hospital')}
-                    className="flex items-center justify-center space-x-2 px-6 py-3 border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-emerald-500/30 dark:hover:border-emerald-500/30 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] cursor-pointer"
+                    className="flex items-center justify-center space-x-2 px-6 py-3.5 border border-slate-200 dark:border-white/[0.05] bg-slate-50 dark:bg-black/30 text-slate-700 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.02] hover:border-emerald-500/30 dark:hover:border-emerald-500/30 rounded-2xl text-xs font-bold transition-all hover:scale-[1.02] cursor-pointer"
                   >
                     <Landmark className="w-4 h-4 text-emerald-600 dark:text-emerald-450" />
                     <span>I manage a hospital</span>
@@ -273,17 +273,17 @@ const SignupPage = () => {
         ) : (
           /* Part 2B: Dedicated Form View */
           <form onSubmit={handleSubmit} className="space-y-6 animate-fadeIn">
-            <div className="flex items-center space-x-4 mb-4 border-b border-white/5 pb-4">
+            <div className="flex items-center space-x-4 mb-4 border-b border-slate-200 dark:border-white/[0.05] pb-4">
               <button
                 type="button"
                 onClick={() => setSelectedRole(null)}
-                className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-bold text-slate-300 hover:text-white transition-all cursor-pointer"
+                className="px-4 py-2 bg-slate-50 dark:bg-white/[0.03] hover:bg-slate-100 dark:hover:bg-white/[0.08] border border-slate-200 dark:border-white/[0.06] rounded-xl text-xs font-bold text-slate-600 dark:text-slate-350 transition-all cursor-pointer"
               >
                 ← Back
               </button>
-              <div>
-                <h4 className="text-lg font-bold text-white">
-                  Create {selectedRole === 'blood_bank' ? 'Blood Bank' : selectedRole === 'donor' ? 'Donor' : 'Seeker'} Account
+              <div className="text-left">
+                <h4 className="text-lg font-bold text-slate-900 dark:text-white font-display">
+                  Create {selectedRole === 'blood_bank' ? 'Blood Bank' : selectedRole === 'donor' ? 'Donor' : selectedRole === 'hospital' ? 'Hospital' : 'Seeker'} Account
                 </h4>
                 <p className="text-xs text-slate-400">
                   Please enter your credentials to complete registration
@@ -619,12 +619,12 @@ const SignupPage = () => {
                       value={formData.password}
                       onChange={handleChange}
                       placeholder="Min 6 characters"
-                      className="w-full pl-10 pr-12 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-red-500 transition-all"
+                      className="w-full pl-10 pr-12 py-3.5 bg-slate-50 dark:bg-black/30 border border-slate-200 dark:border-white/[0.06] rounded-2xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-[#C0152A] transition-all"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-500 hover:text-white cursor-pointer"
+                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer"
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -632,18 +632,18 @@ const SignupPage = () => {
 
                   {/* Password strength indicator */}
                   {formData.password && (
-                    <div className="space-y-1.5 pt-1">
-                      <div className="flex justify-between items-center text-[10px]">
+                    <div className="space-y-1.5 pt-1 text-left">
+                      <div className="flex justify-between items-center text-[10px] px-1">
                         <span className="text-slate-400 font-medium">Strength:</span>
                         <span
                           className={`font-bold ${
-                            strength.score === 1 ? 'text-red-400' : strength.score === 2 ? 'text-amber-400' : 'text-emerald-400'
+                            strength.score === 1 ? 'text-red-500' : strength.score === 2 ? 'text-amber-500' : 'text-emerald-500'
                           }`}
                         >
                           {strength.label}
                         </span>
                       </div>
-                      <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                      <div className="h-1.5 w-full bg-slate-200 dark:bg-white/[0.05] rounded-full overflow-hidden">
                         <div className={`h-full transition-all duration-350 ${strength.color}`} />
                       </div>
                     </div>
@@ -661,12 +661,12 @@ const SignupPage = () => {
 
             <button
               type="submit"
-              disabled={isLoading}
-              className="w-full py-4 bg-[#C0152A] hover:bg-[#a01021] disabled:bg-red-900 rounded-xl font-bold text-sm text-white transition-all flex items-center justify-center space-x-2 cursor-pointer shadow-lg shadow-red-700/10 hover:shadow-red-700/20"
+              disabled={isLoading || isSubmitting}
+              className="w-full py-3.5 bg-gradient-to-r from-[#C0152A] to-[#FF4D6A] disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl font-bold text-xs text-white shadow-lg shadow-red-750/20 hover:shadow-red-755/35 transition-all flex items-center justify-center space-x-2 cursor-pointer keep-white"
             >
-              {isLoading ? (
+              {isLoading || isSubmitting ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
                   <span>Registering...</span>
                 </>
               ) : (
@@ -676,9 +676,9 @@ const SignupPage = () => {
           </form>
         )}
 
-        <div className="text-center pt-2 text-sm text-slate-400">
+        <div className="text-center pt-2 text-xs text-slate-500 dark:text-slate-400">
           <span>Already have an account? </span>
-          <Link to="/auth/login" className="text-red-500 font-bold hover:underline">
+          <Link to="/auth/login" className="text-[#C0152A] dark:text-[#FF4D6A] font-bold hover:underline">
             Login here
           </Link>
         </div>

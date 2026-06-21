@@ -131,33 +131,37 @@ const OTPVerifyPage = ({ email: propEmail, onVerified }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-red-100 p-4">
-      <div className="w-full max-w-md bg-white/80 backdrop-blur-md rounded-2xl shadow-xl border border-red-100 p-8 text-center">
-        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6 text-red-600">
+    <div className="min-h-[calc(100vh-80px)] flex items-center justify-center relative overflow-hidden bg-slate-50 dark:bg-[#07070A] px-4 py-12 transition-colors duration-300">
+      {/* Decorative Blur Backgrounds */}
+      <div className="absolute top-[-10%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-red-600/[0.03] blur-[130px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[45vw] h-[45vw] rounded-full bg-amber-500/[0.015] blur-[130px] pointer-events-none" />
+
+      <div className="w-full max-w-md bg-white dark:bg-[#0F0F1A]/60 border border-slate-200 dark:border-white/[0.05] p-10 rounded-3xl shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)] backdrop-blur-md text-center space-y-6">
+        <div className="w-16 h-16 bg-red-50 dark:bg-white/[0.03] border border-red-100 dark:border-white/[0.06] rounded-2xl flex items-center justify-center mx-auto mb-4 text-[#C0152A] dark:text-[#FF4D6A]">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 19v-8.93a2 2 0 01.89-1.664l8-5.333a2 2 0 012.22 0l8 5.333A2 2 0 0121 10.07V19M3 19a2 2 0 002 2h14a2 2 0 002-2M3 19l6.75-4.5M21 19l-6.75-4.5M3 10l6.75 4.5M21 10l-6.75 4.5m0 0l-2.25-1.5a2 2 0 00-2.22 0l-2.25 1.5" />
           </svg>
         </div>
 
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">Check your inbox</h2>
-        <p className="text-gray-600 mb-8">
-          We sent a 6-digit verification code to <span className="font-semibold text-gray-700">{formattedEmail()}</span>
+        <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white font-display">Check your inbox</h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400 font-body">
+          We sent a 6-digit verification code to <span className="font-semibold text-slate-700 dark:text-slate-300">{formattedEmail()}</span>
         </p>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-xl text-sm border border-red-100">
+          <div className="p-4 bg-red-50 dark:bg-red-500/[0.05] text-red-750 dark:text-red-400 rounded-2xl text-xs border border-red-100 dark:border-red-500/20 text-left">
             {error}
           </div>
         )}
 
         {message && (
-          <div className="mb-6 p-4 bg-emerald-50 text-emerald-700 rounded-xl text-sm border border-emerald-100">
+          <div className="p-4 bg-emerald-50 dark:bg-emerald-500/[0.05] text-emerald-750 dark:text-emerald-400 rounded-2xl text-xs border border-emerald-100 dark:border-emerald-500/20 text-left">
             {message}
           </div>
         )}
 
         <form onSubmit={handleVerify}>
-          <div className="flex justify-between gap-2 mb-8" onPaste={handlePaste}>
+          <div className="flex justify-between gap-2 mb-6" onPaste={handlePaste}>
             {otp.map((digit, idx) => (
               <input
                 key={idx}
@@ -167,7 +171,7 @@ const OTPVerifyPage = ({ email: propEmail, onVerified }) => {
                 onChange={(e) => handleChange(idx, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(idx, e)}
                 ref={(el) => (inputRefs.current[idx] = el)}
-                className="w-12 h-14 text-center text-xl font-bold border-2 rounded-xl focus:border-red-600 focus:outline-none transition-colors border-gray-200 text-gray-800"
+                className="w-12 h-14 text-center text-xl font-bold border-2 rounded-2xl bg-slate-50 dark:bg-black/30 border-slate-200 dark:border-white/[0.06] focus:border-[#C0152A] dark:focus:border-[#FF4D6A] focus:outline-none transition-colors text-slate-800 dark:text-white"
               />
             ))}
           </div>
@@ -175,24 +179,24 @@ const OTPVerifyPage = ({ email: propEmail, onVerified }) => {
           <button
             type="submit"
             disabled={isSubmitting || !email}
-            className="w-full py-3.5 px-4 bg-[#C0152A] hover:bg-[#a01021] text-white font-semibold rounded-xl transition-all shadow-md shadow-red-200 disabled:opacity-50 disabled:cursor-not-allowed mb-6"
+            className="w-full py-3.5 px-4 bg-gradient-to-r from-[#C0152A] to-[#FF4D6A] text-white font-bold rounded-2xl transition-all shadow-lg shadow-red-750/20 hover:shadow-red-755/35 disabled:opacity-50 disabled:cursor-not-allowed mb-4 keep-white"
           >
             {isSubmitting ? 'Verifying...' : 'Verify & Continue'}
           </button>
         </form>
 
-        <div className="text-sm text-gray-500">
+        <div className="text-xs text-slate-500 dark:text-slate-400">
           Didn't get it?{' '}
           {canResend ? (
             <button
               onClick={handleResend}
-              className="text-[#C0152A] hover:underline font-semibold focus:outline-none"
+              className="text-[#C0152A] dark:text-[#FF4D6A] hover:underline font-bold focus:outline-none"
             >
               Resend code &rarr;
             </button>
           ) : (
             <span>
-              Resend in <span className="font-semibold text-gray-700">00:{timer.toString().padStart(2, '0')}</span>
+              Resend in <span className="font-semibold text-slate-755 dark:text-slate-300">00:{timer.toString().padStart(2, '0')}</span>
             </span>
           )}
         </div>

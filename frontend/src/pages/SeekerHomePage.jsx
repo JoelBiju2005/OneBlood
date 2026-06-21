@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import api from '../utils/api';
 import useAuthStore from '../store/authStore';
 import useNotificationStore from '../store/notificationStore';
@@ -254,39 +255,46 @@ const SeekerHomePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-8 px-4 sm:px-6 lg:px-8 space-y-8 transition-colors duration-300">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#07070A] py-8 px-4 sm:px-6 lg:px-8 space-y-8 transition-colors duration-300 relative overflow-hidden">
       {/* Decorative gradients */}
-      <div className="absolute top-0 left-0 w-[30vw] h-[30vw] rounded-full bg-red-600/5 blur-[120px] pointer-events-none" />
+      <div className="absolute top-0 left-0 w-[40vw] h-[40vw] rounded-full bg-gradient-to-tr from-[#C0152A]/5 to-transparent blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-[30vw] h-[30vw] rounded-full bg-gradient-to-bl from-[#C0152A]/3 to-transparent blur-[120px] pointer-events-none" />
 
-      <div className="max-w-6xl mx-auto space-y-8 text-left">
+      <div className="max-w-6xl mx-auto space-y-8 text-left relative z-10">
         {/* Section 1 — Immediate action hero */}
-        <div className="relative overflow-hidden bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-3xl p-8 backdrop-blur-md text-center space-y-6 shadow-sm">
+        <motion.div 
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="glass-card p-8 text-center space-y-6 relative overflow-hidden group"
+        >
+          <div className="absolute -top-24 -right-24 w-48 h-48 rounded-full bg-gradient-to-tr from-[#C0152A]/5 to-[#FF4D6A]/5 blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-700" />
           <div className="flex justify-center items-center gap-2 flex-wrap">
-            <span className="text-[10px] bg-red-500/10 border border-red-500/20 text-[#C0152A] font-black font-mono px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+            <span className="text-[10px] bg-[#C0152A]/10 border border-[#C0152A]/20 text-[#C0152A] dark:text-white font-mono font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm">
               ID: {user?.onebloodId}
               <button 
                 onClick={() => {
                   navigator.clipboard.writeText(user?.onebloodId);
                   toast.success('OneBlood ID copied!');
                 }}
-                className="hover:text-red-600 dark:hover:text-white transition-colors cursor-pointer"
+                className="hover:text-[#C0152A] dark:hover:text-red-400 transition-colors cursor-pointer animate-pulse-slow"
                 title="Copy ID"
               >
                 <Clipboard className="w-3.5 h-3.5" />
               </button>
             </span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-800 dark:text-white">
+          <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white font-display">
             Need blood urgently?
           </h1>
-          <p className="text-sm text-slate-600 dark:text-slate-400 max-w-xl mx-auto">
+          <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xl mx-auto font-body leading-relaxed">
             Create an emergency request or search our network of nearby individual donors and registered blood banks immediately.
           </p>
 
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
             <button
               onClick={handleFindBlood}
-              className="w-full sm:w-auto px-8 py-4 bg-[#C0152A] hover:bg-red-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-red-700/20 hover:shadow-red-700/35 flex items-center justify-center space-x-2"
+              className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-[#C0152A] to-[#E0243C] hover:brightness-110 text-white font-bold rounded-xl transition-all shadow-lg shadow-[#C0152A]/25 hover:shadow-[#C0152A]/35 flex items-center justify-center space-x-2 active:scale-[0.98] transform cursor-pointer keep-white"
             >
               <Search className="w-5 h-5" />
               <span>Find Blood Now</span>
@@ -294,38 +302,38 @@ const SeekerHomePage = () => {
 
             <Link
               to="/request/new"
-              className="w-full sm:w-auto px-8 py-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl border border-slate-200 dark:border-white/10 transition-all flex items-center justify-center space-x-2"
+              className="w-full sm:w-auto px-8 py-4 bg-slate-100 dark:bg-white/[0.04] hover:bg-slate-200 dark:hover:bg-white/[0.08] text-slate-700 dark:text-slate-200 font-bold rounded-xl border border-slate-200 dark:border-white/[0.08] transition-all flex items-center justify-center space-x-2 active:scale-[0.98] transform"
             >
-              <FileText className="w-5 h-5 text-red-500" />
+              <FileText className="w-5 h-5 text-[#C0152A] dark:text-[#FF4D6A]" />
               <span>Upload Doctor's Letter</span>
             </Link>
           </div>
 
-          <div className="flex items-center justify-center space-x-2 text-xs text-slate-500 dark:text-slate-400 pt-2">
-            <MapPin className="w-4 h-4 text-red-500" />
+          <div className="flex items-center justify-center space-x-2 text-xs text-slate-500 dark:text-slate-400 pt-2 font-body">
+            <MapPin className="w-4 h-4 text-[#C0152A] dark:text-[#FF4D6A] animate-pulse" />
             <span>
               Using location:{' '}
-              <span className="text-slate-800 dark:text-white font-bold">
+              <span className="text-slate-805 dark:text-white font-bold">
                 {location.city} ({location.lat.toFixed(3)}, {location.lng.toFixed(3)})
               </span>
             </span>
             <button
               onClick={getGeolocation}
               disabled={gpsLoading}
-              className="underline text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-white pl-1"
+              className="underline text-[#C0152A] hover:text-red-700 dark:text-red-400 dark:hover:text-white pl-1 font-semibold cursor-pointer"
             >
               {gpsLoading ? 'Locating...' : '(Sync GPS)'}
             </button>
           </div>
-        </div>
+        </motion.div>
 
         {/* Section 2 — My active requests */}
         {activeRequests.length > 0 && (
           <div className="space-y-4">
-            <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center space-x-2">
-              <span className="relative flex h-2 w-2 mr-2">
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white font-display flex items-center space-x-2">
+              <span className="relative flex h-2.5 w-2.5 mr-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
               </span>
               <span>My Active Emergency Requests</span>
             </h3>
@@ -334,37 +342,44 @@ const SeekerHomePage = () => {
               {activeRequests.map((req) => {
                 const acceptedRes = req.responses?.find(r => r.status === 'accepted');
                 return (
-                  <div
+                  <motion.div
                     key={req._id}
-                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-6 flex flex-col justify-between space-y-4 shadow-sm"
+                    layout
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="glass-card glass-card-hover p-6 flex flex-col justify-between space-y-5 relative overflow-hidden"
                   >
-                    <div>
-                      <div className="flex justify-between items-start">
+                    <div className="absolute -top-12 -right-12 w-24 h-24 bg-gradient-to-br from-[#C0152A]/5 to-transparent blur-xl pointer-events-none" />
+                    <div className="relative z-10">
+                      <div className="flex justify-between items-start gap-4">
                         <div>
-                          <h4 className="font-bold text-base text-slate-800 dark:text-white">
+                          <h4 className="font-bold text-lg text-slate-900 dark:text-white font-display">
                             Patient: {req.patientName}
                           </h4>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-body">
                             {req.bloodGroup} &bull; {req.bloodComponent.replace('_', ' ').toUpperCase()} &bull; {req.unitsRequired} Units
                           </p>
                         </div>
-                        {getStatusBadge(req.status, req.responses)}
+                        <div className="shrink-0">
+                          {getStatusBadge(req.status, req.responses)}
+                        </div>
                       </div>
 
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-3 bg-slate-50 dark:bg-white/5 px-3 py-2 rounded-lg border border-slate-100 dark:border-white/5">
-                        <MapPin className="w-3.5 h-3.5 inline mr-1 text-red-500" /> {req.hospitalName} ({req.hospitalAddress})
+                      <p className="text-xs text-[#C0152A] dark:text-[#FF4D6A] mt-4 bg-slate-50 dark:bg-black/30 px-3 py-2.5 rounded-xl border border-slate-200 dark:border-white/[0.04] font-body flex items-center gap-1.5">
+                        <MapPin className="w-4 h-4 text-[#C0152A] dark:text-[#FF4D6A] shrink-0" />
+                        <span className="truncate text-slate-700 dark:text-slate-300 font-semibold">{req.hospitalName} ({req.hospitalAddress})</span>
                       </p>
 
-                      <div className="flex gap-2 mt-3">
+                      <div className="flex gap-2 mt-4">
                         <button
                           onClick={() => handleStartEdit(req)}
-                          className="flex-1 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-bold transition-all border border-slate-200 dark:border-white/5 text-center cursor-pointer"
+                          className="flex-1 py-2.5 bg-slate-100 dark:bg-white/[0.04] hover:bg-slate-200 dark:hover:bg-white/[0.08] text-slate-700 dark:text-slate-205 rounded-xl text-xs font-bold transition-all border border-slate-200 dark:border-white/[0.06] text-center cursor-pointer font-body"
                         >
                           Edit Details
                         </button>
                         <button
                           onClick={() => handleDeleteRequest(req._id)}
-                          className="flex-1 py-1.5 bg-red-50 dark:bg-red-950/40 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-500/10 rounded-lg text-xs font-bold transition-all text-center cursor-pointer"
+                          className="flex-1 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-[#C0152A] dark:text-red-400 border border-red-500/20 dark:border-red-500/10 rounded-xl text-xs font-bold transition-all text-center cursor-pointer font-body"
                         >
                           Delete Request
                         </button>
@@ -372,8 +387,8 @@ const SeekerHomePage = () => {
                     </div>
 
                     {req.responses && req.responses.length > 0 && (
-                      <div className="pt-4 border-t border-slate-100 dark:border-white/5 space-y-3">
-                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+                      <div className="pt-4 border-t border-slate-200 dark:border-white/[0.06] space-y-3 relative z-10">
+                        <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                           Donor Responses ({req.responses.length})
                         </span>
                         <div className="space-y-3">
@@ -400,18 +415,18 @@ const SeekerHomePage = () => {
                             }
 
                             return (
-                              <div key={idx} className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 rounded-xl p-3 space-y-2 text-left">
+                              <div key={idx} className="bg-slate-50 dark:bg-black/35 border border-slate-200 dark:border-white/[0.04] rounded-2xl p-4 space-y-3 text-left">
                                 <div className="flex justify-between items-center">
-                                  <span className="text-xs font-bold text-slate-800 dark:text-white">
+                                  <span className="text-xs font-bold text-slate-800 dark:text-white font-body">
                                     {resp.responderName}
                                   </span>
-                                  <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${badgeStyle}`}>
+                                  <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider ${badgeStyle}`}>
                                     {statusText}
                                   </span>
                                 </div>
                                 
                                 {resp.message && (
-                                  <p className="text-[10px] text-slate-505 dark:text-slate-400 italic">
+                                  <p className="text-[11px] text-slate-500 dark:text-slate-400 italic font-body">
                                     "{resp.message}"
                                   </p>
                                 )}
@@ -421,16 +436,16 @@ const SeekerHomePage = () => {
                                     {resp.contactPhone !== 'Hidden' && (
                                       <a
                                         href={`tel:${resp.contactPhone}`}
-                                        className="flex-1 py-1.5 px-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold text-center transition-all flex items-center justify-center space-x-1"
+                                        className="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-bold text-center transition-all flex items-center justify-center space-x-1 keep-white"
                                       >
-                                        <Phone className="w-3 h-3" />
+                                        <Phone className="w-3.5 h-3.5" />
                                         <span>Call ({resp.contactPhone})</span>
                                       </a>
                                     )}
                                     {resp.contactEmail !== 'Hidden' && (
                                       <a
                                         href={`mailto:${resp.contactEmail}`}
-                                        className="flex-1 py-1.5 px-2 border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300 rounded-lg text-[10px] font-bold text-center transition-all flex items-center justify-center space-x-1"
+                                        className="flex-1 py-2 px-3 bg-slate-105 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] hover:bg-slate-200 dark:hover:bg-white/[0.08] text-slate-700 dark:text-slate-350 rounded-xl text-[10px] font-bold text-center transition-all flex items-center justify-center space-x-1"
                                       >
                                         <span>Email</span>
                                       </a>
@@ -442,10 +457,10 @@ const SeekerHomePage = () => {
                                 {!isDeclined && req.status !== 'fulfilled' && (
                                   <button
                                     onClick={() => openFacilitySelector(req._id, resp.responderId, resp.responderName)}
-                                    className="w-full mt-2 py-2 bg-[#C0152A] hover:bg-red-700 text-white rounded-lg text-[10px] font-bold transition-all flex items-center justify-center gap-1.5"
+                                    className="w-full mt-2 py-2.5 bg-gradient-to-r from-[#C0152A] to-red-700 hover:brightness-110 text-white rounded-xl text-[10px] font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm keep-white cursor-pointer"
                                   >
-                                    <ShieldCheck className="w-3.5 h-3.5" />
-                                    Approve & Select Facility
+                                    <ShieldCheck className="w-4 h-4" />
+                                    <span>Approve & Select Facility</span>
                                   </button>
                                 )}
                               </div>
@@ -454,7 +469,7 @@ const SeekerHomePage = () => {
                         </div>
                       </div>
                     )}
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>
@@ -467,12 +482,12 @@ const SeekerHomePage = () => {
         {/* Section 3 — My Notice Board Posts */}
         {myNotices.length > 0 && (
           <div className="space-y-4 text-left">
-            <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center space-x-2">
-              <span className="relative flex h-2 w-2 mr-2">
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white font-display flex items-center space-x-2">
+              <span className="relative flex h-2.5 w-2.5 mr-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
               </span>
-              <span>My Active Requests Board Posts</span>
+              <span>My Active Notice Board Posts</span>
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -494,15 +509,15 @@ const SeekerHomePage = () => {
 
         {/* Section 4 — Nearby blood banks */}
         <div className="space-y-4">
-          <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center space-x-2">
-            <Landmark className="w-5 h-5 text-blue-505 dark:text-blue-400" />
+          <h3 className="text-xl font-bold text-slate-900 dark:text-white font-display flex items-center space-x-2">
+            <Landmark className="w-5 h-5 text-blue-500 dark:text-blue-450" />
             <span>Nearby Registered Blood Banks</span>
           </h3>
 
           {banksLoading ? (
-            <div className="p-8 text-center text-xs text-slate-500">Loading nearby stock inventory...</div>
+            <div className="p-8 text-center text-xs text-slate-500 font-mono">Loading nearby stock inventory...</div>
           ) : nearbyBanks.length === 0 ? (
-            <div className="p-8 text-center bg-white dark:bg-slate-900/20 border border-slate-200 dark:border-white/5 rounded-2xl text-xs text-slate-500 shadow-sm">
+            <div className="p-12 text-center bg-white dark:bg-[#0F0F1A]/20 border border-slate-200 dark:border-white/[0.05] rounded-3xl text-xs text-slate-500 shadow-sm backdrop-blur-md font-body leading-relaxed max-w-4xl">
               No registered blood banks found within 50km coordinates radius.
             </div>
           ) : (
@@ -510,31 +525,31 @@ const SeekerHomePage = () => {
               {nearbyBanks.map((bank) => (
                 <div
                   key={bank._id}
-                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-5 flex flex-col justify-between space-y-4 hover:border-slate-300 dark:hover:border-white/10 transition-all shadow-sm"
+                  className="glass-card glass-card-hover p-5 flex flex-col justify-between space-y-4"
                 >
                   <div>
-                    <span className="px-2 py-0.5 bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 rounded text-[9px] font-bold uppercase tracking-wider">
+                    <span className="px-2.5 py-1 bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 rounded-lg text-[9px] font-bold uppercase tracking-wider font-mono">
                       VERIFIED BANK
                     </span>
-                    <h4 className="font-bold text-sm text-slate-800 dark:text-white mt-2 truncate">
+                    <h4 className="font-bold text-base text-slate-900 dark:text-white mt-3 truncate font-display">
                       {bank.name}
                     </h4>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 font-body leading-relaxed">
                       {bank.address}, {bank.city}
                     </p>
                   </div>
 
-                  <div className="pt-3 border-t border-slate-100 dark:border-white/5 flex gap-2">
+                  <div className="pt-3 border-t border-slate-100 dark:border-white/[0.06] flex gap-2">
                     <a
                       href={`tel:${bank.phone || '108'}`}
-                      className="flex-1 py-2 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-bold text-center hover:bg-slate-100 dark:hover:bg-white/5 transition-all flex items-center justify-center space-x-1"
+                      className="flex-1 py-2 bg-slate-100 hover:bg-slate-205 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] border border-slate-200 dark:border-white/[0.06] text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold text-center transition-all flex items-center justify-center space-x-1 font-body"
                     >
                       <Phone className="w-3.5 h-3.5" />
                       <span>Call</span>
                     </a>
                     <Link
                       to={`/blood-bank/${bank._id}`}
-                      className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold text-center transition-all flex items-center justify-center space-x-1"
+                      className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold text-center transition-all flex items-center justify-center space-x-1 font-body keep-white"
                     >
                       <Navigation className="w-3.5 h-3.5" />
                       <span>Navigate</span>
@@ -548,12 +563,12 @@ const SeekerHomePage = () => {
 
         {/* Section 5 — My request history (accordion) */}
         {pastRequests.length > 0 && (
-          <div className="border-t border-slate-200 dark:border-white/5 pt-8">
+          <div className="border-t border-slate-200 dark:border-white/[0.06] pt-8">
             <button
               onClick={() => setShowHistory(!showHistory)}
-              className="w-full flex items-center justify-between py-4 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors"
+              className="w-full flex items-center justify-between py-4 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer"
             >
-              <span className="font-bold text-sm">My past requests ({pastRequests.length})</span>
+              <span className="font-bold text-sm font-body">My past requests ({pastRequests.length})</span>
               {showHistory ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </button>
 
@@ -562,16 +577,16 @@ const SeekerHomePage = () => {
                 {pastRequests.map((req) => (
                   <div
                     key={req._id}
-                    className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-2xl p-5 opacity-70 shadow-sm"
+                    className="glass-card p-5 opacity-75 hover:opacity-100 transition-opacity"
                   >
                     <div className="flex justify-between items-start">
                       <div>
-                        <h4 className="font-bold text-sm text-slate-700 dark:text-slate-300">Patient: {req.patientName}</h4>
-                        <p className="text-[11px] text-slate-500 mt-1">
+                        <h4 className="font-bold text-sm text-slate-700 dark:text-slate-300 font-display">Patient: {req.patientName}</h4>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-body">
                           {req.bloodGroup} &bull; {req.unitsRequired} Units &bull; {new Date(req.createdAt).toLocaleDateString()}
                         </p>
                       </div>
-                      <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400 capitalize">
+                      <span className="px-2.5 py-1 rounded-lg text-[9px] font-bold bg-slate-100 dark:bg-white/[0.04] border border-slate-205 dark:border-white/[0.06] text-slate-600 dark:text-slate-400 capitalize font-mono">
                         {req.status}
                       </span>
                     </div>
@@ -587,100 +602,155 @@ const SeekerHomePage = () => {
       </div>
 
       {/* Facility Selection Modal */}
-      {facilityModal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={closeFacilityModal}>
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
-          <div
-            className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl max-w-xl w-full max-h-[85vh] overflow-hidden flex flex-col shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="p-6 border-b border-slate-100 dark:border-white/5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-bold text-slate-800 dark:text-white">Coordinate Hospital & Blood Bank</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Donor: <span className="text-slate-800 dark:text-white font-semibold">{facilityModal.donorName}</span>
-                  </p>
+      <AnimatePresence>
+        {facilityModal.open && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm" 
+              onClick={closeFacilityModal} 
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ type: "spring", duration: 0.5 }}
+              className="relative glass-card max-w-xl w-full max-h-[85vh] overflow-hidden flex flex-col shadow-2xl z-10"
+            >
+              {/* Modal Header */}
+              <div className="p-6 border-b border-slate-200 dark:border-white/[0.06] relative z-10">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-905 dark:text-white font-display">Coordinate Hospital & Blood Bank</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-body">
+                      Donor: <span className="text-[#C0152A] dark:text-[#FF4D6A] font-semibold">{facilityModal.donorName}</span>
+                    </p>
+                  </div>
+                  <button onClick={closeFacilityModal} className="p-2 hover:bg-slate-100 dark:hover:bg-white/[0.04] rounded-xl transition-colors cursor-pointer">
+                    <X className="w-5 h-5 text-slate-500 dark:text-slate-400" />
+                  </button>
                 </div>
-                <button onClick={closeFacilityModal} className="p-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl transition-colors">
-                  <X className="w-5 h-5 text-slate-500 dark:text-slate-400" />
-                </button>
-              </div>
 
-              {/* Detour Switch */}
-              <div className="mt-4 flex items-center justify-between bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-white/5 rounded-2xl p-4">
-                <div className="text-left">
-                  <span className="text-xs font-bold text-slate-800 dark:text-white block">Add Transit Blood Bank step?</span>
-                  <span className="text-[10px] text-slate-500 block">Collect or transfuse blood at blood bank first before going to hospital</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setUseDetour(!useDetour)}
-                  className={`w-12 h-6 rounded-full p-1 transition-colors duration-200 focus:outline-none ${
-                    useDetour ? 'bg-[#C0152A]' : 'bg-slate-300 dark:bg-slate-700'
-                  }`}
-                >
-                  <div
-                    className={`w-4 h-4 rounded-full bg-white transition-transform duration-200 ${
-                      useDetour ? 'transform translate-x-6' : ''
+                {/* Detour Switch */}
+                <div className="mt-4 flex items-center justify-between bg-slate-50 dark:bg-black/30 border border-slate-200 dark:border-white/[0.04] rounded-2xl p-4">
+                  <div className="text-left">
+                    <span className="text-xs font-bold text-slate-900 dark:text-white block font-body">Add Transit Blood Bank step?</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-body">Collect or transfuse blood at blood bank first before going to hospital</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setUseDetour(!useDetour)}
+                    className={`w-12 h-6 rounded-full p-1 transition-colors duration-200 focus:outline-none cursor-pointer ${
+                      useDetour ? 'bg-[#C0152A]' : 'bg-slate-300 dark:bg-slate-700'
                     }`}
+                  >
+                    <div
+                      className={`w-4 h-4 rounded-full bg-white transition-transform duration-200 ${
+                        useDetour ? 'transform translate-x-6' : ''
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Search */}
+                <div className="mt-4">
+                  <input
+                    type="text"
+                    placeholder="Search facilities by name or city..."
+                    value={facilityFilter}
+                    onChange={(e) => setFacilityFilter(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/[0.06] rounded-xl text-sm text-slate-805 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-[#C0152A]/50 transition-colors"
                   />
-                </button>
+                </div>
               </div>
 
-              {/* Search */}
-              <div className="mt-4">
-                <input
-                  type="text"
-                  placeholder="Search facilities by name or city..."
-                  value={facilityFilter}
-                  onChange={(e) => setFacilityFilter(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl text-sm text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-red-500/50 transition-colors"
-                />
-              </div>
-            </div>
+              {/* Facility Lists Container */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                
+                {/* Optional Transit Blood Bank Section */}
+                {useDetour && (
+                  <div className="space-y-3">
+                    <h4 className="text-xs font-black uppercase text-purple-605 dark:text-purple-400 tracking-wider flex items-center gap-1 font-mono">
+                      <Building2 className="w-4 h-4" /> 1. Select Transit Blood Bank (Optional)
+                    </h4>
+                    <div className="space-y-2 text-left">
+                      {facilitiesLoading ? (
+                        <div className="py-4 text-center text-xs text-slate-555 font-mono animate-pulse">Loading blood banks...</div>
+                      ) : facilities.filter(f => f.type === 'BloodBank').length === 0 ? (
+                        <div className="py-4 text-center text-xs text-slate-500 font-body">No blood banks found.</div>
+                      ) : (
+                        facilities
+                          .filter(f => f.type === 'BloodBank')
+                          .filter(f => {
+                            const q = facilityFilter.toLowerCase();
+                            return !q || f.name?.toLowerCase().includes(q) || f.city?.toLowerCase().includes(q);
+                          })
+                          .map((fac) => {
+                            const isSelected = selectedBloodBank?.id === fac.id;
+                            return (
+                              <button
+                                key={fac.id}
+                                type="button"
+                                onClick={() => setSelectedBloodBank(fac)}
+                                className={`w-full text-left p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                                  isSelected
+                                    ? 'bg-purple-500/10 border-purple-500/30 ring-1 ring-purple-500/20'
+                                    : 'bg-slate-50 dark:bg-white/[0.02] border-slate-200 dark:border-white/[0.04] hover:border-slate-350 dark:hover:border-white/[0.08]'
+                                }`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <span className="text-xs font-bold text-slate-900 dark:text-white block font-body">{fac.name}</span>
+                                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-body">{fac.address}, {fac.city}</span>
+                                  </div>
+                                  {isSelected && <CheckCircle className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />}
+                                </div>
+                              </button>
+                            );
+                          })
+                      )}
+                    </div>
+                  </div>
+                )}
 
-            {/* Facility Lists Container */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              
-              {/* Optional Transit Blood Bank Section */}
-              {useDetour && (
+                {/* Mandatory Hospital Section */}
                 <div className="space-y-3">
-                  <h4 className="text-xs font-black uppercase text-purple-600 dark:text-purple-400 tracking-wider flex items-center gap-1">
-                    <Building2 className="w-4 h-4" /> 1. Select Transit Blood Bank (Optional)
+                  <h4 className="text-xs font-black uppercase text-blue-600 dark:text-blue-400 tracking-wider flex items-center gap-1 font-mono">
+                    <Hospital className="w-4 h-4" /> {useDetour ? '2. Select Mandatory Destination Hospital' : 'Select Mandatory Destination Hospital'}
                   </h4>
                   <div className="space-y-2 text-left">
                     {facilitiesLoading ? (
-                      <div className="py-4 text-center text-xs text-slate-500">Loading blood banks...</div>
-                    ) : facilities.filter(f => f.type === 'BloodBank').length === 0 ? (
-                      <div className="py-4 text-center text-xs text-slate-500">No blood banks found.</div>
+                      <div className="py-8 text-center text-xs text-slate-500 font-mono animate-pulse">Loading hospitals...</div>
+                    ) : facilities.filter(f => f.type === 'Hospital').length === 0 ? (
+                      <div className="py-8 text-center text-xs text-slate-500 font-body">No approved hospitals found.</div>
                     ) : (
                       facilities
-                        .filter(f => f.type === 'BloodBank')
+                        .filter(f => f.type === 'Hospital')
                         .filter(f => {
                           const q = facilityFilter.toLowerCase();
                           return !q || f.name?.toLowerCase().includes(q) || f.city?.toLowerCase().includes(q);
                         })
                         .map((fac) => {
-                          const isSelected = selectedBloodBank?.id === fac.id;
+                          const isSelected = selectedHospital?.id === fac.id;
                           return (
                             <button
                               key={fac.id}
                               type="button"
-                              onClick={() => setSelectedBloodBank(fac)}
-                              className={`w-full text-left p-3.5 rounded-2xl border transition-all ${
+                              onClick={() => setSelectedHospital(fac)}
+                              className={`w-full text-left p-3.5 rounded-2xl border transition-all cursor-pointer ${
                                 isSelected
-                                  ? 'bg-purple-500/10 border-purple-500/30 ring-1 ring-purple-500/20'
-                                  : 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10'
+                                  ? 'bg-blue-500/10 border-blue-500/30 ring-1 ring-blue-500/20'
+                                  : 'bg-slate-50 dark:bg-white/[0.02] border-slate-200 dark:border-white/[0.04] hover:border-slate-350 dark:hover:border-white/[0.08]'
                               }`}
                             >
                               <div className="flex items-center justify-between">
                                 <div>
-                                  <span className="text-xs font-bold text-slate-800 dark:text-white block">{fac.name}</span>
-                                  <span className="text-[10px] text-slate-500 dark:text-slate-400 block">{fac.address}, {fac.city}</span>
+                                  <span className="text-xs font-bold text-slate-900 dark:text-white block font-body">{fac.name}</span>
+                                  <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-body">{fac.address}, {fac.city}</span>
                                 </div>
-                                {isSelected && <CheckCircle className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />}
+                                {isSelected && <CheckCircle className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />}
                               </div>
                             </button>
                           );
@@ -688,245 +758,224 @@ const SeekerHomePage = () => {
                     )}
                   </div>
                 </div>
-              )}
 
-              {/* Mandatory Hospital Section */}
-              <div className="space-y-3">
-                <h4 className="text-xs font-black uppercase text-blue-600 dark:text-blue-400 tracking-wider flex items-center gap-1">
-                  <Hospital className="w-4 h-4" /> {useDetour ? '2. Select Mandatory Destination Hospital' : 'Select Mandatory Destination Hospital'}
-                </h4>
-                <div className="space-y-2 text-left">
-                  {facilitiesLoading ? (
-                    <div className="py-8 text-center text-xs text-slate-500">Loading hospitals...</div>
-                  ) : facilities.filter(f => f.type === 'Hospital').length === 0 ? (
-                    <div className="py-8 text-center text-xs text-slate-500">No approved hospitals found.</div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="p-4 border-t border-slate-200 dark:border-white/[0.06] bg-slate-50 dark:bg-black/30">
+                <button
+                  onClick={handleApproveDonor}
+                  disabled={!selectedHospital || (useDetour && !selectedBloodBank) || approving}
+                  className="w-full py-3 bg-gradient-to-r from-[#C0152A] to-[#E0243C] hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer text-sm shadow-md keep-white"
+                >
+                  {approving ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Creating Match...</>
                   ) : (
-                    facilities
-                      .filter(f => f.type === 'Hospital')
-                      .filter(f => {
-                        const q = facilityFilter.toLowerCase();
-                        return !q || f.name?.toLowerCase().includes(q) || f.city?.toLowerCase().includes(q);
-                      })
-                      .map((fac) => {
-                        const isSelected = selectedHospital?.id === fac.id;
-                        return (
-                          <button
-                            key={fac.id}
-                            type="button"
-                            onClick={() => setSelectedHospital(fac)}
-                            className={`w-full text-left p-3.5 rounded-2xl border transition-all ${
-                              isSelected
-                                ? 'bg-blue-500/10 border-blue-500/30 ring-1 ring-blue-500/20'
-                                : 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <span className="text-xs font-bold text-slate-800 dark:text-white block">{fac.name}</span>
-                                <span className="text-[10px] text-slate-500 dark:text-slate-400 block">{fac.address}, {fac.city}</span>
-                              </div>
-                              {isSelected && <CheckCircle className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />}
-                            </div>
-                          </button>
-                        );
-                      })
+                    <><ShieldCheck className="w-4 h-4" /> Approve Donor & Confirm Matching</>
+                  )}
+                </button>
+                <div className="mt-2 text-[10px] text-slate-500 dark:text-slate-400 text-center space-y-1 font-body">
+                  {selectedHospital && (
+                    <p>
+                      Final destination hospital: <span className="text-slate-800 dark:text-white font-bold">{selectedHospital.name}</span>
+                    </p>
+                  )}
+                  {useDetour && selectedBloodBank && (
+                    <p>
+                      Transit blood bank step: <span className="text-purple-650 dark:text-purple-400 font-bold">{selectedBloodBank.name}</span>
+                    </p>
                   )}
                 </div>
               </div>
-
-            </div>
-
-            {/* Modal Footer */}
-            <div className="p-4 border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-950/20">
-              <button
-                onClick={handleApproveDonor}
-                disabled={!selectedHospital || (useDetour && !selectedBloodBank) || approving}
-                className="w-full py-3 bg-[#C0152A] hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer text-sm"
-              >
-                {approving ? (
-                  <><Loader2 className="w-4 h-4 animate-spin" /> Creating Match...</>
-                ) : (
-                  <><ShieldCheck className="w-4 h-4" /> Approve Donor & Confirm Matching</>
-                )}
-              </button>
-              <div className="mt-2 text-[10px] text-slate-500 text-center space-y-1">
-                {selectedHospital && (
-                  <p>
-                    Final: <span className="text-slate-800 dark:text-white font-semibold">{selectedHospital.name}</span>
-                  </p>
-                )}
-                {useDetour && selectedBloodBank && (
-                  <p>
-                    Transit Bank: <span className="text-purple-600 dark:text-purple-400 font-semibold">{selectedBloodBank.name}</span>
-                  </p>
-                )}
-              </div>
-            </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
 
       {/* Edit Request Modal */}
-      {editModal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setEditModal({ open: false, request: null })}>
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
-          <div
-            className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="p-6 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-bold text-slate-800 dark:text-white">Edit Blood Request</h3>
-                <p className="text-xs text-slate-505 dark:text-slate-400 mt-1">Update request parameters</p>
-              </div>
-              <button onClick={() => setEditModal({ open: false, request: null })} className="p-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl transition-colors">
-                <X className="w-5 h-5 text-slate-505 dark:text-slate-400" />
-              </button>
-            </div>
-
-            {/* Modal Body / Scrollable Form */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
-              <div className="space-y-1">
-                <label className="text-xs text-slate-505 dark:text-slate-400 font-bold uppercase">Patient Name</label>
-                <input
-                  type="text"
-                  value={editForm.patientName}
-                  onChange={(e) => setEditForm({ ...editForm, patientName: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl text-sm text-slate-800 dark:text-white focus:outline-none focus:border-red-500/50 transition-colors"
-                />
+      <AnimatePresence>
+        {editModal.open && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm" 
+              onClick={() => setEditModal({ open: false, request: null })} 
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ type: "spring", duration: 0.5 }}
+              className="relative glass-card max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl z-10"
+            >
+              {/* Modal Header */}
+              <div className="p-6 border-b border-slate-200 dark:border-white/[0.06] flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-bold text-slate-909 dark:text-white font-display">Edit Blood Request</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-body">Update request parameters</p>
+                </div>
+                <button onClick={() => setEditModal({ open: false, request: null })} className="p-2 hover:bg-slate-100 dark:hover:bg-white/[0.04] rounded-xl transition-colors cursor-pointer">
+                  <X className="w-5 h-5 text-slate-500 dark:text-slate-400" />
+                </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs text-slate-505 dark:text-slate-400 font-bold uppercase">Blood Group</label>
+              {/* Modal Body / Scrollable Form */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                <div className="space-y-1 text-left">
+                  <label className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider font-mono">Patient Name</label>
+                  <input
+                    type="text"
+                    value={editForm.patientName}
+                    onChange={(e) => setEditForm({ ...editForm, patientName: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl text-sm"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 text-left">
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider font-mono">Blood Group</label>
+                    <select
+                      value={editForm.bloodGroup}
+                      onChange={(e) => setEditForm({ ...editForm, bloodGroup: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-xl text-sm"
+                    >
+                      {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(bg => (
+                        <option key={bg} value={bg}>{bg}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1 text-left">
+                    <label className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider font-mono">Units Required</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={editForm.unitsRequired}
+                      onChange={(e) => setEditForm({ ...editForm, unitsRequired: parseInt(e.target.value) || 1 })}
+                      className="w-full px-4 py-2.5 rounded-xl text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1 text-left">
+                  <label className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider font-mono">Blood Component</label>
                   <select
-                    value={editForm.bloodGroup}
-                    onChange={(e) => setEditForm({ ...editForm, bloodGroup: e.target.value })}
-                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl text-sm text-slate-800 dark:text-white focus:outline-none focus:border-red-500/50 transition-colors"
+                    value={editForm.bloodComponent}
+                    onChange={(e) => setEditForm({ ...editForm, bloodComponent: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl text-sm"
                   >
-                    {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(bg => (
-                      <option key={bg} value={bg}>{bg}</option>
-                    ))}
+                    <option value="whole_blood">Whole Blood</option>
+                    <option value="prbc">Packed Red Blood Cells (PRBC)</option>
+                    <option value="platelets">Platelets</option>
+                    <option value="plasma">Fresh Frozen Plasma (FFP)</option>
                   </select>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-xs text-slate-505 dark:text-slate-400 font-bold uppercase">Units Required</label>
+                <div className="space-y-1 text-left">
+                  <label className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider font-mono">Hospital Name</label>
                   <input
-                    type="number"
-                    min="1"
-                    value={editForm.unitsRequired}
-                    onChange={(e) => setEditForm({ ...editForm, unitsRequired: parseInt(e.target.value) || 1 })}
-                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl text-sm text-slate-800 dark:text-white focus:outline-none focus:border-red-500/50 transition-colors"
+                    type="text"
+                    value={editForm.hospitalName}
+                    onChange={(e) => setEditForm({ ...editForm, hospitalName: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl text-sm"
                   />
+                </div>
+
+                <div className="space-y-1 text-left">
+                  <label className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider font-mono">Hospital Address</label>
+                  <textarea
+                    rows="2"
+                    value={editForm.hospitalAddress}
+                    onChange={(e) => setEditForm({ ...editForm, hospitalAddress: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl text-sm"
+                  />
+                </div>
+
+                <div className="space-y-1 text-left">
+                  <label className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider font-mono">Urgency Level</label>
+                  <select
+                    value={editForm.urgencyLevel}
+                    onChange={(e) => setEditForm({ ...editForm, urgencyLevel: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl text-sm"
+                  >
+                    <option value="critical">Critical</option>
+                    <option value="urgent">Urgent</option>
+                    <option value="moderate">Moderate</option>
+                    <option value="planned">Planned</option>
+                  </select>
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-xs text-slate-505 dark:text-slate-400 font-bold uppercase">Blood Component</label>
-                <select
-                  value={editForm.bloodComponent}
-                  onChange={(e) => setEditForm({ ...editForm, bloodComponent: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl text-sm text-slate-800 dark:text-white focus:outline-none focus:border-red-500/50 transition-colors"
+              {/* Modal Footer */}
+              <div className="p-4 border-t border-slate-200 dark:border-white/[0.06] bg-slate-50 dark:bg-black/35">
+                <button
+                  onClick={handleSaveEdit}
+                  className="w-full py-3 bg-[#C0152A] hover:bg-red-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer keep-white shadow-md"
                 >
-                  <option value="whole_blood">Whole Blood</option>
-                  <option value="prbc">Packed Red Blood Cells (PRBC)</option>
-                  <option value="platelets">Platelets</option>
-                  <option value="plasma">Fresh Frozen Plasma (FFP)</option>
-                </select>
+                  Save Changes
+                </button>
               </div>
-
-              <div className="space-y-1">
-                <label className="text-xs text-slate-505 dark:text-slate-400 font-bold uppercase">Hospital Name</label>
-                <input
-                  type="text"
-                  value={editForm.hospitalName}
-                  onChange={(e) => setEditForm({ ...editForm, hospitalName: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl text-sm text-slate-800 dark:text-white focus:outline-none focus:border-red-500/50 transition-colors"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs text-slate-505 dark:text-slate-400 font-bold uppercase">Hospital Address</label>
-                <textarea
-                  rows="2"
-                  value={editForm.hospitalAddress}
-                  onChange={(e) => setEditForm({ ...editForm, hospitalAddress: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl text-sm text-slate-800 dark:text-white focus:outline-none focus:border-red-500/50 transition-colors"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs text-slate-505 dark:text-slate-400 font-bold uppercase">Urgency Level</label>
-                <select
-                  value={editForm.urgencyLevel}
-                  onChange={(e) => setEditForm({ ...editForm, urgencyLevel: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl text-sm text-slate-800 dark:text-white focus:outline-none focus:border-red-500/50 transition-colors"
-                >
-                  <option value="critical">Critical</option>
-                  <option value="urgent">Urgent</option>
-                  <option value="moderate">Moderate</option>
-                  <option value="planned">Planned</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="p-4 border-t border-slate-100 dark:border-white/5">
-              <button
-                onClick={handleSaveEdit}
-                className="w-full py-3 bg-[#C0152A] hover:bg-red-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                Save Changes
-              </button>
-            </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
 
       {/* Match Success Modal */}
-      {matchSuccess.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
-          <div className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl max-w-md w-full p-8 text-center space-y-6 shadow-2xl animate-fadeIn">
-            {/* Success Icon */}
-            <div className="mx-auto w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-3xl text-emerald-500">
-              <ShieldCheck className="w-8 h-8" />
-            </div>
+      <AnimatePresence>
+        {matchSuccess.open && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm" 
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative glass-card max-w-md w-full p-8 text-center space-y-6 shadow-2xl z-10"
+            >
+              {/* Success Icon */}
+              <div className="mx-auto w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-3xl text-emerald-500">
+                <ShieldCheck className="w-8 h-8" />
+              </div>
 
-            <div className="space-y-2">
-              <h3 className="text-xl font-bold text-slate-800 dark:text-white">Donation Match Confirmed!</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                You have approved the donor. A unique Match ID has been generated for your record.
-              </p>
-            </div>
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white font-display">Donation Match Confirmed!</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-body">
+                  You have approved the donor. A unique Match ID has been generated for your record.
+                </p>
+              </div>
 
-            {/* Match ID Display */}
-            <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-white/5 rounded-2xl p-4 space-y-1">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">Matched OBID</span>
-              <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono tracking-wide select-all block">
-                {matchSuccess.matchObid}
-              </span>
-            </div>
+              {/* Match ID Display */}
+              <div className="bg-slate-50 dark:bg-black/30 border border-slate-200 dark:border-white/[0.06] rounded-2xl p-4 space-y-1">
+                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-550 uppercase tracking-widest block font-mono">Matched OBID</span>
+                <span className="text-2xl font-black text-emerald-600 dark:text-emerald-450 font-mono tracking-wide select-all block">
+                  {matchSuccess.matchObid}
+                </span>
+              </div>
 
-            <div className="space-y-3">
-              <Link
-                to="/active-donations"
-                className="w-full py-3 bg-[#C0152A] hover:bg-red-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer text-sm"
-              >
-                Go to Active Donations
-              </Link>
-              <button
-                onClick={() => setMatchSuccess({ open: false, matchObid: '' })}
-                className="w-full py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl transition-all text-xs cursor-pointer"
-              >
-                Dismiss
-              </button>
-            </div>
+              <div className="space-y-3 pt-2">
+                <Link
+                  to="/active-donations"
+                  className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer text-sm shadow-md keep-white"
+                >
+                  Go to Active Donations
+                </Link>
+                <button
+                  onClick={() => setMatchSuccess({ open: false, matchObid: '' })}
+                  className="w-full py-3 bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.06] hover:bg-slate-205 dark:hover:bg-white/[0.08] text-slate-700 dark:text-slate-300 font-bold rounded-xl transition-all text-xs cursor-pointer"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -9,32 +9,33 @@ export default {
     extend: {
       colors: {
         oneblood: {
-          crimson:   '#B91C1C',  // Primary brand red
-          crimson_light: '#DC2626',
-          crimson_dark:  '#7F1D1D',
-          rose:      '#FEF2F2',  // Background tint
-          midnight:  '#0F0A0A',  // Dark backgrounds
+          crimson:   '#C0152A',  // Updated primary brand red to premium crimson
+          crimson_light: '#FF4D6A',
+          crimson_dark:  '#800F1C',
+          rose:      '#FFF5F5',  // Background tint
+          midnight:  '#07070A',  // Deeper obsidian black
           gold:      '#F59E0B',  // Accent / warnings
-          emerald:   '#059669',  // Available / success
-          slate:     '#334155',  // Secondary text
-          glass:     'rgba(255, 255, 255, 0.08)', // Glassmorphism
-          glass_dark: 'rgba(15, 10, 10, 0.75)',
+          emerald:   '#10B981',  // Available / success
+          slate:     '#475569',  // Secondary text
+          glass:     'rgba(255, 255, 255, 0.03)', // Premium Glassmorphism
+          glass_dark: 'rgba(7, 7, 10, 0.8)',
         }
       },
       fontFamily: {
-        heading: ['"DM Serif Display"', 'serif'],
-        body: ['"IBM Plex Sans"', 'sans-serif'],
+        heading: ['"Sora"', 'sans-serif'], // Updated to Sora font
+        body: ['"Inter"', 'sans-serif'],    // Updated to Inter font
+        mono: ['"Space Grotesk"', 'sans-serif'], // Updated to Space Grotesk font
       },
       animation: {
-        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'pulse-slow': 'pulse 3.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'heartbeat': 'heartbeat 1.5s ease-in-out infinite',
       },
       keyframes: {
         heartbeat: {
           '0%, 100%': { transform: 'scale(1)' },
-          '14%': { transform: 'scale(1.15)' },
+          '14%': { transform: 'scale(1.12)' },
           '28%': { transform: 'scale(1)' },
-          '42%': { transform: 'scale(1.15)' },
+          '42%': { transform: 'scale(1.12)' },
           '70%': { transform: 'scale(1)' },
         }
       }

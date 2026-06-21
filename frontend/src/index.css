@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,33 +6,38 @@
 
 @layer base {
   body {
-    @apply bg-slate-50 text-slate-800 dark:bg-[#0F0A0A] dark:text-white font-body antialiased transition-colors duration-300 selection:bg-oneblood-crimson selection:text-white;
+    @apply bg-slate-50 text-slate-800 dark:bg-[#07070A] dark:text-white font-body antialiased transition-colors duration-300 selection:bg-oneblood-crimson selection:text-white;
   }
   
   h1, h2, h3, h4, h5, h6 {
-    @apply font-heading tracking-wide text-slate-900 dark:text-white;
+    @apply font-heading tracking-tight text-slate-900 dark:text-white;
+  }
+  
+  /* Standardise form inputs for premium look */
+  input, select, textarea {
+    @apply focus:ring-2 focus:ring-oneblood-crimson/50 focus:border-oneblood-crimson transition-all duration-200 outline-none;
   }
 }
 
 @layer components {
   .glass-card {
-    @apply bg-white dark:bg-white/5 border border-slate-200 dark:border-white/5 rounded-2xl shadow-sm dark:shadow-xl transition-all duration-300;
+    @apply bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] backdrop-blur-md rounded-2xl shadow-sm dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] transition-all duration-300;
   }
   
   .glass-card-hover {
-    @apply hover:shadow-lg dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.3)] hover:border-slate-300 dark:hover:border-white/10 hover:-translate-y-1 hover:scale-[1.005] duration-300 ease-out;
+    @apply hover:shadow-md dark:hover:shadow-[0_20px_50px_rgba(192,21,42,0.08)] hover:border-slate-300 dark:hover:border-oneblood-crimson/20 hover:-translate-y-1 hover:scale-[1.005] duration-300 ease-out;
   }
   
   .btn-primary {
-    @apply bg-oneblood-crimson hover:bg-oneblood-crimson_light text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 transform active:scale-95 shadow-lg shadow-oneblood-crimson/25;
+    @apply bg-gradient-to-r from-oneblood-crimson to-[#E0243C] hover:brightness-110 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 transform active:scale-95 shadow-lg shadow-oneblood-crimson/25 hover:shadow-oneblood-crimson/35;
   }
   
   .btn-secondary {
-    @apply bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-slate-800 dark:text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 transform active:scale-95 border border-slate-200 dark:border-white/5;
+    @apply bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] text-slate-800 dark:text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 transform active:scale-95 border border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.15];
   }
   
   .btn-danger {
-    @apply bg-oneblood-crimson hover:bg-oneblood-crimson_light text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 transform active:scale-95 shadow-lg shadow-oneblood-crimson/20 animate-pulse-slow;
+    @apply bg-gradient-to-r from-oneblood-crimson to-red-700 hover:brightness-110 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 transform active:scale-95 shadow-lg shadow-oneblood-crimson/20 animate-pulse-slow;
   }
 }
 
