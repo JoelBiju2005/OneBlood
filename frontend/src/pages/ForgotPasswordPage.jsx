@@ -9,10 +9,18 @@ const ForgotPasswordPage = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const [stage, setStage] = useState('email'); // 'email' | 'otp'
+  const [email, setEmail] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const inputRefs = useRef([]);
+
+  // Initialize email if user is logged in
+  useEffect(() => {
+    if (user?.email) {
+      setEmail(user.email);
+    }
+  }, [user]);
 
   // Mask helper - shows first 2 chars + *** + domain
   // joelbiju0504@gmail.com -> jo***@gmail.com
@@ -33,41 +41,19 @@ const ForgotPasswordPage = () => {
     }
   }, [cooldown]);
 
-  // Session guard: if no logged-in user, render login prompt
-  if (!user) {
-    return (
-      <div className="min-h-[calc(100vh-80px)] flex items-center justify-center relative overflow-hidden bg-slate-50 dark:bg-[#07070A] px-4 py-12 transition-colors duration-300">
-        <div className="absolute top-[-10%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-red-600/[0.03] blur-[130px] pointer-events-none" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[45vw] h-[45vw] rounded-full bg-amber-500/[0.015] blur-[130px] pointer-events-none" />
-
-        <div className="w-full max-w-md bg-white dark:bg-[#0F0F1A]/60 border border-slate-200 dark:border-white/[0.05] p-10 rounded-3xl shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)] backdrop-blur-md space-y-6 text-center">
-          <div className="inline-flex p-3 bg-red-50 dark:bg-white/[0.03] border border-red-100 dark:border-white/[0.06] rounded-2xl text-[#C0152A] dark:text-[#FF4D6A] mb-2 shadow-sm">
-            <Mail className="w-8 h-8" />
-          </div>
-          <h2 className="text-2xl font-black text-slate-900 dark:text-white font-display">Log In Required</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 font-body">
-            Please log in first to reset your password.
-          </p>
-          <Link
-            to="/auth/login"
-            className="block w-full py-3.5 bg-gradient-to-r from-[#C0152A] to-[#FF4D6A] rounded-2xl font-bold text-xs text-white text-center shadow-lg hover:shadow-red-755/35 transition-all cursor-pointer keep-white"
-          >
-            Back to Login
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
   // Stage 1: Request OTP
   const handleRequestOtp = async (e) => {
     if (e) e.preventDefault();
+    if (!email) {
+      toast.error('Email address is required.');
+      return;
+    }
 
     setIsLoading(true);
     try {
-      const res = await api.post('/auth/forgot-password', { email: user.email });
+      const res = await api.post('/auth/forgot-password', { email });
       if (res.data.success) {
-        toast.success('A 6-digit OTP code has been sent to your registered email.');
+        toast.success('A 6-digit OTP code has been sent to the registered email.');
         setStage('otp');
         setCooldown(60);
         setOtp(['', '', '', '', '', '']);
@@ -98,14 +84,14 @@ const ForgotPasswordPage = () => {
     setIsLoading(true);
     try {
       const res = await api.post('/auth/verify-reset-otp', {
-        email: user.email,
+        email,
         otp: finalOtp
       });
 
       if (res.data.success) {
         toast.success('OTP verified successfully!');
         // Redirect to ResetPasswordPage, passing the email in state
-        navigate('/auth/reset-password', { state: { email: user.email }, replace: true });
+        navigate('/auth/reset-password', { state: { email }, replace: true });
       } else {
         toast.error(res.data.message || 'Invalid OTP.');
       }
@@ -171,7 +157,7 @@ const ForgotPasswordPage = () => {
       <div className="absolute top-[-10%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-red-600/[0.03] blur-[130px] pointer-events-none" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[45vw] h-[45vw] rounded-full bg-amber-500/[0.015] blur-[130px] pointer-events-none" />
 
-      <div className="w-full max-w-md bg-white dark:bg-[#0F0F1A]/60 border border-slate-200 dark:border-white/[0.05] p-10 rounded-3xl shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)] backdrop-blur-md space-y-8 hover:border-slate-300 dark:hover:border-[#C0152A]/20 transition-all duration-300">
+      <div className="w-full max-w-md bg-white dark:bg-[#0F0F1A]/60 border border-slate-200 dark:border-white/[0.05] p-10 rounded-3xl shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)] backdrop-blur-md space-y-8 hover:border-slate-300 dark:hover:border-[#C0152A]/20 transition-all duration-300 animate-fade-in">
         
         {stage === 'email' ? (
           /* STAGE 1: REQUEST OTP */
@@ -181,12 +167,37 @@ const ForgotPasswordPage = () => {
                 <Mail className="w-8 h-8" />
               </div>
               <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white font-display">Forgot your password?</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-body leading-relaxed px-2">
-                A reset code will be sent to your registered email address on file.
-              </p>
+              {user ? (
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-body leading-relaxed px-2">
+                  A reset code will be sent to your registered email address on file.
+                </p>
+              ) : (
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-body leading-relaxed px-2">
+                  Enter your registered email address and we'll send you a 6-digit OTP to reset your password.
+                </p>
+              )}
             </div>
 
             <form onSubmit={handleRequestOtp} className="space-y-6">
+              {!user && (
+                <div className="space-y-1.5 text-left">
+                  <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block pl-1">Email Address</label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                      <Mail className="h-4 w-4 text-slate-400" />
+                    </span>
+                    <input
+                      type="email"
+                      required
+                      placeholder="name@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full pl-10 pr-4 py-3.5 bg-slate-50 dark:bg-black/30 border border-slate-200 dark:border-white/[0.06] rounded-2xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-[#C0152A] transition-all font-body"
+                    />
+                  </div>
+                </div>
+              )}
+
               <button
                 type="submit"
                 disabled={isLoading}
@@ -220,7 +231,7 @@ const ForgotPasswordPage = () => {
               <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white font-display">OTP sent</h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-body leading-relaxed">
                 A 6-digit code has been sent to your registered email<br />
-                <strong className="text-slate-700 dark:text-slate-200 block text-sm mt-1">{maskEmail(user.email)}</strong>
+                <strong className="text-slate-700 dark:text-slate-200 block text-sm mt-1">{maskEmail(email)}</strong>
               </p>
               <p className="text-[10px] text-slate-400 dark:text-slate-500">
                 If you don't see it, check your spam folder.
