@@ -3,6 +3,8 @@ const path = require('path');
 const EmailTemplate = require('../models/EmailTemplate');
 const EmailLog = require('../models/EmailLog');
 const SystemSettings = require('../models/SystemSettings');
+const BrevoClient = require('@getbrevo/brevo').BrevoClient;
+const { passwordResetOTPTemplate } = require('./emailTemplates');
 
 const getFrontendUrl = () => {
   if (process.env.FRONTEND_URL) {
@@ -526,6 +528,93 @@ const runEmailRetryJob = async () => {
 // Set up background check every 5 minutes
 setInterval(runEmailRetryJob, 5 * 60 * 1000);
 
+const brevoClient = new BrevoClient({
+  apiKey: (process.env.BREVO_API_KEY && process.env.BREVO_API_KEY !== 'mock_key_for_dev') ? process.env.BREVO_API_KEY : 'mock_key_for_dev'
+});
+
+const sendEmailViaBrevo = async ({ to, toName, subject, html }) => {
+  const apiKey = process.env.BREVO_API_KEY;
+  const isMockEnv = !apiKey || apiKey === 'mock_key_for_dev' || apiKey.trim() === '';
+
+  if (isMockEnv) {
+    console.log('\n=================== MOCK EMAIL OUTPUT ===================');
+    console.log(`To:      ${to} (${toName || 'User'})`);
+    console.log(`Subject: ${subject}`);
+    console.log('--------------------------- BODY -------------------------------');
+    console.log(html.replace(/<[^>]*>/g, '').trim().substring(0, 500) + '...');
+    console.log('==========================================================\n');
+
+    try {
+      await EmailLog.create({
+        to,
+        templateName: 'password_reset_otp',
+        emailType: 'password_reset_otp',
+        subject,
+        status: 'sent',
+        provider: 'mock',
+        attempts: 1
+      });
+    } catch (logErr) {
+      console.error('Failed to save EmailLog:', logErr.message);
+    }
+    return { success: true };
+  }
+
+  const sendSmtpEmail = {
+    sender: {
+      name: process.env.EMAIL_FROM_NAME || 'OneBlood',
+      email: process.env.EMAIL_FROM_ADDRESS || 'noreply@oneblood.in'
+    },
+    to: [{ email: to, name: toName || to }],
+    subject,
+    htmlContent: html
+  };
+
+  try {
+    const res = await brevoClient.transactionalEmails.sendTransacEmail(sendSmtpEmail);
+    try {
+      await EmailLog.create({
+        to,
+        templateName: 'password_reset_otp',
+        emailType: 'password_reset_otp',
+        subject,
+        status: 'sent',
+        provider: 'brevo',
+        attempts: 1
+      });
+    } catch (logErr) {
+      console.error('Failed to save EmailLog:', logErr.message);
+    }
+    return res;
+  } catch (err) {
+    console.error('[Email] sendEmailViaBrevo failed:', err.message);
+    try {
+      await EmailLog.create({
+        to,
+        templateName: 'password_reset_otp',
+        emailType: 'password_reset_otp',
+        subject,
+        status: 'failed',
+        provider: 'brevo',
+        errorMessage: err.message,
+        attempts: 1
+      });
+    } catch (logErr) {
+      console.error('Failed to save EmailLog:', logErr.message);
+    }
+    throw err;
+  }
+};
+
+const sendPasswordResetOTPEmail = async ({ name, email, otp }) => {
+  return sendEmailViaBrevo({
+    to: email,
+    toName: name,
+    subject: `${otp} is your OneBlood password reset code`,
+    html: passwordResetOTPTemplate({ name, otp })
+  });
+};
+
 module.exports = {
   sendEmail,
   sendTemplateEmail,
@@ -534,6 +623,8 @@ module.exports = {
   sendHospitalMatchEmail,
   sendBloodBankMatchEmail,
   sendDonationCompletedEmail,
-  runEmailRetryJob
+  runEmailRetryJob,
+  sendEmailViaBrevo,
+  sendPasswordResetOTPEmail
 };
 

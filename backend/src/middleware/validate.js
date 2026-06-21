@@ -38,9 +38,16 @@ const forgotPasswordRules = [
   body('email').isEmail().normalizeEmail().withMessage('Valid email is required.')
 ];
 
+const verifyOTPRules = [
+  body('email').isEmail().normalizeEmail().withMessage('Valid email is required.'),
+  body('otp')
+    .isLength({ min: 6, max: 6 }).withMessage('OTP must be exactly 6 digits.')
+    .isNumeric().withMessage('OTP must contain only numbers.')
+];
+
 const resetPasswordRules = [
-  body('token').notEmpty().withMessage('Reset token is required.'),
-  body('password')
+  body('email').isEmail().normalizeEmail().withMessage('Valid email is required.'),
+  body('newPassword')
     .isLength({ min: 8 }).withMessage('Password must be at least 8 characters.')
     .matches(/[A-Z]/).withMessage('Password must contain at least one uppercase letter.')
     .matches(/[0-9]/).withMessage('Password must contain at least one number.')
@@ -66,6 +73,7 @@ module.exports = {
   registerRules,
   loginRules,
   forgotPasswordRules,
+  verifyOTPRules,
   resetPasswordRules,
   createRequestRules,
   createNoticeRules

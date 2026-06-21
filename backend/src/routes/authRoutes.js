@@ -3,7 +3,7 @@ const router = express.Router();
 const rateLimit = require('express-rate-limit');
 const authController = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
-const { validate, registerRules, loginRules, forgotPasswordRules, resetPasswordRules } = require('../middleware/validate');
+const { validate, registerRules, loginRules, forgotPasswordRules, verifyOTPRules, resetPasswordRules } = require('../middleware/validate');
 
 const isDev = process.env.NODE_ENV !== 'production';
 
@@ -24,6 +24,7 @@ router.post('/logout', protect, authController.logout);
 router.post('/refresh', authController.refreshToken);
 router.post('/refresh-token', authController.refreshToken); // keep alias for compatibility
 router.post('/forgot-password', sensitiveAuthLimiter, forgotPasswordRules, validate, authController.forgotPassword);
+router.post('/verify-reset-otp', sensitiveAuthLimiter, verifyOTPRules, validate, authController.verifyResetOTP);
 router.post('/reset-password', sensitiveAuthLimiter, resetPasswordRules, validate, authController.resetPassword);
 router.get('/me', protect, authController.getMe);
 router.put('/profile', protect, authController.updateProfile);

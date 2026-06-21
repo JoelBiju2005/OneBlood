@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -15,8 +15,17 @@ const loginSchema = z.object({
 const LoginPage = () => {
   const { login, isLoading, isAuthenticated, user } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
   const [showPass, setShowPass] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Show success message from password reset redirect
+  React.useEffect(() => {
+    if (location.state?.successMessage) {
+      toast.success(location.state.successMessage);
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location, navigate]);
 
   // Auto-redirect if already logged in
   React.useEffect(() => {

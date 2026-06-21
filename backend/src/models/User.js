@@ -26,8 +26,10 @@ const userSchema = new mongoose.Schema({
   lockoutUntil: { type: Date, default: null },
 
   // ─── Security: Password reset ─────────────────────────────────────────────
-  resetTokenHash: { type: String, default: null },
-  resetTokenExpiry: { type: Date, default: null }
+  passwordResetOTP:          { type: String, default: null },
+  passwordResetOTPExpiry:    { type: Date, default: null },
+  passwordResetOTPAttempts:  { type: Number, default: 0 },
+  passwordResetVerified:     { type: Boolean, default: false }
 }, {
   timestamps: true,
   strict: false
@@ -53,14 +55,6 @@ userSchema.statics.generateOneBloodId = async function() {
     }
   }
   throw new Error('Unable to generate unique OneBlood ID — please try again later.');
-};
-
-// ─── Password reset token helper ────────────────────────────────────────────
-userSchema.methods.createPasswordResetToken = function() {
-  const resetToken = crypto.randomBytes(32).toString('hex');
-  this.resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
-  this.resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
-  return resetToken; // return raw token (this is what goes in the email link)
 };
 
 const User = mongoose.model('User', userSchema);

@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.99.0",
+    "@getbrevo/brevo": "^5.0.4",
     "axios": "^1.6.8",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.7",
