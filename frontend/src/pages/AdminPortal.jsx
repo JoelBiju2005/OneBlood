@@ -4,7 +4,7 @@ import useAuthStore from '../store/authStore';
 import toast from 'react-hot-toast';
 import { 
   Loader2, ShieldCheck, Users, Landmark, AlertCircle, Trash2, 
-  Edit, CheckCircle, XCircle, Search, Lock, UserCheck, LogOut, Info, Settings
+  Edit, CheckCircle, XCircle, Search, Lock, UserCheck, LogOut, Info, Settings, ClipboardList
 } from 'lucide-react';
 
 const AdminPortal = () => {
@@ -27,6 +27,7 @@ const AdminPortal = () => {
   const [donors, setDonors] = useState([]);
   const [banks, setBanks] = useState([]);
   const [requests, setRequests] = useState([]);
+  const [notices, setNotices] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Editing Modals state
@@ -84,6 +85,9 @@ const AdminPortal = () => {
       } else if (tab === 'requests') {
         const res = await api.get('/admin/requests');
         setRequests(res.data.requests || []);
+      } else if (tab === 'notices') {
+        const res = await api.get('/admin/notices');
+        setNotices(res.data.notices || []);
       }
     } catch (err) {
       toast.error('Failed to load portal logs');
@@ -202,6 +206,21 @@ const AdminPortal = () => {
     }
   };
 
+  const handleDeleteNotice = async (noticeId) => {
+    if (!window.confirm('Permanently delete this request board post?')) return;
+    setActionLoading(noticeId);
+    try {
+      await api.delete(`/admin/notices/${noticeId}`);
+      toast.success('Request board post deleted');
+      setNotices(prev => prev.filter(n => n._id !== noticeId));
+      fetchDataForTab(activeTab);
+    } catch (err) {
+      toast.error('Failed to delete request board post');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   // Filters for search query
   const filteredUsers = users.filter(u => 
     u.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -296,7 +315,8 @@ const AdminPortal = () => {
               { id: 'users', label: 'Manage Users', icon: Users },
               { id: 'donors', label: 'Manage Donors', icon: ShieldCheck },
               { id: 'banks', label: 'Manage Blood Banks', icon: Landmark },
-              { id: 'requests', label: 'Emergency Requests', icon: AlertCircle }
+              { id: 'requests', label: 'Emergency Requests', icon: AlertCircle },
+              { id: 'notices', label: 'Manage Request Board', icon: ClipboardList }
             ].map(tab => {
               const Icon = tab.icon;
               return (
@@ -624,6 +644,71 @@ const AdminPortal = () => {
                           </td>
                         </tr>
                       ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* TAB: NOTICES (MANAGE REQUEST BOARD) */}
+            {activeTab === 'notices' && (
+              <div className="space-y-4">
+                <div>
+                  <h1 className="text-xl font-bold">Manage Request Board</h1>
+                  <p className="text-xs text-slate-400">View or delete currently running notice board posts</p>
+                </div>
+
+                <div className="bg-slate-900/60 border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="bg-slate-950 text-slate-400 font-bold uppercase border-b border-white/5">
+                        <th className="p-4">Patient / Seeker</th>
+                        <th className="p-4">Required Details</th>
+                        <th className="p-4">Hospital / City</th>
+                        <th className="p-4">Status</th>
+                        <th className="p-4 text-center">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {notices.length === 0 ? (
+                        <tr>
+                          <td colSpan="5" className="p-8 text-center text-slate-500 italic">No request board posts found.</td>
+                        </tr>
+                      ) : (
+                        notices.map(notice => (
+                          <tr key={notice._id} className="hover:bg-white/5 transition-colors">
+                            <td className="p-4">
+                              <p className="font-bold text-white">{notice.patientName}</p>
+                              <p className="text-[10px] text-slate-500">Posted by: {notice.seekerName || 'Unknown'}</p>
+                            </td>
+                            <td className="p-4">
+                              <span className="font-bold text-red-500">{notice.bloodGroup}</span> &bull; <span className="uppercase text-[10px] text-slate-450">{notice.component?.replace('_', ' ')}</span> &bull; {notice.unitsRequired || notice.unitsNeeded} Unit(s)
+                            </td>
+                            <td className="p-4">
+                              <p className="text-slate-350">{notice.hospitalName}</p>
+                              <p className="text-[10px] text-slate-500">{notice.city}</p>
+                            </td>
+                            <td className="p-4">
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold capitalize ${
+                                notice.status === 'open' || notice.status === 'active' ? 'bg-amber-500/25 text-amber-400 animate-pulse' :
+                                notice.status === 'fulfilled' ? 'bg-emerald-500/25 text-emerald-400' :
+                                'bg-slate-800 text-slate-500'
+                              }`}>
+                                {notice.status}
+                              </span>
+                            </td>
+                            <td className="p-4 text-center">
+                              <button 
+                                onClick={() => handleDeleteNotice(notice._id)}
+                                className="p-1.5 bg-red-600/10 hover:bg-red-600/20 text-red-500 rounded-lg cursor-pointer"
+                                title="Delete Post"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>

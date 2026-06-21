@@ -8,6 +8,7 @@ const EmailTemplate = require('../models/EmailTemplate');
 const EmailLog = require('../models/EmailLog');
 const SystemSettings = require('../models/SystemSettings');
 const DonationMatch = require('../models/DonationMatch');
+const NoticeBoard = require('../models/NoticeBoard');
 const bcrypt = require('bcryptjs');
 
 // GET /api/admin/users — Paginated, filterable user list
@@ -692,6 +693,35 @@ const seedHubballiData = async (req, res, next) => {
   }
 };
 
+// GET /api/admin/notices — Fetch all notice board items
+const getNotices = async (req, res, next) => {
+  try {
+    const notices = await NoticeBoard.find()
+      .populate('seekerId', 'name email phone onebloodId')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.status(200).json({ notices, total: notices.length });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// DELETE /api/admin/notices/:id — Delete a notice board item
+const deleteNotice = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const notice = await NoticeBoard.findById(id);
+    if (!notice) {
+      return res.status(404).json({ message: 'Notice board post not found' });
+    }
+    await NoticeBoard.findByIdAndDelete(id);
+    res.status(200).json({ success: true, message: 'Notice board post deleted successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getUsers,
   getDonors,
@@ -712,5 +742,7 @@ module.exports = {
   getEmailLogs,
   getSettings,
   updateSettings,
-  seedHubballiData
+  seedHubballiData,
+  getNotices,
+  deleteNotice
 };

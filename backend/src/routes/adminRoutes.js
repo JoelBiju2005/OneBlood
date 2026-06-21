@@ -31,5 +31,7 @@ router.delete('/users/:id', adminController.deleteUser);
 router.delete('/donors/:id', adminController.deleteDonor);
 router.delete('/banks/:id', adminController.deleteBank);
 router.delete('/requests/:id', adminController.deleteRequest);
+router.get('/notices', adminController.getNotices);
+router.delete('/notices/:id', adminController.deleteNotice);
 
 module.exports = router;
