@@ -101,7 +101,7 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://*.tile.openstreetmap.org"],
+      imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://*.tile.openstreetmap.org", "https://*.basemaps.cartocdn.com", "https://cdnjs.cloudflare.com"],
       connectSrc: [
         "'self'",
         process.env.FRONTEND_URL || 'http://localhost:5173',
