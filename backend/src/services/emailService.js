@@ -532,7 +532,7 @@ const brevoClient = new BrevoClient({
   apiKey: (process.env.BREVO_API_KEY && process.env.BREVO_API_KEY !== 'mock_key_for_dev') ? process.env.BREVO_API_KEY : 'mock_key_for_dev'
 });
 
-const sendEmailViaBrevo = async ({ to, toName, subject, html }) => {
+const sendEmailViaBrevo = async ({ to, toName, subject, html, templateName = 'password_reset_otp', emailType = 'password_reset_otp' }) => {
   const apiKey = process.env.BREVO_API_KEY;
   const isMockEnv = !apiKey || apiKey === 'mock_key_for_dev' || apiKey.trim() === '';
 
@@ -547,8 +547,8 @@ const sendEmailViaBrevo = async ({ to, toName, subject, html }) => {
     try {
       await EmailLog.create({
         to,
-        templateName: 'password_reset_otp',
-        emailType: 'password_reset_otp',
+        templateName,
+        emailType,
         subject,
         status: 'sent',
         provider: 'mock',
@@ -579,8 +579,8 @@ const sendEmailViaBrevo = async ({ to, toName, subject, html }) => {
     try {
       await EmailLog.create({
         to,
-        templateName: 'password_reset_otp',
-        emailType: 'password_reset_otp',
+        templateName,
+        emailType,
         subject,
         status: 'sent',
         provider: 'brevo',
@@ -595,8 +595,8 @@ const sendEmailViaBrevo = async ({ to, toName, subject, html }) => {
     try {
       await EmailLog.create({
         to,
-        templateName: 'password_reset_otp',
-        emailType: 'password_reset_otp',
+        templateName,
+        emailType,
         subject,
         status: 'failed',
         provider: 'brevo',
@@ -624,7 +624,9 @@ const sendPasswordResetConfirmEmail = async ({ name, email }) => {
     to: email,
     toName: name,
     subject: 'Your OneBlood password has been successfully updated',
-    html: passwordResetConfirmTemplate({ name })
+    html: passwordResetConfirmTemplate({ name }),
+    templateName: 'password_reset_confirm',
+    emailType: 'password_reset_confirm'
   });
 };
 
