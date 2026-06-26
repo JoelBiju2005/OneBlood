@@ -70,11 +70,20 @@ function App() {
           position="top-right"
           toastOptions={{
             style: {
-              background: '#0f172a',
-              color: '#fff',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              fontSize: '12px'
-            }
+              background: '#18181C',
+              color: '#FAFAFA',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '12px',
+              fontSize: '14px',
+              fontFamily: '"Inter", system-ui, sans-serif',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+            },
+            success: {
+              iconTheme: { primary: '#059669', secondary: '#FAFAFA' },
+            },
+            error: {
+              iconTheme: { primary: '#DC2626', secondary: '#FAFAFA' },
+            },
           }}
         />
         

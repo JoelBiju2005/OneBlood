@@ -4,11 +4,13 @@ import api, { ASSETS_URL } from '../utils/api';
 import useAuthStore from '../store/authStore';
 import useNotificationStore from '../store/notificationStore';
 import toast from 'react-hot-toast';
-import { HeartPulse, Award, Calendar, ToggleLeft, ToggleRight, ShieldAlert, Navigation, Phone, CheckCircle, MessageCircle, ArrowRight, Activity, Users, AwardIcon, Mail, XCircle, Clipboard } from 'lucide-react';
+import { HeartPulse, Award, Calendar, ShieldCheck, Mail, Phone, Activity, Users, Clipboard, X, Check, ArrowRight, ExternalLink } from 'lucide-react';
 import HallOfFameSection from '../components/shared/HallOfFameSection';
 import DonationInProgress from '../components/shared/DonationInProgress';
+import { scaleIn, fadeUp, staggerContainer } from '../utils/animations';
+import { motion } from 'framer-motion';
 
-const DonorHomePage = () => {
+export default function DonorHomePage() {
   const { user } = useAuthStore();
   const { socket } = useNotificationStore();
   const navigate = useNavigate();
@@ -18,7 +20,6 @@ const DonorHomePage = () => {
   const [loading, setLoading] = useState(true);
   const [expandedRequestId, setExpandedRequestId] = useState(null);
 
-  // Community feed mock for Karnataka/AP/Telangana
   const communityFeeds = [
     { id: 1, text: 'O+ donor matched for patient at KLE Hospital, Hubballi', time: '10 mins ago' },
     { id: 2, text: 'B- critical request fulfilled at NIMS, Hyderabad', time: '1 hour ago' },
@@ -28,12 +29,10 @@ const DonorHomePage = () => {
 
   const fetchDonorData = async () => {
     try {
-      // 1. Fetch donor profile
       const profRes = await api.get('/donors/profile');
       const donorProfileData = profRes.data.donor;
       setProfile(donorProfileData);
 
-      // 2. Fetch active requests matching blood type and sent to this donor
       const reqsRes = await api.get('/requests');
       const donorIdStr = donorProfileData?._id?.toString();
       const matching = (reqsRes.data?.requests || []).filter(
@@ -44,10 +43,7 @@ const DonorHomePage = () => {
             (r) => r.responderId && r.responderId.toString() === donorIdStr
           );
 
-          // Scenario A: Targeted exclusively to this donor
           const isTargetedToMe = req.isTargeted === true && req.targetDonorId?.toString() === donorIdStr;
-          
-          // Scenario B: Broadcast request that this donor approved (any state other than declined)
           const isApprovedByMe = req.isTargeted !== true && myResp && myResp.status !== 'declined';
 
           if (isTargetedToMe) {
@@ -76,16 +72,13 @@ const DonorHomePage = () => {
     fetchDonorData();
   }, []);
 
-  // Hook into Socket.IO for new matching request alerts
   useEffect(() => {
     if (!socket || !profile) return;
 
     const handleNewRequest = (data) => {
-      // Check if targeted to this donor
       const isTargetedToMe = data.isTargeted === true && data.targetDonorId?.toString() === profile._id?.toString();
       if (isTargetedToMe) {
         setActiveRequests((prev) => {
-          // Prevent duplicates
           if (prev.some(r => r._id === data._id)) return prev;
           return [data, ...prev];
         });
@@ -128,7 +121,6 @@ const DonorHomePage = () => {
       await api.post(`/requests/${requestId}/accept`);
       fetchDonorData();
       setExpandedRequestId(null);
-      // Navigate to confirmation page
       navigate(`/donor/response-confirm`, { state: { action: 'can_donate', requestId } });
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to accept donation request.');
@@ -148,132 +140,135 @@ const DonorHomePage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-500 dark:text-slate-400">
-        <div className="w-12 h-12 border-4 border-red-600 border-t-transparent rounded-full animate-spin mr-3" />
-        <span>Loading your donor home...</span>
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-ob-ink text-neutral-555">
+        <Loader2 className="w-10 h-10 animate-spin text-ob-red-700 mr-3" />
+        <span className="font-mono text-sm">Loading donor terminal...</span>
       </div>
     );
   }
 
   if (!profile) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-500 dark:text-slate-400 space-y-4 px-4">
-        <HeartPulse className="w-12 h-12 text-red-500 animate-bounce" />
-        <h3 className="text-xl font-bold text-slate-800 dark:text-white">Donor Profile Incomplete</h3>
-        <p className="text-sm max-w-sm text-center text-slate-500 dark:text-slate-400">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white dark:bg-ob-ink px-4 space-y-4">
+        <HeartPulse className="w-16 h-16 text-ob-red-700 animate-bounce" />
+        <h3 className="text-2xl font-display text-neutral-900 dark:text-ob-white">Donor Profile Incomplete</h3>
+        <p className="text-sm max-w-sm text-center text-neutral-500 dark:text-neutral-400">
           You must set up your donor details (blood group, city, availability) before entering.
         </p>
         <Link
           to="/donor/register"
-          className="px-6 py-3 bg-[#C0152A] hover:bg-red-700 text-white font-semibold rounded-xl transition-all"
+          className="px-6 py-3 bg-ob-red-700 text-white font-bold rounded-full hover:scale-[1.02] active:scale-[0.97] transition-all"
         >
-          Complete Setup &rarr;
+          Complete Setup
         </Link>
       </div>
     );
   }
 
   const isEligible = new Date(profile.eligibleToDonateSince) <= new Date();
-  
-  // Calculate remaining days for eligibility message
   const daysDiff = Math.ceil((new Date(profile.eligibleToDonateSince) - new Date()) / (1000 * 60 * 60 * 24));
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-8 px-4 sm:px-6 lg:px-8 space-y-8 transition-colors duration-300">
-      {/* Decorative gradients */}
-      <div className="absolute top-0 right-0 w-[30vw] h-[30vw] rounded-full bg-red-600/5 blur-[120px] pointer-events-none" />
+    <div className="min-h-screen bg-white dark:bg-ob-ink py-10 px-4 sm:px-6 lg:px-8 space-y-8 transition-colors duration-300 relative">
+      <div className="absolute top-0 right-0 w-[30vw] h-[30vw] rounded-full bg-ob-red-700/[0.03] blur-[120px] pointer-events-none" />
 
       <div className="max-w-6xl mx-auto space-y-8">
-        {/* Section 1 — Personal welcome hero */}
-        <div className="relative overflow-hidden bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-3xl p-8 backdrop-blur-md text-left shadow-sm">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 relative z-10">
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[10px] bg-red-500/10 border border-red-500/20 text-[#C0152A] font-black font-mono px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+        
+        {/* Donor Profile Header Panel */}
+        <motion.div 
+          variants={scaleIn}
+          initial="hidden"
+          animate="visible"
+          className="relative overflow-hidden bg-neutral-50 dark:bg-ob-ink-90/40 border border-neutral-200 dark:border-ob-glass-border rounded-3xl p-6 md:p-8 backdrop-blur-md shadow-card"
+        >
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
+            <div className="space-y-3 text-left">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] bg-ob-red-700/10 border border-ob-red-700/20 text-ob-red-700 dark:text-red-400 font-mono font-bold px-2.5 py-1 rounded-lg flex items-center gap-1.5">
                   ID: {user?.onebloodId}
                   <button 
                     onClick={() => {
                       navigator.clipboard.writeText(user?.onebloodId);
-                      toast.success('OneBlood ID copied!');
+                      toast.success('Copied OneBlood ID!');
                     }}
-                    className="hover:text-red-600 dark:hover:text-white transition-colors cursor-pointer"
-                    title="Copy ID"
+                    className="hover:text-neutral-900 dark:hover:text-white transition-colors"
                   >
                     <Clipboard className="w-3.5 h-3.5" />
                   </button>
                 </span>
+                <span className="text-[10px] bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 px-2.5 py-1 rounded-lg font-mono font-bold">
+                  Group: {profile.bloodGroup}
+                </span>
               </div>
-              <h1 className="text-3xl font-extrabold text-slate-800 dark:text-white">
-                Hey {profile.name}
+              <h1 className="text-3xl font-display font-black text-neutral-905 dark:text-ob-white">
+                Welcome, {profile.name}
               </h1>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                You have donated <span className="text-slate-800 dark:text-white font-bold">{profile.totalDonations} times</span>. 
-                You've helped an estimated <span className="text-red-500 dark:text-red-400 font-bold">{profile.totalDonations * 3} people</span>!
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                You have saved lives <span className="text-ob-red-700 font-bold">{profile.totalDonations} times</span>. 
+                That's an estimated <span className="text-emerald-500 font-bold">{profile.totalDonations * 3} patients protected</span>!
               </p>
               
-              <div className="pt-2 text-xs flex items-center space-x-2">
-                <Calendar className="w-4 h-4 text-red-500" />
-                <span className="text-slate-700 dark:text-slate-300">
-                  Next eligible to donate:{' '}
+              <div className="pt-1 text-xs flex items-center space-x-2">
+                <Calendar className="w-4 h-4 text-ob-red-700" />
+                <span className="text-neutral-600 dark:text-neutral-300">
+                  Transfusion status:{' '}
                   {isEligible ? (
-                    <span className="text-emerald-600 dark:text-emerald-400 font-bold">Eligible now!</span>
+                    <span className="text-emerald-600 dark:text-emerald-400 font-bold">Eligible to donate now</span>
                   ) : (
-                    <span className="text-amber-600 dark:text-amber-400">
-                      in {daysDiff} days — <button onClick={() => toast.success('Reminder scheduled!')} className="underline hover:text-slate-900 dark:hover:text-white">Set a reminder</button>
+                    <span className="text-amber-600 dark:text-amber-400 font-semibold">
+                      Cooldown active ({daysDiff} days remaining)
                     </span>
                   )}
                 </span>
               </div>
             </div>
 
-            {/* Giant toggle button */}
-            <div className="bg-slate-100 dark:bg-slate-800/40 border border-slate-200 dark:border-white/10 rounded-2xl p-6 flex flex-col items-center space-y-3 min-w-[200px] shadow-sm">
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Availability Toggle</span>
+            {/* Availability Toggle */}
+            <div className="bg-white dark:bg-neutral-900/60 border border-neutral-250 dark:border-neutral-800 rounded-2xl p-5 flex flex-col items-center space-y-2 min-w-[200px]">
+              <span className="text-[10px] font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-widest">Availability Switch</span>
               <button
                 onClick={handleToggleAvailability}
-                className="focus:outline-none transition-transform hover:scale-105"
+                className="transition-transform active:scale-95 focus:outline-none"
               >
                 {profile.isAvailable ? (
-                  <div className="flex items-center space-x-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-4 py-2.5 rounded-xl font-black text-sm">
-                    <ToggleRight className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
-                    <span>AVAILABLE</span>
+                  <div className="flex items-center space-x-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-605 dark:text-emerald-400 px-4 py-2 rounded-xl font-bold text-xs font-mono">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                    <span>ACTIVE / DISPATCH READY</span>
                   </div>
                 ) : (
-                  <div className="flex items-center space-x-2 bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-white/5 text-slate-500 dark:text-slate-400 px-4 py-2.5 rounded-xl font-black text-sm">
-                    <ToggleLeft className="w-7 h-7 text-slate-400 dark:text-slate-500" />
-                    <span>OFFLINE</span>
+                  <div className="flex items-center space-x-2 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-500 dark:text-neutral-400 px-4 py-2 rounded-xl font-bold text-xs font-mono">
+                    <span className="w-2 h-2 rounded-full bg-neutral-400" />
+                    <span>PAUSED / OFFLINE</span>
                   </div>
                 )}
               </button>
             </div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Section 2 — Live incoming requests */}
+        {/* Incoming Emergency Requests */}
         <div className="space-y-4 text-left">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center space-x-2">
-              <span className="relative flex h-2 w-2 mr-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+            <h3 className="text-lg font-bold text-neutral-900 dark:text-ob-white font-display flex items-center gap-2">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-ob-red-700 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-ob-red-700"></span>
               </span>
-              <span>Requests you received ({profile.bloodGroup})</span>
+              <span>Proximity Match Requests ({profile.bloodGroup})</span>
             </h3>
-            <span className="text-xs text-slate-500 dark:text-slate-400">{activeRequests.length} active matching</span>
+            <span className="text-xs font-mono bg-neutral-100 dark:bg-neutral-900 px-2 py-0.5 rounded-full text-neutral-500">{activeRequests.length} matching</span>
           </div>
 
           {activeRequests.length === 0 ? (
-            <div className="flex flex-col items-center justify-center p-12 bg-white dark:bg-slate-900/20 border border-slate-200 dark:border-white/5 rounded-3xl text-center space-y-3 shadow-sm">
-              <div className="p-4 bg-slate-100 dark:bg-slate-800/40 rounded-full text-slate-500">
-                <HeartPulse className="w-8 h-8 text-red-500" />
-              </div>
-              <p className="text-sm font-semibold text-slate-700 dark:text-slate-400">No requests received yet.</p>
-              <p className="text-xs text-slate-500 dark:text-slate-500 max-w-sm">
-                Stay available — direct donor requests will appear here when patients or nearby seekers search for your blood type.
+            <div className="flex flex-col items-center justify-center p-12 bg-neutral-50 dark:bg-neutral-900/20 border border-neutral-200 dark:border-ob-glass-border rounded-3xl text-center space-y-3 shadow-card">
+              <HeartPulse className="w-8 h-8 text-ob-red-700 animate-pulse" />
+              <p className="text-sm font-semibold text-neutral-755 dark:text-neutral-350">No incoming dispatches.</p>
+              <p className="text-xs text-neutral-500 max-w-sm">
+                Ensure availability is toggled ON to receive direct coordinate dispatches from nearby seeking hospitals.
               </p>
             </div>
           ) : (
-            <div className="flex space-x-6 overflow-x-auto pb-4 pt-1 snap-x scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-white/10">
+            <div className="flex space-x-6 overflow-x-auto pb-4 pt-1 snap-x scrollbar-thin">
               {activeRequests.map((req) => {
                 const isExpanded = expandedRequestId === req._id;
                 const myResp = req.responses?.find(
@@ -282,97 +277,74 @@ const DonorHomePage = () => {
                 return (
                   <div
                     key={req._id}
-                    className={`snap-start shrink-0 w-80 bg-white dark:bg-slate-900 border transition-all duration-300 rounded-2xl flex flex-col justify-between p-6 shadow-sm ${
-                      isExpanded ? 'border-red-500 ring-1 ring-red-500/20 w-[360px]' : 'border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10'
+                    className={`snap-start shrink-0 w-80 bg-neutral-50 dark:bg-neutral-900/60 border rounded-2xl flex flex-col justify-between p-6 transition-all duration-300 ${
+                      isExpanded ? 'border-ob-red-700 ring-2 ring-ob-red-700/10 w-[340px]' : 'border-neutral-200 dark:border-ob-glass-border hover:border-neutral-300 dark:hover:border-ob-glass-hover'
                     }`}
                   >
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       <div className="flex justify-between items-start">
-                        <span className="px-2.5 py-1 bg-red-500/10 border border-red-500/20 text-[#C0152A] rounded-lg text-[10px] font-black uppercase tracking-wider">
+                        <span className={`text-[9px] px-2 py-0.5 rounded-lg border font-mono font-bold uppercase tracking-wider ${
+                          req.urgencyLevel === 'critical' ? 'bg-ob-red-700/10 text-ob-red-700 border-ob-red-700/25 animate-pulse' : 'bg-amber-500/10 text-amber-600 dark:text-amber-500 border-amber-505/20'
+                        }`}>
                           {req.urgencyLevel}
                         </span>
-                        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                        <span className="text-xs text-neutral-500 font-mono">
                           {req.city || profile.city}
                         </span>
                       </div>
 
-                      <div>
-                        <h4 className="font-bold text-base text-slate-800 dark:text-white">
+                      <div className="text-left">
+                        <h4 className="font-bold text-sm text-neutral-900 dark:text-ob-white">
                           Patient: {req.patientName}
                         </h4>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
+                        <p className="text-xs text-neutral-505 dark:text-neutral-400 mt-1">
                           Hospital: {req.hospitalName}
                         </p>
                       </div>
 
-                      {/* Display response details if already responded, else show response actions */}
                       {myResp ? (
-                        <div className="pt-3 border-t border-slate-100 dark:border-white/5 space-y-3 text-left">
+                        <div className="pt-3 border-t border-neutral-200 dark:border-neutral-800 space-y-3">
                           <div className="flex items-center justify-between text-xs">
-                            <span className="text-slate-500 dark:text-slate-400 font-bold">Your Response:</span>
-                            <span className={`px-2.5 py-1 rounded-lg font-black uppercase text-[9px] ${
-                              myResp.status === 'accepted' ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400' :
-                              myResp.status === 'need_transport' ? 'bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400' :
-                              'bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400'
-                            }`}>
-                              {myResp.status.replace('_', ' ')}
+                            <span className="text-neutral-500">Response Status:</span>
+                            <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-505 font-mono text-[9px] font-bold uppercase">
+                              {myResp.status}
                             </span>
                           </div>
 
-                          <div className="bg-slate-50 dark:bg-white/5 rounded-xl p-3 space-y-2 border border-slate-100 dark:border-white/5">
-                            <span className="text-[9px] text-slate-500 dark:text-slate-500 font-bold uppercase tracking-wider block">
-                              Seeker Contact Details
-                            </span>
-                            <div className="space-y-1.5 text-left">
-                              <p className="text-xs text-slate-700 dark:text-slate-300">
-                                <strong>Requester:</strong> {req.requesterId?.name || 'Patient Family'}
-                              </p>
-                              {req.phone && (
-                                <p className="text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                                  <Phone className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                                  <a href={`tel:${req.phone}`} className="hover:underline text-slate-800 dark:text-white font-semibold">
-                                    {req.phone}
-                                  </a>
-                                </p>
-                              )}
-                              {req.requesterId?.email && (
-                                <p className="text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                                  <Mail className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                                  <a href={`mailto:${req.requesterId.email}`} className="hover:underline text-slate-800 dark:text-white font-semibold">
-                                    {req.requesterId.email}
-                                  </a>
-                                </p>
-                              )}
-                            </div>
+                          <div className="bg-white dark:bg-neutral-950/40 rounded-xl p-3 border border-neutral-200 dark:border-neutral-800 space-y-1.5">
+                            <span className="text-[9px] text-neutral-400 font-bold uppercase tracking-wider block">Seeker Contact</span>
+                            <p className="text-xs text-neutral-700 dark:text-neutral-300"><strong>Name:</strong> {req.requesterId?.name || 'Patient Family'}</p>
+                            {req.phone && (
+                              <p className="text-xs text-neutral-755 dark:text-neutral-300 font-mono"><strong>Phone:</strong> <a href={`tel:${req.phone}`} className="text-ob-red-700 hover:underline">{req.phone}</a></p>
+                            )}
                           </div>
 
                           <button
                             onClick={() => handleDeclineRequest(req._id)}
-                            className="w-full py-2.5 bg-red-500/10 hover:bg-red-500/20 text-[#C0152A] border border-red-500/20 rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1.5 cursor-pointer"
+                            className="w-full py-2 bg-ob-red-700/10 hover:bg-ob-red-700/20 text-ob-red-700 rounded-xl text-xs font-bold transition-all active:scale-[0.97]"
                           >
-                            <XCircle className="w-4 h-4" />
-                            <span>Withdraw Response</span>
+                            Withdraw Response
                           </button>
                         </div>
                       ) : isExpanded ? (
-                        <div className="pt-3 border-t border-slate-100 dark:border-white/5 space-y-3 animate-fadeIn">
-                          <div className="grid grid-cols-2 text-xs text-slate-500 dark:text-slate-400 gap-y-2">
-                            <span>Units:</span>
-                            <span className="text-slate-800 dark:text-white font-bold">{req.unitsRequired} Units</span>
+                        <div className="pt-3 border-t border-neutral-200 dark:border-neutral-800 space-y-3">
+                          <div className="grid grid-cols-2 text-xs text-neutral-500 gap-y-2 text-left">
+                            <span>Units Required:</span>
+                            <strong className="text-neutral-900 dark:text-ob-white font-mono">{req.unitsRequired}</strong>
                             <span>Component:</span>
-                            <span className="text-slate-800 dark:text-white font-bold capitalize">{req.bloodComponent.replace('_', ' ')}</span>
+                            <strong className="text-neutral-900 dark:text-ob-white uppercase">{req.bloodComponent.replace('_', ' ')}</strong>
                             <span>Doctor:</span>
-                            <span className="text-slate-800 dark:text-white font-bold">{req.doctorName}</span>
+                            <strong className="text-neutral-900 dark:text-ob-white">{req.doctorName}</strong>
                             {req.doctorLetterUrl && (
                               <>
-                                <span>Prescription:</span>
+                                <span>Letter:</span>
                                 <a 
                                   href={req.doctorLetterUrl.startsWith('http') || req.doctorLetterUrl.startsWith('blob:') ? req.doctorLetterUrl : `${ASSETS_URL}${req.doctorLetterUrl}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="text-oneblood-crimson dark:text-red-400 hover:underline font-bold"
+                                  className="text-ob-red-700 hover:underline font-bold"
                                 >
-                                  View Document ↗
+                                  View prescription ↗
                                 </a>
                               </>
                             )}
@@ -383,11 +355,11 @@ const DonorHomePage = () => {
                               onClick={() => handleAcceptRequest(req._id)}
                               className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all"
                             >
-                              Accept Request
+                              Accept
                             </button>
                             <button
                               onClick={() => handleDeclineRequest(req._id)}
-                              className="flex-1 py-2 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-400 rounded-xl text-xs font-bold transition-all"
+                              className="flex-1 py-2 bg-neutral-200 dark:bg-neutral-805 text-neutral-700 dark:text-neutral-300 rounded-xl text-xs font-bold transition-all"
                             >
                               Decline
                             </button>
@@ -396,10 +368,10 @@ const DonorHomePage = () => {
                       ) : (
                         <button
                           onClick={() => setExpandedRequestId(req._id)}
-                          className="w-full mt-4 py-2 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-800 dark:text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1.5"
+                          className="w-full mt-4 py-2 bg-white dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-750 text-neutral-800 dark:text-ob-white border border-neutral-250 dark:border-neutral-700 rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1.5"
                         >
-                          <span>Respond</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
+                          <span>Review Request</span>
+                          <ArrowRight className="w-3.5 h-3.5 animate-pulse" />
                         </button>
                       )}
                     </div>
@@ -410,48 +382,45 @@ const DonorHomePage = () => {
           )}
         </div>
 
-        {/* Section 2.5 — Donation In Progress */}
+        {/* Live Donation Tracker Widget */}
         <DonationInProgress />
 
-        {/* Section 3 — My Impact & Section 4 — Community Feed */}
+        {/* Lifetime Performance Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Section 3: My Impact */}
-          <div className="lg:col-span-2 space-y-4">
-            <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center space-x-2">
-              <Award className="w-5 h-5 text-amber-500 dark:text-oneblood-gold" />
-              <span>My Impact & Badges</span>
+          <div className="lg:col-span-2 space-y-4 text-left">
+            <h3 className="text-lg font-bold text-neutral-900 dark:text-ob-white font-display flex items-center space-x-2">
+              <Award className="w-5 h-5 text-amber-500" />
+              <span>Donor Impact & Badge Shelf</span>
             </h3>
 
-            <div className="grid grid-cols-3 gap-4 text-left">
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 p-4 rounded-2xl text-center space-y-1 shadow-sm">
-                <Activity className="w-5 h-5 text-red-500 mx-auto mb-1" />
-                <span className="text-2xl font-black text-slate-800 dark:text-white">{profile.totalDonations}</span>
-                <p className="text-[10px] text-slate-500 uppercase font-semibold">Donations Made</p>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="bg-neutral-50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-ob-glass-border p-4 rounded-2xl text-center space-y-1 shadow-sm">
+                <Activity className="w-5 h-5 text-ob-red-700 mx-auto mb-1" />
+                <span className="text-2xl font-black text-neutral-900 dark:text-ob-white font-mono">{profile.totalDonations}</span>
+                <p className="text-[10px] text-neutral-400 uppercase font-semibold">Total Donations</p>
               </div>
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 p-4 rounded-2xl text-center space-y-1 shadow-sm">
-                <Users className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mx-auto mb-1" />
-                <span className="text-2xl font-black text-slate-800 dark:text-white">{profile.totalDonations * 3}</span>
-                <p className="text-[10px] text-slate-500 uppercase font-semibold">People Helped</p>
+              <div className="bg-neutral-50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-ob-glass-border p-4 rounded-2xl text-center space-y-1 shadow-sm">
+                <Users className="w-5 h-5 text-emerald-500 mx-auto mb-1" />
+                <span className="text-2xl font-black text-neutral-900 dark:text-ob-white font-mono">{profile.totalDonations * 3}</span>
+                <p className="text-[10px] text-neutral-400 uppercase font-semibold">Lives Saved</p>
               </div>
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 p-4 rounded-2xl text-center space-y-1 shadow-sm">
-                <Calendar className="w-5 h-5 text-amber-500 mx-auto mb-1" />
-                <span className="text-2xl font-black text-slate-800 dark:text-white">
+              <div className="bg-neutral-50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-ob-glass-border p-4 rounded-2xl text-center space-y-1 shadow-sm">
+                <Calendar className="w-5 h-5 text-blue-500 mx-auto mb-1" />
+                <span className="text-2xl font-black text-neutral-900 dark:text-ob-white font-mono">
                   {profile.lastDonationDate ? Math.ceil((new Date() - new Date(profile.lastDonationDate)) / (1000 * 60 * 60 * 24)) : 'N/A'}
                 </span>
-                <p className="text-[10px] text-slate-500 uppercase font-semibold">Days Since Last</p>
+                <p className="text-[10px] text-neutral-400 uppercase font-semibold">Days Since Last</p>
               </div>
             </div>
 
-            {/* Badge shelf */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 p-6 rounded-2xl space-y-4 text-left shadow-sm">
-              <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Badge Gallery</h4>
+            <div className="bg-neutral-50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-ob-glass-border p-6 rounded-2xl space-y-4 shadow-sm">
+              <h4 className="text-xs font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">Badge shelf</h4>
               <div className="flex flex-wrap gap-3">
-                {/* Seed Badges */}
                 {[
-                  { name: 'First Drop', min: 1, icon: <HeartPulse className="w-4 h-4" /> },
-                  { name: 'Life Saver', min: 3, icon: <Activity className="w-4 h-4" /> },
-                  { name: 'Century Club', min: 5, icon: <Award className="w-4 h-4" /> },
-                  { name: 'Guardian Angel', min: 10, icon: <Users className="w-4 h-4" /> }
+                  { name: 'First Drop', min: 1, icon: <HeartPulse className="w-4 h-4 text-ob-red-700" /> },
+                  { name: 'Life Saver', min: 3, icon: <Activity className="w-4 h-4 text-emerald-505" /> },
+                  { name: 'Century Club', min: 5, icon: <Award className="w-4 h-4 text-amber-500" /> },
+                  { name: 'Guardian Angel', min: 10, icon: <Users className="w-4 h-4 text-blue-500" /> }
                 ].map((b) => {
                   const unlocked = profile.totalDonations >= b.min;
                   return (
@@ -459,15 +428,15 @@ const DonorHomePage = () => {
                       key={b.name}
                       className={`px-3 py-2 border rounded-xl flex items-center space-x-2 text-xs font-bold transition-all ${
                         unlocked
-                          ? 'bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-oneblood-gold'
-                          : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/5 text-slate-400 dark:text-slate-500 opacity-60'
+                          ? 'bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400'
+                          : 'bg-neutral-100 dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 text-neutral-405 dark:text-neutral-500 opacity-60'
                       }`}
                     >
                       <span>{b.icon}</span>
                       <span>{b.name}</span>
                       {!unlocked && (
-                        <span className="text-[8px] text-slate-500 dark:text-slate-600 block pl-1">
-                          (Donate {b.min - profile.totalDonations} more)
+                        <span className="text-[8px] text-neutral-400 pl-1 font-mono">
+                          (Need {b.min - profile.totalDonations})
                         </span>
                       )}
                     </div>
@@ -477,16 +446,16 @@ const DonorHomePage = () => {
             </div>
           </div>
 
-          {/* Section 4: Community Feed */}
+          {/* Recent Activity Log */}
           <div className="space-y-4 text-left">
-            <h3 className="text-lg font-bold text-slate-800 dark:text-white">Recent Activity</h3>
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-3xl p-6 divide-y divide-slate-100 dark:divide-white/5 space-y-4 shadow-sm">
+            <h3 className="text-lg font-bold text-neutral-900 dark:text-ob-white font-display">Recent Activity</h3>
+            <div className="bg-neutral-50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-ob-glass-border rounded-3xl p-6 divide-y divide-neutral-200 dark:divide-neutral-800 space-y-4 shadow-sm">
               {communityFeeds.map((feed) => (
                 <div key={feed.id} className="pt-4 first:pt-0 space-y-1">
-                  <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 leading-snug">
+                  <p className="text-xs font-semibold text-neutral-700 dark:text-neutral-350 leading-snug">
                     {feed.text}
                   </p>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-500 block">
+                  <span className="text-[10px] text-neutral-400 font-mono block">
                     {feed.time}
                   </span>
                 </div>
@@ -495,39 +464,37 @@ const DonorHomePage = () => {
           </div>
         </div>
 
-        {/* Section 5 — Quick links */}
-        <div className="border-t border-slate-200 dark:border-white/5 pt-8 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-          <Link
-            to="/dashboard/donor"
-            className="p-4 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/5 rounded-2xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white transition-all shadow-sm"
-          >
-            Go to my Dashboard &rarr;
-          </Link>
+        {/* Secondary Quick Navigation */}
+        <div className="border-t border-neutral-200 dark:border-neutral-800 pt-8 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
           <Link
             to="/profile"
-            className="p-4 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/5 rounded-2xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white transition-all shadow-sm"
+            className="p-4 bg-neutral-50 dark:bg-neutral-900/45 border border-neutral-200 dark:border-ob-glass-border rounded-2xl text-xs font-bold text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-850 hover:text-neutral-900 dark:hover:text-white transition-all shadow-sm"
           >
-            Edit my Profile &rarr;
+            Edit Profile
           </Link>
           <Link
             to="/search"
-            className="p-4 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/5 rounded-2xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white transition-all shadow-sm"
+            className="p-4 bg-neutral-50 dark:bg-neutral-900/45 border border-neutral-200 dark:border-ob-glass-border rounded-2xl text-xs font-bold text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-850 hover:text-neutral-900 dark:hover:text-white transition-all shadow-sm"
           >
-            Browse Map &rarr;
+            Browse Search Map
+          </Link>
+          <Link
+            to="/active-donations"
+            className="p-4 bg-neutral-50 dark:bg-neutral-900/45 border border-neutral-200 dark:border-ob-glass-border rounded-2xl text-xs font-bold text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-850 hover:text-neutral-900 dark:hover:text-white transition-all shadow-sm"
+          >
+            Donation Records
           </Link>
           <button
-            onClick={() => toast.success('Donation log is up to date!')}
-            className="p-4 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/5 rounded-2xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white transition-all shadow-sm focus:outline-none"
+            onClick={() => toast.success('Dispatch metrics synced!')}
+            className="p-4 bg-neutral-50 dark:bg-neutral-900/45 border border-neutral-200 dark:border-ob-glass-border rounded-2xl text-xs font-bold text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-850 hover:text-neutral-900 dark:hover:text-white transition-all shadow-sm cursor-pointer"
           >
-            See donation history &rarr;
+            Sync Dispatch System
           </button>
         </div>
 
-        {/* Hall of Fame statistics */}
+        {/* Global Hall of Fame */}
         <HallOfFameSection />
       </div>
     </div>
   );
-};
-
-export default DonorHomePage;
+}

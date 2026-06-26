@@ -1,541 +1,460 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, useScroll, useSpring, useTransform, AnimatePresence } from 'framer-motion';
 import {
-  HeartPulse, ShieldAlert, Heart, Landmark, ShieldCheck,
-  ChevronDown, ChevronUp, FileText, Fingerprint, Activity,
-  CheckCircle2, Hospital, Building2, ArrowRight,
-  MapPin, Bell, UserCheck, FlaskConical, BadgeCheck, BarChart3,
-  Megaphone, Target, Printer, Droplet, Users, Phone, Share2,
-  Check, LayoutDashboard
+  HeartPulse, Shield, FileText, Fingerprint, Activity,
+  BadgeCheck, Hospital, ArrowRight, Radar, Route, Trophy,
+  MapPin, UserCheck, ChevronDown, ChevronUp, HelpCircle,
+  Scan, Handshake, Clock, Lock, Zap
 } from 'lucide-react';
+import BloodCompatibilityMatrix from '../components/shared/BloodCompatibilityMatrix';
+import {
+  massiveRevealLeft, massiveRevealRight, revealFromBelow,
+  fadeUp, fadeUpSlow, staggerGrid, scaleIn, staggerContainerSlow
+} from '../utils/animations';
 
-const Step = ({ number, title, description, color = 'red', badge, children }) => {
-  const colors = {
-    red: 'border-red-650/40 text-red-650 dark:text-red-500 bg-red-500/[0.03]',
-    emerald: 'border-emerald-650/40 text-emerald-650 dark:text-emerald-400 bg-emerald-500/[0.03]',
-    blue: 'border-blue-655/40 text-blue-655 dark:text-blue-400 bg-blue-500/[0.03]',
-    purple: 'border-purple-650/40 text-purple-650 dark:text-purple-400 bg-purple-500/[0.03]',
-  };
+/* ─── Massive Timeline Step ─── */
+const TimelineStep = ({ step, index, totalSteps }) => {
+  const isLeft = index % 2 === 0;
+  const stepRef = useRef(null);
+  
+  const { scrollYProgress } = useScroll({
+    target: stepRef,
+    offset: ["start 0.85", "start 0.3"]
+  });
+  
+  const opacity = useTransform(scrollYProgress, [0, 0.4], [0, 1]);
+  const y = useTransform(scrollYProgress, [0, 0.5], [60, 0]);
+  const x = useTransform(scrollYProgress, [0, 0.5], [isLeft ? -60 : 60, 0]);
+  const scale = useTransform(scrollYProgress, [0, 0.5], [0.92, 1]);
+
+  const iconMap = [Fingerprint, Scan, Radar, Handshake, Route, Trophy];
+  const StepIcon = iconMap[index] || HeartPulse;
+
+  const colorAccents = [
+    'border-ob-red-700',
+    'border-amber-500',
+    'border-emerald-500',
+    'border-blue-500',
+    'border-purple-500',
+    'border-ob-red-500',
+  ];
 
   return (
-    <div className="relative space-y-2">
-      <span className={`absolute -left-12 top-0.5 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border ${colors[color]}`}>
-        {number}
-      </span>
-      <div className="flex flex-wrap items-center gap-2">
-        <h3 className="text-sm font-bold text-slate-850 dark:text-white">{title}</h3>
-        {badge && (
-          <span className="text-[9px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-white/10 text-slate-600 dark:text-slate-400 font-mono font-bold tracking-wider">
-            {badge}
-          </span>
-        )}
-      </div>
-      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{description}</p>
-      {children && (
-        <div className="mt-2 p-3 bg-slate-100/50 dark:bg-slate-900/60 border border-slate-200 dark:border-white/5 rounded-xl text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed space-y-1">
-          {children}
+    <div
+      ref={stepRef}
+      className={`relative flex flex-col md:flex-row items-center justify-between w-full ${
+        index < totalSteps - 1 ? 'mb-32 md:mb-40' : ''
+      } ${isLeft ? '' : 'md:flex-row-reverse'}`}
+    >
+      {/* Content card side */}
+      <motion.div
+        style={{ opacity, y, x, scale }}
+        className={`w-full md:w-[46%] ${isLeft ? 'md:pr-10 md:text-right' : 'md:pl-10 md:text-left'}`}
+      >
+        <div className={`glass-panel-premium rounded-3xl p-8 md:p-10 transition-all duration-500 hover:-translate-y-2 hover:shadow-raised group border-t-4 ${colorAccents[index]}`}>
+          {/* Step label + Icon row */}
+          <div className={`flex items-center gap-3 mb-5 ${isLeft ? 'md:justify-end' : 'md:justify-start'}`}>
+            <div className="w-11 h-11 rounded-xl bg-ob-ink-70 border border-ob-glass-border flex items-center justify-center group-hover:border-ob-red-700/40 transition-colors">
+              <StepIcon className="w-5 h-5 text-ob-red-500" />
+            </div>
+            <span className="text-[11px] uppercase font-mono font-bold tracking-[3px] text-ob-red-500">
+              {step.subtitle}
+            </span>
+          </div>
+
+          {/* Title */}
+          <h3 className="text-2xl md:text-[28px] font-display leading-snug text-ob-white mb-4">
+            {step.title}
+          </h3>
+
+          {/* Description */}
+          <p className="text-[15px] md:text-base text-neutral-400 leading-relaxed">
+            {step.description}
+          </p>
+
+          {/* Tag/chip */}
+          {step.tag && (
+            <div className={`inline-flex items-center gap-1.5 mt-6 px-3 py-1.5 rounded-pill bg-ob-ink-70 border border-ob-glass-border text-xs font-mono text-neutral-300`}>
+              <Zap className="w-3 h-3 text-ob-red-500" />
+              {step.tag}
+            </div>
+          )}
         </div>
-      )}
+      </motion.div>
+
+      {/* Center node */}
+      <div className="absolute left-6 md:left-1/2 transform -translate-x-1/2 z-30">
+        <motion.div
+          style={{ scale }}
+          className="w-16 h-16 rounded-full bg-ob-ink border-[3px] border-ob-red-700 flex items-center justify-center font-mono text-lg font-black text-ob-red-500 animate-timeline-pulse shadow-glow-red"
+        >
+          {index + 1}
+        </motion.div>
+      </div>
+
+      {/* Ghost illustration side */}
+      <div className={`hidden md:flex w-[46%] items-center justify-center ${isLeft ? 'pl-10' : 'pr-10'}`}>
+        <motion.div
+          style={{ opacity: useTransform(scrollYProgress, [0, 0.6], [0, 0.15]) }}
+          className="w-full h-52 rounded-3xl border border-dashed border-ob-glass-border flex items-center justify-center"
+        >
+          <StepIcon className="w-16 h-16 text-neutral-600" strokeWidth={1} />
+        </motion.div>
+      </div>
     </div>
   );
 };
 
-const HowItWorksPage = () => {
-  const [openFaq, setOpenFaq] = useState(null);
+/* ─── Architecture Node Card ─── */
+const NodeCard = ({ node, index }) => {
+  const borderColors = [
+    'border-t-ob-red-700',
+    'border-t-emerald-500',
+    'border-t-purple-500',
+    'border-t-blue-500'
+  ];
+  const iconColors = ['text-ob-red-500', 'text-emerald-400', 'text-purple-400', 'text-blue-400'];
+  const icons = [UserCheck, HeartPulse, Shield, Hospital];
+  const NodeIcon = icons[index];
 
-  const toggleFaq = (index) => {
-    setOpenFaq(openFaq === index ? null : index);
-  };
+  return (
+    <motion.div
+      variants={revealFromBelow}
+      className={`glass-panel-premium rounded-3xl p-7 md:p-8 border-t-4 ${borderColors[index]} hover:shadow-raised hover:-translate-y-1 transition-all duration-300 flex flex-col`}
+    >
+      <div className={`w-12 h-12 rounded-full bg-ob-ink-70 border border-ob-glass-border flex items-center justify-center mb-5 ${iconColors[index]}`}>
+        <NodeIcon className="w-5 h-5" />
+      </div>
+      <h4 className="text-lg font-bold text-ob-white mb-2">{node.name}</h4>
+      <p className="text-sm text-neutral-400 leading-relaxed mb-4 flex-grow">{node.desc}</p>
+      <div className="space-y-2">
+        {node.features.map((feat, i) => (
+          <div key={i} className="flex items-center gap-2 text-xs text-neutral-500">
+            <BadgeCheck className="w-3.5 h-3.5 text-ob-red-500 shrink-0" />
+            {feat}
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  );
+};
+
+
+export default function HowItWorksPage() {
+  const [openFaq, setOpenFaq] = useState(null);
+  const containerRef = useRef(null);
+
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start center", "end center"]
+  });
+
+  const scaleY = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001
+  });
+
+  const timelineSteps = [
+    {
+      title: "Cryptographic Registration",
+      subtitle: "Identity & Onboarding",
+      description: "Every participant — seeker, donor, hospital, or blood bank — is assigned a unique cryptographic OneBlood ID (OB-XXXXXXX) upon registration. All subsequent actions, matches, and communications are authenticated and permanently mapped to this persistent identity, creating a verifiable audit trail for every unit of blood.",
+      tag: "OB-XXXXXXX"
+    },
+    {
+      title: "AI-Powered Request Analysis",
+      subtitle: "Claude OCR Validation",
+      description: "When blood is needed, the doctor's prescription or hospital requisition letter is uploaded directly to the platform. Anthropic's Claude AI performs deep OCR analysis — extracting the hospital name, patient blood group, required units, and urgency level. The system automatically validates authenticity and filters out spam or fraudulent requests before any broadcast occurs.",
+      tag: "99.8% Accuracy"
+    },
+    {
+      title: "Geospatial Matching Engine",
+      subtitle: "25km Proximity Broadcast",
+      description: "OneBlood's geospatial engine scans all active, eligible donors within a configurable 25-kilometer radius of the requesting hospital. Compatible donors receive instant push notifications with request details. Crucially, personal donor coordinates, phone numbers, and contact details remain fully encrypted and hidden until mutual confirmation.",
+      tag: "< 30 Second Match"
+    },
+    {
+      title: "Mutual Confirmation & Match ID",
+      subtitle: "Official Slip Generation",
+      description: "When a seeker approves a donor's response, a unique Match ID (MOB-XXXXXXX) is cryptographically generated. The system automatically creates a downloadable PDF match slip — a formal document detailing the transit blood bank, donor identity, and destination hospital node. This document serves as the official coordination record.",
+      tag: "MOB-XXXXXXX"
+    },
+    {
+      title: "Synchronized Dispatch Tracking",
+      subtitle: "Live Multi-Dashboard Sync",
+      description: "The donation journey progresses through real-time synchronized milestones: Match Confirmed → Collected at Blood Bank → En-route to Hospital → Donation Received. All four participant dashboards — seeker, donor, blood bank, and hospital — update dynamically as each milestone is confirmed, providing complete transparency and accountability.",
+      tag: "4-Stage Pipeline"
+    },
+    {
+      title: "Delivery & Score Finalization",
+      subtitle: "Badges & Medical Cooldown",
+      description: "The hospital marks the donation as received, formally closing the transaction record. The donor earns performance achievement badges based on donation frequency and reliability. The system then automatically initiates and tracks the 56-day medical cooldown period, ensuring donor health compliance before eligibility for future donations.",
+      tag: "56-Day Cooldown"
+    }
+  ];
+
+  const architectureNodes = [
+    {
+      name: "Seeker Node",
+      desc: "Individuals or families initiating emergency blood requests, tracking donor matches, and coordinating hospital deliveries.",
+      features: ["AI-Verified Requests", "Real-time Donor Tracking", "PDF Match Slips"]
+    },
+    {
+      name: "Donor Node",
+      desc: "Registered donors responding to proximity-based alerts, coordinating availability, and building donation histories.",
+      features: ["Smart Push Alerts", "Cooldown Tracking", "Achievement Badges"]
+    },
+    {
+      name: "Blood Bank Node",
+      desc: "Licensed facilities managing local inventory, validating transit stages, and confirming blood unit quality.",
+      features: ["Inventory Sync", "Dispatch Routing", "Quality Validation"]
+    },
+    {
+      name: "Hospital Node",
+      desc: "Medical staff issuing critical requisitions and confirming receipt of matched blood to close the transaction loop.",
+      features: ["AI OCR Uploads", "ETA Dashboards", "Receipt Confirmation"]
+    }
+  ];
 
   const faqData = [
     {
-      q: 'What is a OneBlood ID?',
-      a: 'Every user — whether a seeker, donor, blood bank, or hospital — receives a unique OneBlood ID (OB-XXXXXXX) upon registration. This ID is permanently tied to your account and is displayed on all match documents, so all parties can verify identities at a glance. You can copy your ID from your dashboard at any time.'
+      q: 'What is a OneBlood ID and how is it generated?',
+      a: 'Every user — whether a seeker, donor, blood bank, or hospital — receives a unique cryptographic OneBlood ID (OB-XXXXXXX) upon registration. This ID is permanently tied to your account, displayed on all match documents, and ensures all parties can verify identities instantly. The ID is generated using a secure hashing algorithm tied to your verified phone number and registration timestamp.'
     },
     {
-      q: 'What is a Match ID (MOB-XXXXXXX)?',
-      a: 'When a seeker approves a donor response and selects a destination, the system automatically generates a unique Match ID in the format MOB-XXXXXXX. This ID tracks the entire donation journey — from approval, to blood bank stage (if applicable), to hospital receipt. It appears on the PDF match slip, in-app notifications, and on all four dashboards (seeker, donor, blood bank, hospital).'
+      q: 'How does the Match ID (MOB-XXXXXXX) work?',
+      a: 'When a seeker approves a donor response and selects a destination, the system automatically generates a unique Match ID in the format MOB-XXXXXXX. This ID tracks the entire donation journey — from initial approval, through the blood bank transit stage (if applicable), all the way to hospital receipt confirmation. It appears on all related documents including the downloadable PDF match slip.'
     },
     {
-      q: 'How does the progress bar work?',
-      a: 'Once a match is created, a live progress bar is visible on all 4 dashboards. For donations routed through a blood bank first, there are 4 stages: Match Confirmed → Collected at Bank → En-route to Hospital → Donation Received. For direct hospital donations, there are 3 stages. The blood bank marks their stage complete; only after that can the hospital mark the donation received — which fully completes the record and moves it to Past Donations history.'
+      q: 'What are the progress stages and how are they tracked?',
+      a: 'Once a match is created, a live progress bar becomes visible across all 4 participant dashboards. For donations routed through a blood bank, there are 4 stages: Match Confirmed → Collected at Bank → En-route to Hospital → Donation Received. For direct hospital donations, there are 3 stages. Each stage requires explicit confirmation from the relevant party — the hospital confirms final receipt to complete the record.'
     },
     {
-      q: 'Is the doctor\'s letter verified by AI?',
-      a: 'When using the Smart Search / OCR flow, the letter goes through an automated analysis that extracts hospital name, doctor name, blood group, units needed, and urgency level. However, the direct "Send Request" modal lets you manually fill in all details and simply upload the letter as an attachment without AI verification — the document is stored securely and visible to the donor and matched facility.'
+      q: 'How is donor privacy and contact information protected?',
+      a: 'Donor phone numbers, email addresses, and WhatsApp contacts are AES-256 encrypted in our database and never publicly visible to any user. During the matching phase, seekers can only see distance and blood group compatibility. Contact information is decrypted and revealed only after the donor explicitly accepts a specific request, creating a mutual consent gateway.'
     },
     {
-      q: 'Can I choose a specific donor?',
-      a: 'Yes. On the Search Map, you can click on any donor pin and send them a direct, exclusive request. The request goes only to that donor and appears in their "Requests Sent to You" section. Alternatively, you can broadcast to all nearby eligible donors with a single click.'
-    },
-    {
-      q: 'What blood components are supported?',
-      a: 'OneBlood coordinates: Whole Blood, Packed RBC (PRBC), Fresh Frozen Plasma, Platelets, Cryoprecipitate, and Single Donor Platelets (SDP). Blood banks can maintain real-time inventory for all 8 blood groups × 6 components.'
-    },
-    {
-      q: 'Is my phone number safe?',
-      a: 'Yes. Phone numbers and emails are encrypted in our database and never publicly visible. Donor contact is shared only with the specific seeker after the seeker formally approves that donor. Blood bank and hospital contacts are visible on their public profile pages only to authenticated users.'
-    },
-    {
-      q: 'How is the donation marked as complete?',
-      a: 'A donation is only marked complete when the destination hospital marks it as "Donation Received". If there is a blood bank transit stop, the blood bank must first mark their stage as "Collected at Bank" — only then can the hospital finalise the record. This ensures accurate tracking and prevents premature completion.'
+      q: 'How accurate is the AI document scanning?',
+      a: 'Our integration with Anthropic\'s Claude AI achieves over 99.8% accuracy on standard medical requisition forms and doctor\'s prescriptions. The AI extracts blood type, units required, hospital name, and patient details. In rare cases of ambiguity — such as poor handwriting on physical forms — the request is automatically flagged for manual review before broadcasting to donors.'
     }
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-16 px-4 sm:px-6 lg:px-8 space-y-20 transition-colors duration-300 relative overflow-hidden">
-      {/* Decorative gradients */}
-      <div className="absolute top-10 right-0 w-[40vw] h-[40vw] rounded-full bg-red-600/[0.02] blur-[130px] pointer-events-none" />
-      <div className="absolute bottom-20 left-0 w-[30vw] h-[30vw] rounded-full bg-blue-650/[0.015] blur-[120px] pointer-events-none" />
+    <div className="min-h-screen bg-white dark:bg-ob-ink py-20 px-4 sm:px-6 lg:px-8 space-y-0 transition-colors duration-300 relative overflow-hidden">
 
-      {/* ── Hero Header ── */}
-      <motion.div 
-        initial={{ opacity: 0, y: 25 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="max-w-4xl mx-auto text-center space-y-4"
+      {/* ─── Background Orbs ─── */}
+      <div className="absolute top-10 right-0 w-[50vw] h-[50vw] rounded-full bg-ob-red-700/[0.03] blur-[150px] pointer-events-none animate-orb-float" />
+      <div className="absolute top-[40%] left-[-10%] w-[35vw] h-[35vw] rounded-full bg-purple-500/[0.02] blur-[130px] pointer-events-none" />
+      <div className="absolute bottom-20 right-[-5%] w-[30vw] h-[30vw] rounded-full bg-amber-500/[0.02] blur-[120px] pointer-events-none" />
+
+      {/* ═══════════════════════════════════════════
+          1. HERO HEADER
+      ═══════════════════════════════════════════ */}
+      <motion.div
+        variants={fadeUp}
+        initial="hidden"
+        animate="visible"
+        className="max-w-5xl mx-auto text-center space-y-7 mb-32"
       >
-        <div className="inline-flex p-2.5 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-[#C0152A] mb-2 shadow-sm">
-          <HeartPulse className="w-8 h-8 text-[#C0152A] animate-pulse" />
-        </div>
-        <h1 className="text-3xl sm:text-5xl font-black text-slate-850 dark:text-white leading-tight font-display">
-          How OneBlood Works
-        </h1>
-        <p className="text-base sm:text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
-          A real-time, end-to-end blood coordination platform. Every step — from request to receipt — is tracked, documented, and confirmed across all four parties.
-        </p>
+        <motion.span
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.1 }}
+          className="inline-block px-4 py-2 bg-ob-red-700/10 dark:bg-ob-red-700/20 border border-ob-red-700/20 text-ob-red-700 dark:text-ob-red-500 font-bold uppercase tracking-[3px] rounded-full text-xs"
+        >
+          Engineered for Emergencies
+        </motion.span>
 
-        {/* Key Identity callout */}
-        <div className="inline-flex flex-wrap items-center justify-center gap-4 mt-4 px-6 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl shadow-sm">
-          <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
-            <Fingerprint className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-            <span><span className="font-bold text-slate-850 dark:text-white">OneBlood ID</span> — OB-XXXXXXX</span>
-          </div>
-          <div className="w-px h-4 bg-slate-200 dark:bg-white/10 hidden sm:block" />
-          <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
-            <BadgeCheck className="w-4 h-4 text-emerald-550 dark:text-emerald-400" />
-            <span><span className="font-bold text-slate-850 dark:text-white">Match ID</span> — MOB-XXXXXXX</span>
-          </div>
-          <div className="w-px h-4 bg-slate-200 dark:bg-white/10 hidden sm:block" />
-          <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
-            <BarChart3 className="w-4 h-4 text-blue-500 dark:text-blue-450" />
-            <span><span className="font-bold text-slate-850 dark:text-white">Progress Bar</span> — Live Sync</span>
-          </div>
-        </div>
+        <motion.h1
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.6 }}
+          className="text-5xl sm:text-7xl lg:text-8xl font-display font-black text-neutral-900 dark:text-ob-white leading-[1.05] tracking-tight"
+        >
+          How OneBlood{' '}
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-ob-red-700 to-red-400 text-glow-red">
+            Works
+          </span>
+        </motion.h1>
+
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35, duration: 0.5 }}
+          className="text-base sm:text-lg lg:text-xl text-neutral-600 dark:text-neutral-400 max-w-3xl mx-auto leading-relaxed font-light"
+        >
+          A highly secure, AI-driven coordination platform that matches critical blood requests
+          with qualified donors in real-time. Every step — from request to receipt — is tracked,
+          documented, and confirmed across all four parties.
+        </motion.p>
+
+        {/* Scroll indicator */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.6 }}
+          transition={{ delay: 0.8 }}
+          className="flex flex-col items-center gap-2 pt-8"
+        >
+          <span className="text-[10px] tracking-[0.25em] uppercase font-mono text-neutral-500">Scroll to explore</span>
+          <motion.div
+            animate={{ y: [0, 8, 0] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          >
+            <ChevronDown className="w-5 h-5 text-neutral-500" />
+          </motion.div>
+        </motion.div>
       </motion.div>
 
-      {/* ── Seeker + Donor Columns ── */}
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16">
 
-        {/* Section 1 — For Seekers */}
-        <motion.div 
-          initial={{ opacity: 0, x: -30 }}
-          whileInView={{ opacity: 1, x: 0 }}
+      {/* ═══════════════════════════════════════════
+          2. MASSIVE TIMELINE
+      ═══════════════════════════════════════════ */}
+      <section className="max-w-6xl mx-auto mb-32 px-4 relative">
+        {/* Section header */}
+        <motion.div
+          variants={fadeUpSlow}
+          initial="hidden"
+          whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.6 }}
-          className="space-y-8 text-left"
+          className="text-center mb-24"
         >
-          <h2 className="text-xl font-bold text-slate-850 dark:text-white flex items-center space-x-2 pb-2 border-b border-slate-200 dark:border-white/5">
-            <Heart className="w-5 h-5 text-amber-500" />
-            <span>For Seekers (Looking for Blood)</span>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display text-neutral-900 dark:text-ob-white mb-4">
+            The Lifesaving Protocol
           </h2>
-
-          <div className="relative pl-8 space-y-8 border-l-2 border-dashed border-red-500/20">
-
-            <Step number="1" color="red" title="Register & Get Your OneBlood ID"
-              description="Sign up with your details. Instantly receive a unique OneBlood ID (OB-XXXXXXX) that identifies you across the platform and on all official match documents.">
-              <span className="font-mono text-amber-600 dark:text-amber-400">Your ID: OB-3742819 (example)</span>
-            </Step>
-
-            <Step number="2" color="red" title="Submit a Blood Request"
-              description="On the Search Map or from your dashboard, fill in the patient's details — name, age, gender, blood group, component type, units needed, urgency level, hospital details, and doctor's information. Attach the doctor's prescription letter as supporting evidence." />
-
-            <Step number="3" color="red" title="Geospatial Matching & Alert Dispatch"
-              description="The system scans for eligible donors within your set radius using geospatial queries. Matched donors receive instant real-time push notifications and email alerts with full request details.">
-              <span>You can also target a <span className="text-slate-850 dark:text-white font-semibold">specific donor</span> directly from the map by clicking their pin — the request goes exclusively to them.</span>
-            </Step>
-
-            <Step number="4" color="red" title="Donor Responds — You Review & Approve"
-              description="Donors who can help will accept the request. You'll receive a notification. On your dashboard under 'Requests Sent', you'll see all responses. You then select:"
-              badge="KEY STEP">
-              <ul className="space-y-2 list-none">
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-500" />
-                  <span className="text-slate-700 dark:text-white font-semibold">Which donor to approve</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Hospital className="w-4 h-4 text-red-500" />
-                  <span className="text-slate-700 dark:text-white font-semibold">Final destination hospital</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Landmark className="w-4 h-4 text-blue-500" />
-                  <span className="text-slate-700 dark:text-white font-semibold">Optional: transit blood bank</span>
-                </li>
-              </ul>
-            </Step>
-
-            <Step number="5" color="red" title="Match ID Generated & PDF Match Slip Issued"
-              description="The moment you approve, the system generates a unique Match ID (MOB-XXXXXXX). A detailed PDF match slip is produced containing:"
-              badge="MOB-XXXXXXX">
-              <ul className="space-y-2 list-none">
-                <li className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-slate-400" />
-                  <span>Your OneBlood ID and patient details</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Droplet className="w-4 h-4 text-red-500" />
-                  <span>Donor OneBlood ID, address, and eligibility check</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Hospital className="w-4 h-4 text-slate-400" />
-                  <span>Destination hospital and transit blood bank details</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Printer className="w-4 h-4 text-slate-400" />
-                  <span>Official verification notice</span>
-                </li>
-              </ul>
-              <p className="pt-1 text-slate-500 dark:text-slate-500">The PDF is emailed to all parties and available for download from every dashboard.</p>
-            </Step>
-
-            <Step number="6" color="red" title="Track via Live Progress Bar"
-              description="Your seeker dashboard shows a real-time progress bar for your active donation. The stages depend on the route chosen:">
-              <div className="space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-emerald-500 text-white text-[9px] font-black flex items-center justify-center shrink-0">✓</span>
-                  <span className="text-slate-700 dark:text-slate-300">Match Confirmed</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-purple-500/20 border border-purple-500/40 text-purple-650 dark:text-purple-400 text-[9px] font-black flex items-center justify-center shrink-0">2</span>
-                  <span className="text-slate-700 dark:text-slate-300">Collected at Blood Bank <span className="text-slate-400 dark:text-slate-600">(if transit route)</span></span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-blue-500/20 border border-blue-500/40 text-blue-600 dark:text-blue-450 text-[9px] font-black flex items-center justify-center shrink-0">3</span>
-                  <span className="text-slate-700 dark:text-slate-300">En-route to Hospital</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-500 text-[9px] font-black flex items-center justify-center shrink-0">4</span>
-                  <span className="text-slate-700 dark:text-slate-300">Donation Received — <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Fully Complete</span></span>
-                </div>
-              </div>
-            </Step>
-
-            <Step number="7" color="red" title="Moved to Past Donations"
-              description="Once the hospital confirms receipt, the match is fully closed and stored in your Past Donations history — accessible from your seeker dashboard and the Active Donations page. All 4 parties (seeker, donor, blood bank, hospital) retain a full record." />
-
-          </div>
+          <div className="h-1 w-24 bg-ob-red-700 mx-auto rounded-full box-glow-red" />
         </motion.div>
 
-        {/* Section 2 — For Donors */}
-        <motion.div 
-          initial={{ opacity: 0, x: 30 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.6 }}
-          className="space-y-8 text-left"
-        >
-          <h2 className="text-xl font-bold text-slate-850 dark:text-white flex items-center space-x-2 pb-2 border-b border-slate-200 dark:border-white/5">
-            <HeartPulse className="w-5 h-5 text-[#C0152A]" />
-            <span>For Donors (Ready to Donate)</span>
-          </h2>
-
-          <div className="relative pl-8 space-y-8 border-l-2 border-dashed border-emerald-500/20">
-
-            <Step number="1" color="emerald" title="Register & Complete Your Donor Profile"
-              description="Sign up and fill in your blood group, age, weight, city, and contact preferences. You receive a unique OneBlood ID (OB-XXXXXXX) which identifies you on all match slips and communications.">
-              <span>The system automatically enforces the <span className="text-slate-850 dark:text-white font-semibold">56-day cooldown rule</span> — your eligibility date is tracked and displayed on your dashboard.</span>
-            </Step>
-
-            <Step number="2" color="emerald" title="Set Your Availability"
-              description="Toggle your availability on your Donor Home or Dashboard. When toggled ON, you're included in geospatial searches and can receive request notifications. Toggle OFF to pause without losing your profile." />
-
-            <Step number="3" color="emerald" title="Receive Requests — Direct or Broadcast"
-              description="You'll receive two types of requests in 'Requests Sent to You' on your dashboard:">
-              <ul className="space-y-2 list-none">
-                <li className="flex items-center gap-2">
-                  <Megaphone className="w-4 h-4 text-blue-500" />
-                  <span className="text-slate-700 dark:text-white font-semibold">Broadcast requests</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Target className="w-4 h-4 text-red-500" />
-                  <span className="text-slate-700 dark:text-white font-semibold">Exclusive requests</span>
-                </li>
-              </ul>
-              <p className="pt-1 text-slate-500 dark:text-slate-550">Only requests explicitly addressed to you appear here — not all requests for your blood group.</p>
-            </Step>
-
-            <Step number="4" color="emerald" title="Review Full Patient & Hospital Details"
-              description="Expand any incoming request to see: patient name, age, gender, blood component required, urgency level, hospital name and address, doctor's name, doctor's contact, and the attached prescription letter.">
-              <span>You can view the prescription document (image or PDF) before deciding to accept.</span>
-            </Step>
-
-            <Step number="5" color="emerald" title="Accept the Request"
-              description="Tapping Accept sends your response to the seeker. The seeker then reviews all responses and formally approves you. Once approved, you'll receive a notification with the Match ID and the PDF match slip."
-              badge="Triggers Match ID">
-              <span>Your contact details are shared with the seeker only after formal approval — not when you simply accept.</span>
-            </Step>
-
-            <Step number="6" color="emerald" title="Receive Match ID & PDF Slip"
-              description="Upon seeker approval, you receive a notification containing the Match ID (MOB-XXXXXXX) and a downloadable PDF match slip. The slip includes both the seeker's and your own verified details, the donation route, and destination."
-              badge="MOB-XXXXXXX">
-              <span className="font-mono text-emerald-600 dark:text-emerald-450 block">Example: Match ID MOB-4829371</span>
-            </Step>
-
-            <Step number="7" color="emerald" title="Track Progress on Your Dashboard"
-              description="Your Donor Dashboard and Donor Home show a live progress bar for your active donation match. The stages update automatically as the blood bank and hospital mark their steps complete." />
-
-            <Step number="8" color="emerald" title="Earn Badges & Impact Score"
-              description="Every completed donation increases your lifetime total. Earn badges like First Drop, Life Saver, Century Club, and Guardian Angel based on your donation count. Each donation is estimated to save 3 lives." />
-
-          </div>
-        </motion.div>
-      </div>
-
-      {/* ── Section 3: Blood Banks & Hospitals ── */}
-      <motion.div 
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        className="max-w-6xl mx-auto space-y-6"
-      >
-        <h2 className="text-xl font-bold text-slate-850 dark:text-white flex items-center space-x-2 pb-2 border-b border-slate-200 dark:border-white/5 max-w-6xl mx-auto">
-          <Landmark className="w-5 h-5 text-blue-500 dark:text-blue-450" />
-          <span>For Blood Banks & Hospitals</span>
-        </h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-
-          {/* Blood Banks */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-6 text-left space-y-5 shadow-sm hover:border-slate-300 dark:hover:border-white/10 hover:shadow-md transition-all duration-300">
-            <div className="flex items-center gap-2">
-              <FlaskConical className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-              <h3 className="text-base font-bold text-slate-850 dark:text-white">Blood Banks</h3>
-            </div>
-            <div className="relative pl-7 space-y-5 border-l-2 border-dashed border-purple-500/20 text-xs text-slate-500 dark:text-slate-400">
-              {[
-                {
-                  n: '1',
-                  t: 'Register & Set Up Bank Profile',
-                  d: 'Create a blood bank account and fill in your registration number, address, and contact. You receive a OneBlood ID for the bank account.'
-                },
-                {
-                  n: '2',
-                  t: 'Manage Real-Time Inventory',
-                  d: 'The inventory matrix on your dashboard shows all 8 blood groups × 6 blood components. Click any cell to edit the unit count — changes auto-save to the server after 1.5 seconds. Low stock triggers a visual alert banner.'
-                },
-                {
-                  n: '3',
-                  t: 'Receive Transit Match Assignments',
-                  d: 'When a seeker routes a donation through your bank, you receive a notification. The Active Donations section on your dashboard shows the Match ID, donor, seeker, and destination hospital.'
-                },
-                {
-                  n: '4',
-                  t: 'Mark "Collected at Bank" — Advances Progress Bar',
-                  d: 'Once the donor arrives and the blood is collected/processed at your bank, click "Mark as Collected at Bank". This advances the progress bar for all 4 parties and notifies the donor and hospital to proceed to the next stage.',
-                  badge: 'Stage 1 Complete'
-                },
-                {
-                  n: '5',
-                  t: 'View Full Donation History',
-                  d: 'Past donations routed through your bank are permanently stored in your history — visible on the Active Donations page under "Past" tab.'
-                }
-              ].map(s => (
-                <div key={s.n} className="relative space-y-1">
-                  <span className="absolute -left-10 top-0.5 w-7 h-7 bg-white dark:bg-slate-950 border border-purple-500/20 rounded-full flex items-center justify-center text-[10px] font-bold text-purple-605 dark:text-purple-400">
-                    {s.n}
-                  </span>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h4 className="text-xs font-bold text-slate-850 dark:text-white">{s.t}</h4>
-                    {s.badge && (
-                      <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400 font-mono font-bold">
-                        {s.badge}
-                      </span>
-                    )}
-                  </div>
-                  <p className="leading-relaxed">{s.d}</p>
-                </div>
-              ))}
-            </div>
-            <Link to="/auth/signup" className="inline-block mt-2 px-5 py-2 bg-purple-605 hover:bg-purple-700 text-white text-xs font-bold rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all">
-              Register your Blood Bank
-            </Link>
+        {/* Timeline container */}
+        <div ref={containerRef} className="relative">
+          {/* Central animated line (desktop) */}
+          <div className="absolute left-6 md:left-1/2 transform md:-translate-x-1/2 top-0 bottom-0 w-[2px] bg-neutral-100 dark:bg-neutral-800/60 rounded-full z-0">
+            <motion.div
+              style={{ scaleY, originY: 0 }}
+              className="w-full h-full timeline-line-glow rounded-full origin-top"
+            />
           </div>
 
-          {/* Hospitals */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-6 text-left space-y-5 shadow-sm hover:border-slate-300 dark:hover:border-white/10 hover:shadow-md transition-all duration-300">
-            <div className="flex items-center gap-2">
-              <Hospital className="w-5 h-5 text-blue-600 dark:text-blue-450" />
-              <h3 className="text-base font-bold text-slate-855 dark:text-white">Hospitals</h3>
-            </div>
-            <div className="relative pl-7 space-y-5 border-l-2 border-dashed border-blue-500/20 text-xs text-slate-500 dark:text-slate-400">
-              {[
-                {
-                  n: '1',
-                  t: 'Register Your Hospital',
-                  d: 'Sign up as a hospital and provide your registration number, address, emergency contact, and specialisation. You receive a unique OneBlood ID for the institution.'
-                },
-                {
-                  n: '2',
-                  t: 'View Active Donation Matches',
-                  d: 'The Active Donations section of your hospital dashboard shows all current matches assigned to your facility — with the Match ID, donor name, seeker name, blood group, units, and current stage.'
-                },
-                {
-                  n: '3',
-                  t: 'Track Progress Bar in Real Time',
-                  d: 'The live progress bar on your dashboard advances as the blood bank completes their transit stage. If no bank is involved, the bar moves directly from "Match Confirmed" to your stage.'
-                },
-                {
-                  n: '4',
-                  t: 'Mark "Donation Received" — Fully Completes the Cycle',
-                  d: 'Once the blood is physically received at the hospital and the transfusion/handover is done, click "Mark Donation Received at Hospital". This fully completes the match. It moves from Active to Past Donations on all 4 dashboards.',
-                  badge: 'Final Stage'
-                },
-                {
-                  n: '5',
-                  t: 'Access Complete Donation History',
-                  d: 'All past donations to your hospital — with full donor, seeker, blood bank details, Match ID, and timestamps — are preserved in your Past Donations history permanently.'
-                }
-              ].map(s => (
-                <div key={s.n} className="relative space-y-1">
-                  <span className="absolute -left-10 top-0.5 w-7 h-7 bg-white dark:bg-slate-955 border border-blue-500/20 rounded-full flex items-center justify-center text-[10px] font-bold text-blue-600 dark:text-blue-450">
-                    {s.n}
-                  </span>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h4 className="text-xs font-bold text-slate-855 dark:text-white">{s.t}</h4>
-                    {s.badge && (
-                      <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-455 font-mono font-bold">
-                        {s.badge}
-                      </span>
-                    )}
-                  </div>
-                  <p className="leading-relaxed">{s.d}</p>
-                </div>
-              ))}
-            </div>
-            <Link to="/auth/signup" className="inline-block mt-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all">
-              Register your Hospital
-            </Link>
-          </div>
-
-        </div>
-      </motion.div>
-
-      {/* ── Section 4: The Match ID Explainer ── */}
-      <motion.div 
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        className="max-w-4xl mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-3xl p-8 text-left space-y-6 shadow-sm hover:border-slate-300 dark:hover:border-white/10 transition-all duration-300"
-      >
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-slate-105 dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-amber-500 rounded-xl shadow-sm">
-            <BadgeCheck className="w-6 h-6 text-amber-500" />
-          </div>
-          <div>
-            <h2 className="text-lg font-bold text-slate-855 dark:text-white font-display">The Match ID System — MOB-XXXXXXX</h2>
-            <p className="text-xs text-slate-500 dark:text-slate-500 mt-0.5">Every approved donation gets a unique, tamper-proof identifier</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-slate-500 dark:text-slate-400">
-          <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-white/5 rounded-xl p-4 space-y-2">
-            <span className="font-mono text-amber-600 dark:text-amber-450 font-black text-sm block">MOB-4829371</span>
-            <p>Generated <span className="text-slate-855 dark:text-white font-semibold">automatically</span> the instant a seeker approves a donor. No manual steps needed.</p>
-          </div>
-          <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-white/5 rounded-xl p-4 space-y-2">
-            <FileText className="w-4 h-4 text-blue-500 dark:text-blue-450" />
-            <p>Embedded in the <span className="text-slate-855 dark:text-white font-semibold">downloadable PDF match slip</span> along with all party details, addresses, and medical verification notes.</p>
-          </div>
-          <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-white/5 rounded-xl p-4 space-y-2">
-            <Activity className="w-4 h-4 text-emerald-550 dark:text-emerald-400" />
-            <p>Tracks the full journey — visible on <span className="text-slate-855 dark:text-white font-semibold">all 4 dashboards</span> (seeker, donor, blood bank, hospital) simultaneously via real-time sync.</p>
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <p className="text-xs text-slate-500 dark:text-slate-500 uppercase tracking-wider font-bold">Donation Journey — with Blood Bank Transit</p>
-          <div className="flex flex-wrap items-center gap-2 text-xs">
-            {[
-              { label: 'Match Confirmed', color: 'emerald', icon: '✓' },
-              { label: '', arrow: true },
-              { label: 'Collected at Bank', color: 'purple', icon: '2' },
-              { label: '', arrow: true },
-              { label: 'En-route to Hospital', color: 'amber', icon: '3' },
-              { label: '', arrow: true },
-              { label: 'Donation Received', color: 'blue', icon: '✓' },
-            ].map((item, i) => item.arrow ? (
-              <ArrowRight key={i} className="w-3.5 h-3.5 text-slate-400 dark:text-slate-600 shrink-0" />
-            ) : (
-              <div key={i} className={`px-3 py-1.5 rounded-lg border text-[10px] font-bold flex items-center gap-1.5 ${
-                item.color === 'emerald' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-450' :
-                item.color === 'purple' ? 'bg-purple-500/10 border-purple-500/20 text-purple-605 dark:text-purple-405' :
-                item.color === 'amber' ? 'bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-500' :
-                'bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-450'
-              }`}>
-                <span className="w-4 h-4 rounded-full bg-white/5 flex items-center justify-center text-[8px]">{item.icon}</span>
-                {item.label}
-              </div>
+          {/* Timeline steps */}
+          <div className="relative z-10 pl-14 md:pl-0">
+            {timelineSteps.map((step, idx) => (
+              <TimelineStep
+                key={idx}
+                step={step}
+                index={idx}
+                totalSteps={timelineSteps.length}
+              />
             ))}
           </div>
-          <p className="text-[10px] text-slate-400 dark:text-slate-500">For direct hospital donations (no transit bank), Stage 2 is skipped — the bar moves from Match Confirmed → En-route → Received.</p>
         </div>
-      </motion.div>
+      </section>
 
-      {/* ── Section 5: Safety & Privacy ── */}
-      <motion.div 
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        className="max-w-4xl mx-auto text-left space-y-6"
-      >
-        <h2 className="text-xl font-bold text-slate-850 dark:text-white flex items-center space-x-2 pb-2 border-b border-slate-200 dark:border-white/5">
-          <Heart className="w-5 h-5 text-emerald-555" />
-          <span>Safety & Privacy Standards</span>
-        </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 p-6 rounded-2xl space-y-2 shadow-sm hover:border-slate-300 dark:hover:border-white/10 hover:shadow-md transition-all duration-300">
-            <h4 className="text-sm font-bold text-slate-850 dark:text-white">Private Contacts</h4>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-              Donor phone numbers and emails are hidden from all public views. They are exposed only to the specific seeker who formally approved that donor after matching.
-            </p>
-          </div>
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 p-6 rounded-2xl space-y-2 shadow-sm hover:border-slate-300 dark:hover:border-white/10 hover:shadow-md transition-all duration-300">
-            <h4 className="text-sm font-bold text-slate-855 dark:text-white">Document Evidence</h4>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-              Doctor's prescription letters are uploaded and stored securely. They are attached to the match PDF and visible to all matched parties, providing verifiable medical evidence of need.
-            </p>
-          </div>
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 p-6 rounded-2xl space-y-2 shadow-sm hover:border-slate-300 dark:hover:border-white/10 hover:shadow-md transition-all duration-300">
-            <h4 className="text-sm font-bold text-slate-855 dark:text-white">Encrypted Records</h4>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-              All user data, match records, and communications are stored securely. Donation history is permanently preserved for all 4 parties even after completion.
-            </p>
-          </div>
-        </div>
-      </motion.div>
+      {/* ═══════════════════════════════════════════
+          3. ARCHITECTURE SECTION
+      ═══════════════════════════════════════════ */}
+      <section className="max-w-6xl mx-auto py-20 px-4 border-t border-neutral-200 dark:border-neutral-800/60 mb-20">
+        <motion.div
+          variants={fadeUpSlow}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-80px" }}
+          className="text-center space-y-4 mb-16"
+        >
+          <span className="px-3 py-1.5 bg-ob-red-700/10 dark:bg-ob-red-700/20 text-ob-red-700 dark:text-ob-red-500 text-xs font-mono rounded font-semibold uppercase tracking-wider">
+            Ecosystem Architecture
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-display text-neutral-900 dark:text-ob-white">
+            Four Nodes, One Unified Interface
+          </h2>
+          <p className="text-sm sm:text-base text-neutral-500 dark:text-neutral-400 max-w-2xl mx-auto leading-relaxed">
+            A distributed coordination topology serving four distinct operational pillars,
+            ensuring seamless communication across the entire healthcare supply chain.
+          </p>
+        </motion.div>
 
-      {/* ── Section 6: FAQ ── */}
-      <motion.div 
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        className="max-w-3xl mx-auto text-left space-y-6"
-      >
-        <h2 className="text-xl font-bold text-slate-850 dark:text-white text-center">Frequently Asked Questions</h2>
+        <motion.div
+          variants={staggerGrid}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-60px" }}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+        >
+          {architectureNodes.map((node, idx) => (
+            <NodeCard key={idx} node={node} index={idx} />
+          ))}
+        </motion.div>
+      </section>
 
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-3xl divide-y divide-slate-200 dark:divide-white/5 overflow-hidden shadow-sm">
+
+      {/* ═══════════════════════════════════════════
+          4. BLOOD COMPATIBILITY SECTION
+      ═══════════════════════════════════════════ */}
+      <section className="max-w-6xl mx-auto border-t border-neutral-200 dark:border-neutral-800/60 pt-20 pb-20">
+        <motion.div
+          variants={fadeUpSlow}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-80px" }}
+          className="text-center space-y-4 mb-12"
+        >
+          <span className="px-3 py-1.5 bg-ob-red-700/10 dark:bg-ob-red-700/20 text-ob-red-700 dark:text-ob-red-500 text-xs font-mono rounded font-semibold uppercase tracking-wider">
+            Clinical Standard
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-display text-neutral-900 dark:text-ob-white">
+            Interactive Compatibility Matrix
+          </h2>
+          <p className="text-sm text-neutral-500 dark:text-neutral-400 max-w-xl mx-auto">
+            Understand which blood types can be safely donated and received — powered by clinical matching logic.
+          </p>
+        </motion.div>
+        <BloodCompatibilityMatrix />
+      </section>
+
+
+      {/* ═══════════════════════════════════════════
+          5. FAQ SECTION
+      ═══════════════════════════════════════════ */}
+      <section className="max-w-3xl mx-auto space-y-8 mb-24">
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          className="text-center"
+        >
+          <h2 className="text-2xl sm:text-3xl font-display text-neutral-900 dark:text-ob-white flex items-center justify-center gap-3">
+            <HelpCircle className="w-7 h-7 text-ob-red-700" />
+            <span>System Inquiries</span>
+          </h2>
+          <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-2">
+            Technical details on how OneBlood secures the supply chain.
+          </p>
+        </motion.div>
+
+        <div className="glass-panel-premium rounded-3xl divide-y divide-neutral-200 dark:divide-white/[0.06] overflow-hidden">
           {faqData.map((faq, index) => {
             const isOpen = openFaq === index;
             return (
-              <div key={index} className="transition-colors hover:bg-slate-50 dark:hover:bg-white/5">
+              <motion.div
+                key={index}
+                initial={false}
+                className="transition-colors hover:bg-white/[0.02]"
+              >
                 <button
-                  onClick={() => toggleFaq(index)}
-                  className="w-full flex justify-between items-center p-6 text-left focus:outline-none gap-4"
+                  onClick={() => setOpenFaq(isOpen ? null : index)}
+                  className="w-full flex justify-between items-center p-6 md:p-7 text-left focus:outline-none gap-4 group"
                 >
-                  <span className="text-sm font-bold text-slate-855 dark:text-white">{faq.q}</span>
-                  {isOpen ? <ChevronUp className="w-4 h-4 text-slate-500 shrink-0" /> : <ChevronDown className="w-4 h-4 text-slate-500 shrink-0" />}
+                  <span className="text-sm md:text-base font-semibold text-neutral-900 dark:text-ob-white group-hover:text-ob-red-500 transition-colors">
+                    {faq.q}
+                  </span>
+                  <motion.div
+                    animate={{ rotate: isOpen ? 180 : 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <ChevronDown className="w-5 h-5 text-neutral-500 shrink-0" />
+                  </motion.div>
                 </button>
                 <AnimatePresence initial={false}>
                   {isOpen && (
@@ -543,49 +462,61 @@ const HowItWorksPage = () => {
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.25, ease: "easeInOut" }}
+                      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
                       className="overflow-hidden"
                     >
-                      <div className="px-6 pb-6 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                      <p className="px-6 md:px-7 pb-6 md:pb-7 text-sm md:text-[15px] text-neutral-500 dark:text-neutral-400 leading-relaxed">
                         {faq.a}
-                      </div>
+                      </p>
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </div>
+              </motion.div>
             );
           })}
         </div>
-      </motion.div>
+      </section>
 
-      {/* ── CTA Footer ── */}
-      <motion.div 
-        initial={{ opacity: 0, y: 25 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        className="max-w-2xl mx-auto text-center space-y-4"
+
+      {/* ═══════════════════════════════════════════
+          6. CTA FOOTER
+      ═══════════════════════════════════════════ */}
+      <motion.div
+        variants={revealFromBelow}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-80px" }}
+        className="max-w-4xl mx-auto text-center space-y-6 pb-8 relative"
       >
-        <p className="text-slate-500 dark:text-slate-400 text-sm">Ready to be part of the network?</p>
-        <div className="flex flex-wrap justify-center gap-3">
+        {/* CTA glow background */}
+        <div className="absolute inset-0 -z-10 flex items-center justify-center pointer-events-none">
+          <div className="w-[500px] h-[300px] bg-ob-red-700/[0.06] rounded-full blur-[100px]" />
+        </div>
+
+        <h2 className="text-3xl sm:text-4xl font-display text-neutral-900 dark:text-ob-white">
+          Ready to Join the Network?
+        </h2>
+        <p className="text-neutral-500 dark:text-neutral-400 text-sm sm:text-base max-w-xl mx-auto">
+          Register as a donor or healthcare facility today. Every connection made on OneBlood
+          has the potential to save a life.
+        </p>
+        <div className="flex flex-wrap justify-center gap-4 pt-2">
           <Link
             to="/auth/signup"
-            className="px-6 py-3 bg-[#C0152A] hover:bg-red-700 text-white font-bold rounded-xl text-sm hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-1.5"
+            className="px-8 py-4 bg-ob-red-700 hover:bg-red-800 text-white font-bold rounded-full text-sm sm:text-base hover:scale-[1.02] active:scale-[0.97] transition-all duration-200 flex items-center gap-2 shadow-glow-red hover:shadow-[0_0_30px_rgba(192,21,42,0.5)]"
           >
-            <span>Register as Donor</span>
-            <ArrowRight className="w-4 h-4" />
+            <span>Register Now</span>
+            <ArrowRight className="w-5 h-5" />
           </Link>
           <Link
             to="/search"
-            className="px-6 py-3 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-bold rounded-xl text-sm hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-1.5"
+            className="px-8 py-4 bg-neutral-100 hover:bg-neutral-200 dark:bg-ob-glass-hover dark:hover:bg-neutral-800 border border-neutral-200 dark:border-ob-glass-border text-neutral-800 dark:text-ob-white font-semibold rounded-full text-sm sm:text-base hover:scale-[1.02] active:scale-[0.97] transition-all duration-200"
           >
-            <span>Search Blood Map</span>
-            <ArrowRight className="w-4 h-4" />
+            Search Live Map
           </Link>
         </div>
       </motion.div>
 
     </div>
   );
-};
-
-export default HowItWorksPage;
+}

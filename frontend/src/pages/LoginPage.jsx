@@ -1,26 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import useAuthStore from '../store/authStore';
 import toast from 'react-hot-toast';
-import { HeartPulse, Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react';
+import { HeartPulse, Mail, Lock, Loader2, Eye, EyeOff, Quote } from 'lucide-react';
+import Logo from '../components/shared/Logo';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const loginSchema = z.object({
   identifier: z.string().min(1, { message: 'OneBlood ID or Email is required' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
 });
 
-const LoginPage = () => {
+const TESTIMONIALS = [
+  {
+    text: "When my mother needed emergency surgery in Chennai, traditional social broadcasts failed. Within minutes of uploading her request to OneBlood, three donors matched and responded. Absolute lifesaver.",
+    author: "Priya Ramanathan",
+    role: "Emergency Seeker",
+    stat: "Matched in 4 mins"
+  },
+  {
+    text: "Being a regular O- donor, I wanted a secure way to help without having my phone number publicly listed. OneBlood keeps my details encrypted until I actively accept a dispatch request.",
+    author: "Arjun Mehta",
+    role: "Verified O- Donor",
+    stat: "14 Life Saves"
+  },
+  {
+    text: "Integrating our hospital ward with the OneBlood coordination portal has completely modernized how we request emergency units. No phone tag, just verified digital matches.",
+    author: "Dr. K. Raghavan",
+    role: "Chief Medical Officer",
+    stat: "Hospital Network Member"
+  }
+];
+
+export default function LoginPage() {
   const { login, isLoading, isAuthenticated, user } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
   const [showPass, setShowPass] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [testimonialIndex, setTestimonialIndex] = useState(0);
 
   // Show success message from password reset redirect
-  React.useEffect(() => {
+  useEffect(() => {
     if (location.state?.successMessage) {
       toast.success(location.state.successMessage);
       navigate(location.pathname, { replace: true, state: {} });
@@ -28,11 +52,19 @@ const LoginPage = () => {
   }, [location, navigate]);
 
   // Auto-redirect if already logged in
-  React.useEffect(() => {
+  useEffect(() => {
     if (isAuthenticated && user && !isSubmitting) {
       navigate('/home', { replace: true });
     }
   }, [isAuthenticated, user, isSubmitting, navigate]);
+
+  // Cycle testimonials
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTestimonialIndex((prev) => (prev + 1) % TESTIMONIALS.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
 
   const {
     register,
@@ -51,7 +83,6 @@ const LoginPage = () => {
       
       const loggedUser = await login(onebloodId, email, data.password);
       toast.success(`Welcome back, ${loggedUser.name}!`);
-      // Navigate to success welcome page
       navigate('/welcome', { replace: true, state: { isNewUser: false, name: loggedUser.name } });
     } catch (error) {
       setIsSubmitting(false);
@@ -60,92 +91,151 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-80px)] flex items-center justify-center relative overflow-hidden bg-slate-50 dark:bg-[#07070A] px-4 py-12 transition-colors duration-300">
-      {/* Decorative Blur Backgrounds */}
-      <div className="absolute top-[-10%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-red-600/[0.03] blur-[130px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[45vw] h-[45vw] rounded-full bg-amber-500/[0.015] blur-[130px] pointer-events-none" />
-
-      <div className="w-full max-w-md bg-white dark:bg-[#0F0F1A]/60 border border-slate-200 dark:border-white/[0.05] p-10 rounded-3xl shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)] backdrop-blur-md space-y-8 hover:border-slate-300 dark:hover:border-oneblood-crimson/20 transition-all duration-300">
-        {/* Header Title */}
-        <div className="text-center space-y-3">
-          <div className="inline-flex p-3 bg-red-50 dark:bg-white/[0.03] border border-red-100 dark:border-white/[0.06] rounded-2xl text-[#C0152A] dark:text-[#FF4D6A] mb-2 shadow-sm">
-            <HeartPulse className="w-8 h-8 animate-pulse" />
+    <div className="min-h-screen flex flex-col md:flex-row bg-white dark:bg-ob-ink transition-colors duration-300">
+      
+      {/* LEFT VISUAL PANEL (Desktop: 50% or 55%) */}
+      <div className="hidden md:flex md:w-[50%] lg:w-[55%] bg-gradient-to-br from-ob-red-950 via-ob-red-900 to-ob-red-950 p-12 text-white relative flex-col justify-between overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.35),transparent_80%)] pointer-events-none" />
+        
+        {/* Top Branding Logo */}
+        <div className="relative z-10 flex items-center gap-3">
+          <Logo size="lg" showText={false} />
+          <div>
+            <h2 className="text-xl font-display font-black tracking-tight text-white leading-none">OneBlood</h2>
+            <span className="text-[10px] uppercase font-mono font-bold tracking-[0.2em] text-red-300">Emergency Routing Node</span>
           </div>
-          <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white font-display">Sign in to OneBlood</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 font-body">Enter your credentials to manage your requests and coordination.</p>
         </div>
 
-        {/* Input Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-          <div className="space-y-1.5 text-left">
-            <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block pl-1">OneBlood ID or Email</label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                <Mail className="h-4 w-4 text-slate-400" />
-              </span>
-              <input
-                type="text"
-                placeholder="OB-D0N0R1 or name@example.com"
-                className="w-full pl-10 pr-4 py-3.5 bg-slate-50 dark:bg-black/30 border border-slate-200 dark:border-white/[0.06] rounded-2xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-[#C0152A] transition-all font-mono"
-                {...register('identifier')}
-              />
-            </div>
-            {errors.identifier && <p className="text-[10px] text-red-500">{errors.identifier.message}</p>}
-          </div>
-
-          <div className="space-y-1.5 text-left">
-            <div className="flex justify-between items-center px-1">
-              <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">Password</label>
-              <Link to="/auth/forgot-password" className="text-[10px] text-[#C0152A] dark:text-[#FF4D6A] hover:underline font-bold">
-                Forgot password?
-              </Link>
-            </div>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                <Lock className="h-4 w-4 text-slate-400" />
-              </span>
-              <input
-                type={showPass ? "text" : "password"}
-                placeholder="••••••••"
-                className="w-full pl-10 pr-10 py-3.5 bg-slate-50 dark:bg-black/30 border border-slate-200 dark:border-white/[0.06] rounded-2xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-[#C0152A] transition-all"
-                {...register('password')}
-              />
-              <span 
-                className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-350"
-                onClick={() => setShowPass(!showPass)}
+        {/* Testimonial Crossfade Slider */}
+        <div className="relative z-10 max-w-xl pr-8 my-auto">
+          <Quote className="w-12 h-12 text-red-400/40 mb-6" />
+          <div className="min-h-[140px] relative">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={testimonialIndex}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.4 }}
+                className="space-y-4"
               >
-                {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </span>
-            </div>
-            {errors.password && <p className="text-[10px] text-red-500">{errors.password.message}</p>}
+                <p className="text-lg md:text-xl font-light leading-relaxed text-red-100">
+                  "{TESTIMONIALS[testimonialIndex].text}"
+                </p>
+                <div>
+                  <h4 className="font-bold text-white text-sm">{TESTIMONIALS[testimonialIndex].author}</h4>
+                  <p className="text-xs text-red-300">{TESTIMONIALS[testimonialIndex].role}</p>
+                </div>
+                <div className="inline-block px-3 py-1 bg-white/10 rounded-full text-[10px] font-mono font-semibold uppercase tracking-wider text-red-200">
+                  {TESTIMONIALS[testimonialIndex].stat}
+                </div>
+              </motion.div>
+            </AnimatePresence>
           </div>
+        </div>
 
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={isLoading || isSubmitting}
-            className="w-full py-3.5 bg-gradient-to-r from-[#C0152A] to-[#FF4D6A] disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl font-bold text-xs text-white shadow-lg shadow-red-750/20 hover:shadow-red-755/35 transition-all flex items-center justify-center space-x-2 cursor-pointer keep-white"
-          >
-            {isLoading || isSubmitting ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin text-white" />
-                <span>Logging in...</span>
-              </>
-            ) : (
-              <span>Sign In</span>
-            )}
-          </button>
-        </form>
-
-        <div className="text-center pt-2 text-xs text-slate-500 dark:text-slate-400">
-          <span>Don't have an account? </span>
-          <Link to="/auth/signup" className="text-[#C0152A] dark:text-[#FF4D6A] font-bold hover:underline">
-            Register here
-          </Link>
+        {/* Bottom Status Ticker */}
+        <div className="relative z-10 flex items-center justify-between border-t border-white/10 pt-6">
+          <p className="text-xs text-red-200 font-mono">Status: Connected to public emergency feeds</p>
+          <p className="text-[10px] text-red-300 uppercase tracking-widest font-bold">100% SECURED</p>
         </div>
       </div>
+
+      {/* RIGHT AUTH FORM PANEL */}
+      <div className="flex-1 flex flex-col justify-center px-6 py-12 md:px-16 lg:px-24 bg-white dark:bg-ob-ink relative">
+        {/* Mobile Logo Header */}
+        <div className="md:hidden flex items-center justify-center gap-3 mb-8">
+          <Logo size="md" showText={false} />
+          <h1 className="text-2xl font-display font-black tracking-tight text-neutral-900 dark:text-ob-white">OneBlood</h1>
+        </div>
+
+        <div className="w-full max-w-md mx-auto space-y-8">
+          <div className="text-left space-y-2">
+            <h2 className="text-3xl font-display font-black text-neutral-900 dark:text-ob-white leading-tight">
+              Sign In
+            </h2>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">
+              Enter your verified credentials to access your routing dashboard.
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            
+            {/* Identifier Input */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-widest block">
+                OneBlood ID or Email
+              </label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <Mail className="h-4 w-4 text-neutral-400" />
+                </span>
+                <input
+                  type="text"
+                  placeholder="OB-D0N0R1 or user@domain.com"
+                  className="w-full pl-10 pr-4 py-3 bg-neutral-50 dark:bg-neutral-900 border border-neutral-250 dark:border-ob-glass-border focus:ring-2 focus:ring-ob-red-700/20 focus:border-ob-red-700 rounded-xl text-sm text-neutral-900 dark:text-ob-white focus:outline-none transition-all font-mono"
+                  {...register('identifier')}
+                />
+              </div>
+              {errors.identifier && <p className="text-xs text-ob-red-700 mt-1 font-semibold">{errors.identifier.message}</p>}
+            </div>
+
+            {/* Password Input */}
+            <div className="space-y-1.5">
+              <div className="flex justify-between items-center">
+                <label className="text-[10px] font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-widest block">
+                  Password
+                </label>
+                <Link to="/auth/forgot-password" className="text-xs text-ob-red-700 hover:underline font-bold">
+                  Forgot password?
+                </Link>
+              </div>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <Lock className="h-4 w-4 text-neutral-400" />
+                </span>
+                <input
+                  type={showPass ? "text" : "password"}
+                  placeholder="••••••••"
+                  className="w-full pl-10 pr-10 py-3 bg-neutral-50 dark:bg-neutral-900 border border-neutral-250 dark:border-ob-glass-border focus:ring-2 focus:ring-ob-red-700/20 focus:border-ob-red-700 rounded-xl text-sm text-neutral-900 dark:text-ob-white focus:outline-none transition-all"
+                  {...register('password')}
+                />
+                <span 
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-350"
+                  onClick={() => setShowPass(!showPass)}
+                >
+                  {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </span>
+              </div>
+              {errors.password && <p className="text-xs text-ob-red-700 mt-1 font-semibold">{errors.password.message}</p>}
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={isLoading || isSubmitting}
+              className="w-full py-3.5 bg-ob-red-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl font-bold text-sm text-white hover:shadow-glow-red active:scale-[0.97] transition-all flex items-center justify-center space-x-2"
+            >
+              {isLoading || isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
+                  <span>Signing in...</span>
+                </>
+              ) : (
+                <span>Sign In</span>
+              )}
+            </button>
+          </form>
+
+          <div className="text-center pt-2 text-sm text-neutral-500 dark:text-neutral-400">
+            <span>Don't have an account? </span>
+            <Link to="/auth/signup" className="text-ob-red-700 font-bold hover:underline">
+              Create an Account
+            </Link>
+          </div>
+        </div>
+      </div>
+      
     </div>
   );
-};
-
-export default LoginPage;
+}

@@ -3,9 +3,9 @@ import { useNavigate, Link } from 'react-router-dom';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
 import useAuthStore from '../store/authStore';
-import { HeartPulse, Mail, KeyRound, ArrowLeft, Loader2, RefreshCw } from 'lucide-react';
+import { Mail, KeyRound, ArrowLeft, Loader2, RefreshCw } from 'lucide-react';
 
-const ForgotPasswordPage = () => {
+export default function ForgotPasswordPage() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const [stage, setStage] = useState('email'); // 'email' | 'otp'
@@ -23,7 +23,6 @@ const ForgotPasswordPage = () => {
   }, [user]);
 
   // Mask helper - shows first 2 chars + *** + domain
-  // joelbiju0504@gmail.com -> jo***@gmail.com
   const maskEmail = (emailStr) => {
     if (!emailStr) return '';
     const [local, domain] = emailStr.split('@');
@@ -57,7 +56,6 @@ const ForgotPasswordPage = () => {
         setStage('otp');
         setCooldown(60);
         setOtp(['', '', '', '', '', '']);
-        // Delay focusing slightly to allow DOM transition
         setTimeout(() => {
           if (inputRefs.current[0]) {
             inputRefs.current[0].focus();
@@ -90,7 +88,6 @@ const ForgotPasswordPage = () => {
 
       if (res.data.success) {
         toast.success('OTP verified successfully!');
-        // Redirect to ResetPasswordPage, passing the email in state
         navigate('/auth/reset-password', { state: { email }, replace: true });
       } else {
         toast.error(res.data.message || 'Invalid OTP.');
@@ -116,11 +113,9 @@ const ForgotPasswordPage = () => {
     const cleanValue = value.replace(/[^0-9]/g, '');
     const newOtp = [...otp];
     
-    // Take only the last character if multiple characters are entered
     newOtp[index] = cleanValue.substring(cleanValue.length - 1);
     setOtp(newOtp);
 
-    // If typed a digit, auto-advance to next input
     if (cleanValue && index < 5) {
       inputRefs.current[index + 1].focus();
     }
@@ -128,7 +123,6 @@ const ForgotPasswordPage = () => {
 
   const handleKeyDown = (e, index) => {
     if (e.key === 'Backspace') {
-      // If current box is empty, retreat focus to previous box and clear it
       if (!otp[index] && index > 0) {
         const newOtp = [...otp];
         newOtp[index - 1] = '';
@@ -152,39 +146,34 @@ const ForgotPasswordPage = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-80px)] flex items-center justify-center relative overflow-hidden bg-slate-50 dark:bg-[#07070A] px-4 py-12 transition-colors duration-300">
-      {/* Decorative Blur Backgrounds */}
-      <div className="absolute top-[-10%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-red-600/[0.03] blur-[130px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[45vw] h-[45vw] rounded-full bg-amber-500/[0.015] blur-[130px] pointer-events-none" />
+    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-ob-ink px-4 py-12 transition-colors duration-300 relative overflow-hidden">
+      
+      {/* Decorative gradients */}
+      <div className="absolute top-[-10%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-ob-red-700/[0.04] blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[45vw] h-[45vw] rounded-full bg-neutral-100 dark:bg-neutral-900/[0.02] blur-[120px] pointer-events-none" />
 
-      <div className="w-full max-w-md bg-white dark:bg-[#0F0F1A]/60 border border-slate-200 dark:border-white/[0.05] p-10 rounded-3xl shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)] backdrop-blur-md space-y-8 hover:border-slate-300 dark:hover:border-[#C0152A]/20 transition-all duration-300 animate-fade-in">
+      <div className="w-full max-w-md bg-neutral-50 dark:bg-ob-ink-90/40 border border-neutral-200 dark:border-ob-glass-border p-8 md:p-10 rounded-3xl shadow-card backdrop-blur-md space-y-8 transition-all duration-300">
         
         {stage === 'email' ? (
           /* STAGE 1: REQUEST OTP */
           <>
             <div className="text-center space-y-3">
-              <div className="inline-flex p-3 bg-red-50 dark:bg-white/[0.03] border border-red-100 dark:border-white/[0.06] rounded-2xl text-[#C0152A] dark:text-[#FF4D6A] mb-2 shadow-sm">
-                <Mail className="w-8 h-8" />
+              <div className="inline-flex p-3 bg-ob-red-700/10 text-ob-red-700 rounded-2xl mb-2">
+                <Mail className="w-6 h-6 animate-pulse" />
               </div>
-              <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white font-display">Forgot your password?</h2>
-              {user ? (
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-body leading-relaxed px-2">
-                  A reset code will be sent to your registered email address on file.
-                </p>
-              ) : (
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-body leading-relaxed px-2">
-                  Enter your registered email address and we'll send you a 6-digit OTP to reset your password.
-                </p>
-              )}
+              <h2 className="text-3xl font-display font-black text-neutral-900 dark:text-ob-white leading-tight">Forgot Password</h2>
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed px-2">
+                Enter your registered email address to receive a 6-digit OTP code to recover your account.
+              </p>
             </div>
 
             <form onSubmit={handleRequestOtp} className="space-y-6">
               {!user && (
                 <div className="space-y-1.5 text-left">
-                  <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block pl-1">Email Address</label>
+                  <label className="text-[10px] font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-widest block pl-1">Email Address</label>
                   <div className="relative">
                     <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                      <Mail className="h-4 w-4 text-slate-400" />
+                      <Mail className="h-4 w-4 text-neutral-400" />
                     </span>
                     <input
                       type="email"
@@ -192,7 +181,7 @@ const ForgotPasswordPage = () => {
                       placeholder="name@example.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3.5 bg-slate-50 dark:bg-black/30 border border-slate-200 dark:border-white/[0.06] rounded-2xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-[#C0152A] transition-all font-body"
+                      className="w-full pl-10 pr-4 py-3 bg-white dark:bg-neutral-900 border border-neutral-250 dark:border-ob-glass-border focus:ring-2 focus:ring-ob-red-700/20 focus:border-ob-red-700 rounded-xl text-sm text-neutral-900 dark:text-ob-white focus:outline-none transition-all"
                     />
                   </div>
                 </div>
@@ -201,7 +190,7 @@ const ForgotPasswordPage = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3.5 bg-gradient-to-r from-[#C0152A] to-[#FF4D6A] disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl font-bold text-xs text-white shadow-lg shadow-red-750/20 hover:shadow-red-755/35 transition-all flex items-center justify-center space-x-2 cursor-pointer keep-white"
+                className="w-full py-3 bg-ob-red-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl font-bold text-sm text-white hover:shadow-glow-red active:scale-[0.97] transition-all flex items-center justify-center space-x-2"
               >
                 {isLoading ? (
                   <>
@@ -215,8 +204,8 @@ const ForgotPasswordPage = () => {
             </form>
 
             <div className="text-center pt-2">
-              <Link to="/auth/login" className="inline-flex items-center space-x-1.5 text-xs text-slate-500 dark:text-slate-400 hover:text-[#C0152A] dark:hover:text-[#FF4D6A] font-bold transition-colors">
-                <ArrowLeft className="w-3.5 h-3.5" />
+              <Link to="/auth/login" className="inline-flex items-center space-x-1.5 text-sm text-neutral-500 dark:text-neutral-400 hover:text-ob-red-700 font-bold transition-colors">
+                <ArrowLeft className="w-4 h-4" />
                 <span>Back to Sign In</span>
               </Link>
             </div>
@@ -225,16 +214,13 @@ const ForgotPasswordPage = () => {
           /* STAGE 2: OTP ENTER FORM */
           <>
             <div className="text-center space-y-3">
-              <div className="inline-flex p-3 bg-red-50 dark:bg-white/[0.03] border border-red-100 dark:border-white/[0.06] rounded-2xl text-[#C0152A] dark:text-[#FF4D6A] mb-2 shadow-sm">
-                <KeyRound className="w-8 h-8" />
+              <div className="inline-flex p-3 bg-ob-red-700/10 text-ob-red-700 rounded-2xl mb-2">
+                <KeyRound className="w-6 h-6" />
               </div>
-              <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white font-display">OTP sent</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-body leading-relaxed">
-                A 6-digit code has been sent to your registered email<br />
-                <strong className="text-slate-700 dark:text-slate-200 block text-sm mt-1">{maskEmail(email)}</strong>
-              </p>
-              <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                If you don't see it, check your spam folder.
+              <h2 className="text-3xl font-display font-black text-neutral-900 dark:text-ob-white leading-tight">OTP Sent</h2>
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">
+                Enter the 6-digit code sent to your email:<br />
+                <strong className="text-neutral-900 dark:text-ob-white block text-base mt-1 font-mono font-bold">{maskEmail(email)}</strong>
               </p>
             </div>
 
@@ -250,7 +236,7 @@ const ForgotPasswordPage = () => {
                     value={digit}
                     onChange={(e) => handleInputChange(e.target.value, idx)}
                     onKeyDown={(e) => handleKeyDown(e, idx)}
-                    className="w-12 h-14 text-center text-lg font-bold bg-slate-50 dark:bg-black/30 border border-slate-200 dark:border-white/[0.06] focus:border-[#C0152A] focus:ring-1 focus:ring-[#C0152A] rounded-xl text-slate-900 dark:text-white focus:outline-none transition-all font-mono animate-fade-in"
+                    className="w-12 h-14 text-center text-lg font-bold bg-white dark:bg-neutral-900 border border-neutral-250 dark:border-ob-glass-border focus:border-ob-red-700 focus:ring-2 focus:ring-ob-red-700/20 rounded-xl text-neutral-900 dark:text-ob-white focus:outline-none transition-all font-mono"
                   />
                 ))}
               </div>
@@ -258,7 +244,7 @@ const ForgotPasswordPage = () => {
               <button
                 onClick={() => handleVerifyOtp()}
                 disabled={isLoading || otp.some(d => d === '')}
-                className="w-full py-3.5 bg-gradient-to-r from-[#C0152A] to-[#FF4D6A] disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl font-bold text-xs text-white shadow-lg shadow-red-750/20 hover:shadow-red-755/35 transition-all flex items-center justify-center space-x-2 cursor-pointer keep-white"
+                className="w-full py-3 bg-ob-red-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl font-bold text-sm text-white hover:shadow-glow-red active:scale-[0.97] transition-all flex items-center justify-center space-x-2"
               >
                 {isLoading ? (
                   <>
@@ -270,12 +256,11 @@ const ForgotPasswordPage = () => {
                 )}
               </button>
 
-              {/* Resend Logic */}
               <div className="flex flex-col items-center justify-center pt-2 space-y-4">
                 <button
                   onClick={handleRequestOtp}
                   disabled={cooldown > 0 || isLoading}
-                  className="inline-flex items-center space-x-1.5 text-xs text-[#C0152A] dark:text-[#FF4D6A] disabled:text-slate-400 disabled:dark:text-slate-600 font-bold hover:underline cursor-pointer disabled:no-underline"
+                  className="inline-flex items-center space-x-1.5 text-xs text-ob-red-700 disabled:text-neutral-400 dark:disabled:text-neutral-600 font-bold hover:underline"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
                   {cooldown > 0 ? (
@@ -285,13 +270,13 @@ const ForgotPasswordPage = () => {
                   )}
                 </button>
 
-                <Link
-                  to="/auth/login"
-                  className="inline-flex items-center space-x-1.5 text-xs text-slate-500 dark:text-slate-400 hover:text-[#C0152A] dark:hover:text-[#FF4D6A] font-bold transition-colors"
+                <button
+                  onClick={() => setStage('email')}
+                  className="inline-flex items-center space-x-1.5 text-xs text-neutral-500 hover:text-neutral-800 dark:hover:text-ob-white font-bold"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Back to Sign In</span>
-                </Link>
+                  <span>Change Email</span>
+                </button>
               </div>
             </div>
           </>
@@ -300,6 +285,4 @@ const ForgotPasswordPage = () => {
       </div>
     </div>
   );
-};
-
-export default ForgotPasswordPage;
+}

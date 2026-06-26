@@ -1,129 +1,201 @@
 import React from 'react';
-import { HeartPulse, Shield, MapPin, Activity, HelpCircle, ArrowRight } from 'lucide-react';
+import { HeartPulse, Shield, MapPin, Activity, HelpCircle, ArrowRight, Scan, Lock, Zap, BadgeCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { fadeUp, fadeUpSlow, staggerGrid, revealFromBelow, scaleIn } from '../utils/animations';
+
+const PillarCard = ({ icon: Icon, title, description, iconColor, delay = 0 }) => (
+  <motion.div
+    variants={revealFromBelow}
+    className="glass-panel-premium rounded-3xl p-7 md:p-8 space-y-4 hover:-translate-y-2 hover:shadow-raised transition-all duration-300 flex flex-col justify-between group"
+  >
+    <div className="space-y-4">
+      <motion.div
+        whileHover={{ rotate: 5, scale: 1.1 }}
+        transition={{ type: "spring", stiffness: 300 }}
+        className={`p-3 w-fit bg-ob-ink-70 border border-ob-glass-border ${iconColor} rounded-xl group-hover:border-ob-red-700/30 transition-colors`}
+      >
+        <Icon className="w-6 h-6" />
+      </motion.div>
+      <h3 className="text-lg font-bold text-neutral-900 dark:text-ob-white">{title}</h3>
+      <p className="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">
+        {description}
+      </p>
+    </div>
+    <div className="flex items-center gap-2 text-xs text-ob-red-500 font-semibold pt-2 group-hover:gap-3 transition-all">
+      <span>Learn more</span>
+      <ArrowRight className="w-3.5 h-3.5" />
+    </div>
+  </motion.div>
+);
 
 const AboutPage = () => {
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
+  const pillars = [
+    {
+      icon: Scan,
+      title: "Advanced AI Document Scanning",
+      description: "Every emergency blood request is automatically parsed and verified using Anthropic's Claude AI. Requesters upload the doctor's prescription, and the AI extracts required blood type, hospital, patient details, and verifies validity — eliminating fraudulent posts with 99.8% accuracy.",
+      iconColor: "text-ob-red-500"
+    },
+    {
+      icon: MapPin,
+      title: "Geospatial Routing & Live ETA",
+      description: "We leverage MongoDB's 2dsphere indexing and Open Source Routing Machine (OSRM) to pinpoint matching donors or blood banks within a 25km radius, calculate precise travel routing, estimate ETAs, and display clean path overlays on a customizable Leaflet map layer.",
+      iconColor: "text-amber-400"
+    },
+    {
+      icon: Lock,
+      title: "Cryptographic Contact Privacy",
+      description: "Donor contact information is protected with AES-256 encryption. Requesters see distance and blood group matches, but phone numbers, WhatsApp links, and emails remain locked. They are revealed only when the donor explicitly accepts a request — creating a mutual consent gateway.",
+      iconColor: "text-emerald-400"
+    },
+    {
+      icon: Zap,
+      title: "Real-time Event Coordination",
+      description: "Using Socket.IO for live bidirectional communication and Resend for email alerts, matching donors receive instant push notifications. Requesters track confirmations in real-time and can immediately coordinate transport once contacts are unlocked — all within seconds.",
+      iconColor: "text-blue-400"
     }
-  };
+  ];
 
-  const itemVariants = {
-    hidden: { y: 30, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 90, damping: 14 } }
-  };
+  const techStack = [
+    { label: "AI Engine", value: "Anthropic Claude" },
+    { label: "Geo Engine", value: "MongoDB 2dsphere + OSRM" },
+    { label: "Real-time", value: "Socket.IO" },
+    { label: "Security", value: "AES-256 Encryption" },
+    { label: "Maps", value: "Leaflet + CartoDB" },
+    { label: "Notifications", value: "Resend Email API" },
+  ];
 
   return (
-    <div className="relative overflow-hidden bg-slate-50 dark:bg-slate-950 min-h-[calc(100vh-80px)] flex flex-col justify-center py-16 px-4 transition-colors duration-300">
-      {/* Background gradients */}
-      <div className="absolute top-[-10%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-red-600/[0.02] blur-[130px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[45vw] h-[45vw] rounded-full bg-amber-500/[0.01] blur-[130px] pointer-events-none" />
+    <div className="relative overflow-hidden bg-white dark:bg-ob-ink min-h-[calc(100vh-80px)] flex flex-col justify-center py-20 px-4 transition-colors duration-300">
+      {/* Background orbs */}
+      <div className="absolute top-[-10%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-ob-red-700/[0.03] blur-[130px] pointer-events-none animate-orb-float" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[45vw] h-[45vw] rounded-full bg-purple-500/[0.02] blur-[130px] pointer-events-none" />
 
-      <div className="max-w-4xl mx-auto space-y-12 relative z-10 w-full">
-        {/* Header */}
+      <div className="max-w-5xl mx-auto space-y-16 relative z-10 w-full">
+        
+        {/* ─── Header ─── */}
         <motion.div 
-          initial={{ opacity: 0, y: 25 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-center space-y-4"
+          variants={fadeUp}
+          initial="hidden"
+          animate="visible"
+          className="text-center space-y-6"
         >
-          <div className="inline-flex p-2.5 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-[#C0152A] mb-2 shadow-sm">
-            <HeartPulse className="w-8 h-8 text-[#C0152A] animate-pulse" />
-          </div>
-          <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight font-display">
-            About <span className="text-[#C0152A]">OneBlood</span>
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 200 }}
+            className="inline-flex p-3 bg-ob-ink-70 border border-ob-glass-border rounded-2xl text-ob-red-500 mb-2"
+          >
+            <HeartPulse className="w-9 h-9 text-ob-red-500" />
+          </motion.div>
+
+          <h1 className="text-4xl sm:text-5xl font-display font-black tracking-tight text-neutral-900 dark:text-ob-white leading-tight">
+            About <span className="text-transparent bg-clip-text bg-gradient-to-r from-ob-red-700 to-red-400 text-glow-red">OneBlood</span>
           </h1>
-          <p className="text-sm text-slate-600 dark:text-slate-400 max-w-xl mx-auto leading-relaxed">
-            OneBlood is a state-of-the-art real-time blood coordination network designed to bridge the gap between emergency seekers, active individual donors, and local blood banks.
+
+          <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto leading-relaxed">
+            OneBlood is a state-of-the-art real-time blood coordination network designed to bridge the gap between emergency seekers, verified individual donors, local blood banks, and hospital systems — creating a unified, AI-verified supply chain for life-saving resources.
           </p>
         </motion.div>
 
-        {/* Pillars / Features */}
-        <motion.div 
-          variants={containerVariants}
+        {/* ─── Mission Statement ─── */}
+        <motion.div
+          variants={fadeUpSlow}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          className="grid grid-cols-1 md:grid-cols-2 gap-6"
+          viewport={{ once: true, margin: "-80px" }}
+          className="glass-panel-premium rounded-3xl p-8 md:p-10 text-center space-y-4"
         >
-          <motion.div variants={itemVariants} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-6 space-y-3 hover:border-slate-355 dark:hover:border-white/10 hover:-translate-y-1.5 hover:scale-[1.01] hover:shadow-lg dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.35)] transition-all duration-300 flex flex-col justify-between">
-            <div className="space-y-3">
-              <div className="p-2.5 w-fit bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-[#C0152A] rounded-xl shadow-sm">
-                <Shield className="w-5 h-5" />
-              </div>
-              <h3 className="text-base font-bold text-slate-850 dark:text-white">Advanced AI Scanning</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                Every emergency blood request is automatically parsed and verified using Anthropic's Claude API. Requesters simply upload the doctor's letter, and the AI extracts required blood type, hospital, patient details, and verifies validity to eliminate fraudulent posts.
-              </p>
-            </div>
-          </motion.div>
-
-          <motion.div variants={itemVariants} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-6 space-y-3 hover:border-slate-355 dark:hover:border-white/10 hover:-translate-y-1.5 hover:scale-[1.01] hover:shadow-lg dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.35)] transition-all duration-300 flex flex-col justify-between">
-            <div className="space-y-3">
-              <div className="p-2.5 w-fit bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-amber-500 rounded-xl shadow-sm">
-                <MapPin className="w-5 h-5" />
-              </div>
-              <h3 className="text-base font-bold text-slate-855 dark:text-white">Geospatial Routing & ETA</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                We leverage MongoDB's 2dsphere indexing and OpenSource Routing Machine (OSRM) to pinpoint matching donors or blood banks, calculate precise travel routing, estimate ETAs, and display clean path overlays on a customizable Leaflet map layer.
-              </p>
-            </div>
-          </motion.div>
-
-          <motion.div variants={itemVariants} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-6 space-y-3 hover:border-slate-355 dark:hover:border-white/10 hover:-translate-y-1.5 hover:scale-[1.01] hover:shadow-lg dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.35)] transition-all duration-300 flex flex-col justify-between">
-            <div className="space-y-3">
-              <div className="p-2.5 w-fit bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-emerald-600 dark:text-emerald-450 rounded-xl shadow-sm">
-                <Activity className="w-5 h-5" />
-              </div>
-              <h3 className="text-base font-bold text-slate-855 dark:text-white">Gated Contact Privacy</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                Donor contact information is protected at all costs. Requesters can see distance and blood group matches, but phone numbers, WhatsApp links, and emails remain encrypted and locked. They are revealed only when the donor accepts the request in real time.
-              </p>
-            </div>
-          </motion.div>
-
-          <motion.div variants={itemVariants} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-6 space-y-3 hover:border-slate-355 dark:hover:border-white/10 hover:-translate-y-1.5 hover:scale-[1.01] hover:shadow-lg dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.35)] transition-all duration-300 flex flex-col justify-between">
-            <div className="space-y-3">
-              <div className="p-2.5 w-fit bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-blue-600 dark:text-blue-450 rounded-xl shadow-sm">
-                <HelpCircle className="w-5 h-5" />
-              </div>
-              <h3 className="text-base font-bold text-slate-855 dark:text-white">Real-time Coordination</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                Using Socket.IO and Resend email alerts, matching donors receive instant alerts. Requesters can track confirmations and immediately dial unlocked contacts to coordinate transport or blood transfer.
-              </p>
-            </div>
-          </motion.div>
+          <span className="text-xs font-mono font-bold uppercase tracking-[3px] text-ob-red-500">Our Mission</span>
+          <p className="text-lg md:text-xl text-neutral-700 dark:text-neutral-300 leading-relaxed max-w-3xl mx-auto font-light italic">
+            "To ensure that no blood emergency goes unanswered. By combining AI verification, geospatial matching, and cryptographic privacy into a single platform, we're building the infrastructure for a world where finding a compatible donor takes seconds, not hours."
+          </p>
         </motion.div>
 
-        {/* CTA section */}
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.6 }}
-          className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-8 flex flex-col md:flex-row justify-between items-center gap-6 shadow-md"
+        {/* ─── Platform Pillars ─── */}
+        <div>
+          <motion.div
+            variants={fadeUpSlow}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="text-center mb-10"
+          >
+            <span className="px-3 py-1.5 bg-ob-red-700/10 dark:bg-ob-red-700/20 text-ob-red-700 dark:text-ob-red-500 text-xs font-mono rounded font-semibold uppercase tracking-[3px]">
+              Platform Architecture
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-display text-neutral-900 dark:text-ob-white mt-4">
+              Four Engineering Pillars
+            </h2>
+          </motion.div>
+
+          <motion.div 
+            variants={staggerGrid}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-60px" }}
+            className="grid grid-cols-1 md:grid-cols-2 gap-6"
+          >
+            {pillars.map((pillar, idx) => (
+              <PillarCard key={idx} {...pillar} delay={idx * 0.1} />
+            ))}
+          </motion.div>
+        </div>
+
+        {/* ─── Tech Stack Grid ─── */}
+        <motion.div
+          variants={fadeUpSlow}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-60px" }}
         >
-          <div className="text-left space-y-1">
-            <h4 className="text-lg font-bold text-slate-850 dark:text-white font-display">Want to start saving lives?</h4>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Join our growing network of donors, patients, and healthcare providers.</p>
+          <div className="text-center mb-8">
+            <h3 className="text-lg font-display text-neutral-900 dark:text-ob-white">Technology Stack</h3>
           </div>
-          <div className="flex gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {techStack.map((tech, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.06 }}
+                className="glass-panel-premium rounded-xl p-4 text-center hover:scale-[1.03] transition-all duration-200"
+              >
+                <p className="text-xs text-neutral-500 dark:text-neutral-500 uppercase tracking-wider font-mono mb-1">{tech.label}</p>
+                <p className="text-sm font-semibold text-neutral-900 dark:text-ob-white">{tech.value}</p>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* ─── CTA Section ─── */}
+        <motion.div 
+          variants={revealFromBelow}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-80px" }}
+          className="glass-panel-premium rounded-3xl p-8 md:p-10 flex flex-col md:flex-row justify-between items-center gap-6 relative overflow-hidden"
+        >
+          {/* CTA glow */}
+          <div className="absolute -top-20 -right-20 w-64 h-64 bg-ob-red-700/[0.08] rounded-full blur-[80px] pointer-events-none" />
+          
+          <div className="text-left space-y-2 relative z-10">
+            <h4 className="text-xl font-bold text-neutral-900 dark:text-ob-white font-display">Ready to start saving lives?</h4>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">Join our growing network of donors, patients, and healthcare providers. Registration takes less than 2 minutes.</p>
+          </div>
+          <div className="flex gap-4 relative z-10 shrink-0">
             <Link 
               to="/auth/signup" 
-              className="px-6 py-3 bg-[#C0152A] hover:bg-red-750 rounded-xl text-xs font-bold text-white flex items-center space-x-1.5 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md"
+              className="px-7 py-3.5 bg-ob-red-700 hover:bg-red-800 rounded-full text-sm font-bold text-white flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-glow-red hover:shadow-[0_0_30px_rgba(192,21,42,0.5)]"
             >
               <span>Get Started</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link 
               to="/search" 
-              className="px-6 py-3 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-white/10 rounded-xl text-xs font-semibold text-slate-705 dark:text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
+              className="px-7 py-3.5 bg-neutral-100 dark:bg-ob-glass-hover border border-neutral-200 dark:border-ob-glass-border hover:bg-neutral-200 dark:hover:bg-neutral-800 rounded-full text-sm font-semibold text-neutral-700 dark:text-ob-white transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
               Search Map
             </Link>

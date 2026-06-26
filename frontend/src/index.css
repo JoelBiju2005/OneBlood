@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,83 +6,140 @@
 
 @layer base {
   body {
-    @apply bg-slate-50 text-slate-800 dark:bg-[#07070A] dark:text-white font-body antialiased transition-colors duration-300 selection:bg-oneblood-crimson selection:text-white;
+    @apply bg-ob-ink text-ob-white font-sans antialiased selection:bg-ob-red-700 selection:text-white;
   }
   
   h1, h2, h3, h4, h5, h6 {
-    @apply font-heading tracking-tight text-slate-900 dark:text-white;
+    @apply font-display tracking-tight text-ob-white;
   }
   
-  /* Standardise form inputs for premium look */
+  /* Universal dark input style */
   input, select, textarea {
-    @apply focus:ring-2 focus:ring-oneblood-crimson/50 focus:border-oneblood-crimson transition-all duration-200 outline-none;
+    @apply bg-ob-ink-70 text-ob-white border border-ob-glass-border rounded-xl px-4 py-3
+           placeholder:text-ob-ink-20 
+           focus:ring-2 focus:ring-ob-red-700/25 focus:border-ob-red-700 
+           transition-all duration-200 outline-none;
+  }
+
+  option {
+    @apply bg-ob-ink-80 text-ob-white;
   }
 }
 
 @layer components {
   .glass-card {
-    @apply bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] backdrop-blur-md rounded-2xl shadow-sm dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] transition-all duration-300;
+    @apply bg-ob-glass border border-ob-glass-border backdrop-blur-md rounded-2xl shadow-card transition-all duration-300;
   }
   
   .glass-card-hover {
-    @apply hover:shadow-md dark:hover:shadow-[0_20px_50px_rgba(192,21,42,0.08)] hover:border-slate-300 dark:hover:border-oneblood-crimson/20 hover:-translate-y-1 hover:scale-[1.005] duration-300 ease-out;
+    @apply hover:shadow-raised hover:border-ob-red-700/20 hover:-translate-y-1 hover:scale-[1.005] duration-300 ease-out;
   }
   
   .btn-primary {
-    @apply bg-gradient-to-r from-oneblood-crimson to-[#E0243C] hover:brightness-110 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 transform active:scale-95 shadow-lg shadow-oneblood-crimson/25 hover:shadow-oneblood-crimson/35;
+    @apply bg-gradient-to-r from-ob-red-700 to-ob-red-500 hover:brightness-110 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 transform active:scale-[0.97] shadow-lg shadow-ob-red-700/25 hover:shadow-ob-red-700/40;
   }
   
   .btn-secondary {
-    @apply bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] text-slate-800 dark:text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 transform active:scale-95 border border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.15];
+    @apply bg-ob-glass-hover text-ob-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 transform active:scale-[0.97] border border-ob-glass-border hover:border-ob-ink-20;
   }
   
   .btn-danger {
-    @apply bg-gradient-to-r from-oneblood-crimson to-red-700 hover:brightness-110 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 transform active:scale-95 shadow-lg shadow-oneblood-crimson/20 animate-pulse-slow;
+    @apply bg-gradient-to-r from-ob-red-700 to-red-700 hover:brightness-110 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 transform active:scale-[0.97] shadow-lg shadow-ob-red-700/20 animate-pulse-slow;
   }
+
+  .btn-pill {
+    @apply px-6 py-2.5 rounded-pill font-semibold text-sm transition-all duration-300 active:scale-[0.97];
+  }
+
+  .btn-pill-primary {
+    @apply btn-pill bg-ob-red-700 text-white hover:bg-ob-red-600 shadow-glow-red;
+  }
+
+  .btn-pill-secondary {
+    @apply btn-pill border border-ob-glass-border text-ob-white hover:bg-ob-glass-hover;
+  }
+
+  /* Spotlight card effect */
+  .spotlight-card {
+    @apply relative overflow-hidden;
+    background: radial-gradient(
+      300px circle at var(--x, 50%) var(--y, 50%),
+      rgba(192, 21, 42, 0.06),
+      transparent 60%
+    );
+  }
+
+  /* Shadow utility classes */
+  .shadow-card  { box-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.24); }
+  .shadow-raised { box-shadow: 0 4px 14px rgba(0,0,0,0.4); }
+  .shadow-float  { box-shadow: 0 16px 48px rgba(0,0,0,0.5); }
+  .shadow-glow-red   { box-shadow: 0 0 20px rgba(192,21,42,0.35), 0 0 60px rgba(192,21,42,0.12); }
+  .shadow-glow-green { box-shadow: 0 0 20px rgba(16,185,129,0.3), 0 0 60px rgba(16,185,129,0.1); }
 }
 
-/* Custom scrollbars */
+/* Custom scrollbars — thinner, crimson */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 4px;
+  height: 4px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0F0A0A;
+  background: #07070A;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #27272a;
+  background: #27272F;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #B91C1C;
+  background: #C0152A;
 }
 
-/* Leaflet maps custom stylings to look dark-themed and slick */
+/* Leaflet maps — CartoDB Dark Matter compatible */
 .leaflet-container {
   width: 100%;
   height: 100%;
   border-radius: 1rem;
-  background-color: #0F0A0A !important;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background-color: #07070A !important;
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .leaflet-tile {
-  filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+  /* CartoDB Dark Matter tiles are already dark — no filter needed */
 }
 
 .leaflet-popup-content-wrapper {
-  background: #181212 !important;
-  color: #fff !important;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px !important;
+  background: #0C0C10 !important;
+  color: #F5F5F7 !important;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
 }
 
 .leaflet-popup-tip {
-  background: #181212 !important;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #0C0C10 !important;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.leaflet-control-zoom a {
+  background-color: #111116 !important;
+  color: #F5F5F7 !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background-color: #18181D !important;
+}
+
+/* Hero glow breathing animation */
+.hero-glow {
+  animation: heroGlow 4s ease-in-out infinite;
+}
+
+@keyframes heroGlow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50%      { opacity: 0.7; transform: scale(1.05); }
 }
 
 /* Typewriter animation */
@@ -112,188 +169,6 @@
   animation: loading-bar 1.5s infinite ease-in-out;
 }
 
-/* ==========================================
-   ONEBLOOD DYNAMIC THEME SWAPPING OVERRIDES
-   ========================================== */
-
-/* Overrides for text color: white -> dark in light mode, white in dark mode */
-.text-white {
-  color: #0f172a !important; /* slate-900 */
-}
-.dark .text-white {
-  color: #ffffff !important;
-}
-.keep-white, .keep-white * {
-  color: #ffffff !important;
-}
-
-/* Red / Emerald / Amber backgrounds and buttons MUST keep white text in both modes */
-.btn-primary,
-.btn-danger,
-.bg-oneblood-crimson,
-.bg-\[\#C0152A\],
-.bg-red-600,
-.bg-red-700,
-.bg-\[\#a01021\],
-.bg-emerald-600,
-.bg-emerald-700,
-.bg-amber-500,
-.bg-blue-600,
-.bg-indigo-600,
-.btn-primary *,
-.btn-danger *,
-.bg-oneblood-crimson *,
-.bg-\[\#C0152A\] *,
-.bg-red-600 *,
-.bg-red-700 *,
-.bg-\[\#a01021\] *,
-.bg-emerald-600 *,
-.bg-emerald-700 *,
-.bg-amber-500 *,
-.bg-blue-600 *,
-.bg-indigo-600 * {
-  color: #ffffff !important;
-}
-
-/* Overrides for text-slate-300 and text-slate-400 */
-.text-slate-300 {
-  color: #334155 !important; /* slate-700 */
-}
-.dark .text-slate-300 {
-  color: #cbd5e1 !important; /* slate-300 */
-}
-
-.text-slate-400 {
-  color: #475569 !important; /* slate-600 */
-}
-.dark .text-slate-400 {
-  color: #94a3b8 !important; /* slate-400 */
-}
-
-/* Overrides for background classes to toggle dark/light colors */
-.bg-slate-950 {
-  background-color: #f8fafc !important; /* slate-50 */
-}
-.dark .bg-slate-950 {
-  background-color: #020617 !important;
-}
-
-.bg-slate-900,
-.bg-slate-900\/60,
-.bg-slate-900\/40 {
-  background-color: #ffffff !important; /* pure white card in light mode */
-}
-.dark .bg-slate-900 {
-  background-color: #0f172a !important;
-}
-.dark .bg-slate-900\/60 {
-  background-color: rgba(15, 23, 42, 0.6) !important;
-}
-.dark .bg-slate-900\/40 {
-  background-color: rgba(15, 23, 42, 0.4) !important;
-}
-
-.bg-oneblood-midnight, .bg-\[\#0F0A0A\], .bg-\[\#0F0A0A\]\/60 {
-  background-color: #f8fafc !important; /* slate-50 */
-}
-.dark .bg-oneblood-midnight, .dark .bg-\[\#0F0A0A\], .dark .bg-\[\#0F0A0A\]\/60 {
-  background-color: #0f0a0a !important;
-}
-
-/* Input, select, textarea elements text/background colors */
-input, select, textarea {
-  background-color: #ffffff !important;
-  color: #0f172a !important;
-  border-color: #cbd5e1 !important; /* slate-300 */
-}
-.dark input, .dark select, .dark textarea {
-  background-color: rgba(255, 255, 255, 0.05) !important;
-  color: #ffffff !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
-}
-
-/* Options within select dropdowns */
-option {
-  background-color: #ffffff !important;
-  color: #0f172a !important;
-}
-.dark option {
-  background-color: #0f172a !important;
-  color: #ffffff !important;
-}
-
-/* Glass card component adjustments */
-.glass-card {
-  background-color: #ffffff !important;
-  border-color: #e2e8f0 !important;
-}
-.dark .glass-card {
-  background-color: rgba(255, 255, 255, 0.05) !important;
-  border-color: rgba(255, 255, 255, 0.05) !important;
-}
-
-/* Border lines and overlays */
-.border-white\/5, .border-white\/10 {
-  border-color: #cbd5e1 !important;
-}
-.dark .border-white\/5 {
-  border-color: rgba(255, 255, 255, 0.05) !important;
-}
-.dark .border-white\/10 {
-  border-color: rgba(255, 255, 255, 0.1) !important;
-}
-
-/* Override background of Leaflet Map controls/containers to adapt dynamically */
-.leaflet-container {
-  background-color: #ffffff !important;
-  border-color: #cbd5e1 !important;
-}
-.dark .leaflet-container {
-  background-color: #0F0A0A !important;
-  border-color: rgba(255, 255, 255, 0.05) !important;
-}
-.leaflet-tile {
-  filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%) !important;
-}
-.dark .leaflet-tile {
-  filter: none !important;
-}
-.leaflet-popup-content-wrapper {
-  background: #ffffff !important;
-  color: #0f172a !important;
-  border-color: #cbd5e1 !important;
-}
-.dark .leaflet-popup-content-wrapper {
-  background: #181212 !important;
-  color: #fff !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
-}
-.leaflet-popup-tip {
-  background: #ffffff !important;
-}
-.dark .leaflet-popup-tip {
-  background: #181212 !important;
-}
-
-/* Specific custom overrides for the header role toggle switch to prevent theme-swap bugs */
-.role-toggle-container {
-  background-color: #f1f5f9 !important; /* light slate-100 */
-  border-color: #cbd5e1 !important; /* light slate-300 */
-}
-.dark .role-toggle-container {
-  background-color: #020617 !important; /* dark slate-950 */
-  border-color: rgba(255, 255, 255, 0.1) !important;
-}
-.role-toggle-active {
-  color: #ffffff !important; /* white on red active background in both themes */
-}
-.role-toggle-inactive {
-  color: #64748b !important; /* dark slate-500 in light mode */
-}
-.dark .role-toggle-inactive {
-  color: #94a3b8 !important; /* light slate-400 in dark mode */
-}
-
 /* Blood drop falling and morphing animation */
 @keyframes blood-fall {
   0% {
@@ -308,7 +183,7 @@ option {
     opacity: 1;
   }
   48% {
-    transform: translateY(0) scale(1.4, 0.4); /* Splat stretching */
+    transform: translateY(0) scale(1.4, 0.4);
     opacity: 0.8;
   }
   54% {
@@ -354,3 +229,96 @@ option {
   animation: logo-morph 2.5s infinite ease-out;
 }
 
+/* Noise texture overlay (used on CTA banners) */
+.noise-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ─── Timeline Pulse Animation ─── */
+@keyframes timeline-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(192, 21, 42, 0.7); }
+  70%  { box-shadow: 0 0 0 18px rgba(192, 21, 42, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(192, 21, 42, 0); }
+}
+
+.animate-timeline-pulse {
+  animation: timeline-pulse 2.5s infinite;
+}
+
+/* ─── Premium Glass Panel ─── */
+.glass-panel-premium {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-panel-premium:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* ─── Text and Box Glow ─── */
+.text-glow-red {
+  text-shadow: 0 0 24px rgba(192, 21, 42, 0.6);
+}
+
+.box-glow-red {
+  box-shadow: 0 0 30px rgba(192, 21, 42, 0.2);
+}
+
+/* ─── Timeline connector line ─── */
+.timeline-line-glow {
+  background: linear-gradient(to bottom, transparent, #C0152A, #C0152A, transparent);
+  box-shadow: 0 0 12px rgba(192, 21, 42, 0.4);
+}
+
+/* ─── FAQ Accordion transition ─── */
+.accordion-answer {
+  transition: max-height 0.35s ease-out, opacity 0.3s ease-out;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.accordion-answer.open {
+  max-height: 500px;
+  opacity: 1;
+}
+
+/* ─── Shimmer loading effect ─── */
+@keyframes shimmer-reveal {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer-line {
+  background: linear-gradient(90deg, transparent, rgba(192, 21, 42, 0.1), transparent);
+  background-size: 200% 100%;
+  animation: shimmer-reveal 2s infinite;
+}
+
+/* ─── Floating gradient orb ─── */
+@keyframes orb-float {
+  0%, 100% { transform: translateY(0) scale(1); opacity: 0.3; }
+  50%      { transform: translateY(-20px) scale(1.05); opacity: 0.5; }
+}
+
+.animate-orb-float {
+  animation: orb-float 8s ease-in-out infinite;
+}
+
+/* ─── Counter number animation ─── */
+@keyframes count-in {
+  0%   { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.animate-count-in {
+  animation: count-in 0.6s ease-out forwards;
+}

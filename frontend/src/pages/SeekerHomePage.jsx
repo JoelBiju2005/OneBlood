@@ -718,7 +718,7 @@ const SeekerHomePage = () => {
                 {/* Mandatory Hospital Section */}
                 <div className="space-y-3">
                   <h4 className="text-xs font-black uppercase text-blue-600 dark:text-blue-400 tracking-wider flex items-center gap-1 font-mono">
-                    <Hospital className="w-4 h-4" /> {useDetour ? '2. Select Mandatory Destination Hospital' : 'Select Mandatory Destination Hospital'}
+                    <Building2 className="w-4 h-4" /> {useDetour ? '2. Select Mandatory Destination Hospital' : 'Select Mandatory Destination Hospital'}
                   </h4>
                   <div className="space-y-2 text-left">
                     {facilitiesLoading ? (

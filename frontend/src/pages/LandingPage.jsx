@@ -1,42 +1,64 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Shield, Activity, Users, MapPin, Search, ArrowRight, HeartPulse } from 'lucide-react';
-import Logo from '../components/shared/Logo';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { Shield, Activity, Users, MapPin, ArrowRight, HeartPulse, FileSearch, Handshake, ChevronDown, Quote, Zap, Scan, Route, Lock, BadgeCheck } from 'lucide-react';
 import api from '../utils/api';
 import useAuthStore from '../store/authStore';
 import toast from 'react-hot-toast';
 import HallOfFameSection from '../components/shared/HallOfFameSection';
+import BloodCompatibilityMatrix from '../components/shared/BloodCompatibilityMatrix';
+import useCountUp from '../utils/useCountUp';
+import { fadeUp, fadeIn, staggerContainer, scaleIn, fadeUpSlow, staggerGrid, revealFromBelow } from '../utils/animations';
 
-const AnimatedNumber = ({ value, suffix = "" }) => {
-  const [current, setCurrent] = useState(0);
-
-  useEffect(() => {
-    let start = 0;
-    const end = parseInt(value, 10) || 0;
-    if (end === 0) return;
-    
-    const duration = 1500; // ms
-    const incrementTime = Math.max(Math.floor(duration / end), 15);
-    
-    const timer = setInterval(() => {
-      start += Math.max(Math.ceil(end / 100), 1);
-      if (start >= end) {
-        clearInterval(timer);
-        setCurrent(end);
-      } else {
-        setCurrent(start);
-      }
-    }, incrementTime);
-
-    return () => clearInterval(timer);
-  }, [value]);
-
-  return <span>{current.toLocaleString()}{suffix}</span>;
+const StatCard = ({ label, value, colorClass, suffix = "" }) => {
+  const { count, ref } = useCountUp(value, 2000);
+  return (
+    <motion.div
+      variants={scaleIn}
+      ref={ref} 
+      className="bg-white/80 dark:bg-ob-ink-90/50 border border-neutral-200 dark:border-ob-glass-border rounded-2xl p-6 text-center hover:border-neutral-300 dark:hover:border-ob-glass-hover hover:scale-[1.02] duration-300 transition-all shadow-sm dark:shadow-none group"
+    >
+      <p className={`text-4xl lg:text-5xl font-mono font-black ${colorClass} group-hover:scale-105 transition-transform`}>
+        {count.toLocaleString()}{suffix}
+      </p>
+      <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-2 uppercase tracking-wider font-semibold">
+        {label}
+      </p>
+    </motion.div>
+  );
 };
 
-const LandingPage = () => {
-  const { user, login } = useAuthStore();
+const FeatureStep = ({ icon: Icon, step, title, description, accent = false, delay = 0 }) => (
+  <motion.div
+    variants={revealFromBelow}
+    className="flex flex-col items-center text-center relative z-10 group"
+  >
+    <motion.div
+      whileHover={{ y: -4, scale: 1.05 }}
+      transition={{ type: "spring", stiffness: 300 }}
+      className={`w-18 h-18 rounded-2xl flex items-center justify-center mb-6 transition-all duration-300 ${
+        accent
+          ? 'bg-ob-red-700 text-white shadow-glow-red'
+          : 'bg-neutral-100 dark:bg-ob-ink-70 border border-neutral-200 dark:border-ob-glass-border text-neutral-900 dark:text-ob-white group-hover:border-ob-red-700/40'
+      }`}
+      style={{ width: '4.5rem', height: '4.5rem' }}
+    >
+      <Icon className="w-7 h-7" />
+    </motion.div>
+    <span className={`text-xs font-mono font-bold uppercase tracking-[3px] mb-3 ${
+      accent ? 'text-ob-red-700 dark:text-ob-red-500' : 'text-neutral-400 dark:text-neutral-500'
+    }`}>
+      Step {step}
+    </span>
+    <h3 className="text-xl md:text-2xl font-display font-bold text-neutral-900 dark:text-ob-white mb-3">{title}</h3>
+    <p className="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed max-w-xs">
+      {description}
+    </p>
+  </motion.div>
+);
+
+export default function LandingPage() {
+  const { user } = useAuthStore();
   const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalDonors: 1240,
@@ -45,15 +67,12 @@ const LandingPage = () => {
     livesHelped: 2600,
   });
 
-  const handleQuickLogin = async (onebloodId, email, password) => {
-    try {
-      await login(onebloodId, email, password);
-      toast.success('Logged in successfully!');
-      navigate('/home', { replace: true });
-    } catch (err) {
-      toast.error('Quick login failed. Make sure DB is seeded!');
-    }
-  };
+  const [activeBloodGroupIndex, setActiveBloodGroupIndex] = useState(0);
+  const bloodGroups = ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+'];
+
+  const { scrollYProgress } = useScroll();
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0.3]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.15], [1, 0.97]);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -67,273 +86,374 @@ const LandingPage = () => {
       }
     };
     fetchStats();
-  }, []);
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.12
-      }
-    }
-  };
 
-  const itemVariants = {
-    hidden: { y: 30, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 90, damping: 14 } }
-  };
+    // Cycle blood groups for problem section
+    const interval = setInterval(() => {
+      setActiveBloodGroupIndex((prev) => (prev + 1) % bloodGroups.length);
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <div className="relative overflow-hidden bg-slate-50 dark:bg-[#07070A] text-slate-800 dark:text-white min-h-[calc(100vh-80px)] flex flex-col justify-center transition-colors duration-300">
-      {/* Dynamic decorative backdrop gradients */}
-      <div className="absolute top-[-10%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-red-600/[0.03] dark:bg-red-600/[0.03] blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[60vw] h-[60vw] rounded-full bg-slate-200/[0.03] dark:bg-amber-500/[0.02] blur-[140px] pointer-events-none" />
-      <div className="absolute top-[35%] left-[25%] w-[40vw] h-[40vw] rounded-full bg-red-500/[0.01] blur-[160px] pointer-events-none" />
-
-      {/* Main Hero Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10 w-full font-sans">
-        <div className="flex flex-col items-center justify-center text-center space-y-12">
-          
-          {/* Heading and Tagline */}
-          <div className="space-y-8 flex flex-col items-center">
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.1, duration: 0.6 }}
-              className="space-y-6"
-            >
-              <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.05] font-display">
-                Every Drop Counts.<br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#C0152A] to-[#FF4D6A]">Every Second Matters.</span>
-              </h1>
-              <p className="text-base sm:text-xl lg:text-2xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto leading-relaxed font-body font-light">
-                Connecting blood seekers with donors in real-time. Our emergency coordination platform saves lives when every second is critical.
-              </p>
-            </motion.div>
- 
-            {/* Call To Actions */}
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.6 }}
-              className="flex flex-wrap justify-center gap-6"
-            >
-              <Link 
-                to={user ? "/home" : "/auth/signup?role=seeker"}
-                state={{ role: 'seeker' }}
-                className="px-10 py-5 text-lg rounded-2xl bg-gradient-to-r from-[#C0152A] to-[#FF4D6A] text-white font-bold hover:shadow-lg hover:shadow-red-600/35 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center space-x-2.5 group keep-white"
-              >
-                <span>Find Blood Now</span>
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
-              <Link 
-                to={user ? "/noticeboard" : "/auth/signup?role=donor"}
-                state={{ role: 'donor' }}
-                className="px-10 py-5 text-lg rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.03] dark:hover:bg-white/[0.06] border border-slate-200 dark:border-white/[0.08] text-slate-800 dark:text-white font-bold hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center space-x-2.5 group"
-              >
-                <span>Register as Donor</span>
-              </Link>
-            </motion.div>
-          </div>
-
-          {/* Stats Visual (OneBlood at a Glance) */}
-          <div className="w-full max-w-5xl mx-auto pt-8 relative flex flex-col items-center">
-            <motion.div
-              initial={{ opacity: 0, y: 35, scale: 0.98 }}
-              whileInView={{ opacity: 1, y: 0, scale: 1 }}
-              viewport={{ once: true, margin: "-80px" }}
-              transition={{ type: "spring", stiffness: 70, damping: 14 }}
-              className="relative w-full bg-white dark:bg-[#0F0F1A]/60 border border-slate-200 dark:border-white/[0.05] rounded-3xl p-8 lg:p-12 flex flex-col gap-8 shadow-xl dark:shadow-[0_25px_60px_rgba(0,0,0,0.4)] backdrop-blur-md overflow-hidden group hover:border-slate-300 dark:hover:border-white/[0.1] transition-all duration-300"
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between relative z-10 border-b border-slate-200 dark:border-white/[0.08] pb-6">
-                <div className="text-left">
-                  <p className="text-xs font-black uppercase tracking-[4px] text-[#C0152A] dark:text-[#FF4D6A]">Live Network</p>
-                  <h3 className="text-2xl font-extrabold text-slate-850 dark:text-white mt-1 font-display">OneBlood at a Glance</h3>
-                </div>
-                <Logo size="lg" showText={false} />
-              </div>
- 
-              {/* Stats grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 relative z-10">
-                <div className="bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] rounded-2xl p-6 text-center hover:border-[#C0152A]/30 dark:hover:border-[#C0152A]/30 hover:scale-[1.02] duration-300 transition-all">
-                  <p className="text-4xl lg:text-5xl font-black text-[#C0152A] dark:text-[#FF4D6A]"><AnimatedNumber value={stats.totalDonors} /></p>
-                  <p className="text-xs lg:text-sm text-slate-500 dark:text-slate-400 mt-2 uppercase tracking-wider font-semibold">Active Donors</p>
-                </div>
-                <div className="bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] rounded-2xl p-6 text-center hover:border-blue-500/30 dark:hover:border-blue-500/30 hover:scale-[1.02] duration-300 transition-all">
-                  <p className="text-4xl lg:text-5xl font-black text-blue-600 dark:text-blue-400"><AnimatedNumber value={stats.totalBanks} /></p>
-                  <p className="text-xs lg:text-sm text-slate-500 dark:text-slate-400 mt-2 uppercase tracking-wider font-semibold">Blood Banks</p>
-                </div>
-                <div className="bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] rounded-2xl p-6 text-center hover:border-amber-500/30 dark:hover:border-amber-500/30 hover:scale-[1.02] duration-300 transition-all">
-                  <p className="text-4xl lg:text-5xl font-black text-amber-500"><AnimatedNumber value={stats.requestsFulfilled} /></p>
-                  <p className="text-xs lg:text-sm text-slate-500 dark:text-slate-400 mt-2 uppercase tracking-wider font-semibold">Requests Fulfilled</p>
-                </div>
-                <div className="bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] rounded-2xl p-6 text-center hover:border-emerald-500/30 dark:hover:border-emerald-500/30 hover:scale-[1.02] duration-300 transition-all">
-                  <p className="text-4xl lg:text-5xl font-black text-emerald-500"><AnimatedNumber value={stats.livesHelped} /></p>
-                  <p className="text-xs lg:text-sm text-slate-500 dark:text-slate-400 mt-2 uppercase tracking-wider font-semibold">Lives Helped</p>
-                </div>
-              </div>
- 
-              {/* Bottom tagline */}
-              <div className="pt-4 text-center relative z-10">
-                <p className="text-sm italic text-slate-650 dark:text-slate-350 font-medium">
-                  "Protecting hope through one coordinated blood network."
-                </p>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-
-        {/* Feature section cards */}
-        <motion.div 
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-24"
+    <div className="relative overflow-hidden bg-white dark:bg-ob-ink text-neutral-800 dark:text-ob-white min-h-screen transition-colors duration-300">
+      
+      {/* BACKGROUND DECORATIONS */}
+      <div className="absolute top-[-10%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-ob-red-700/[0.04] dark:bg-ob-red-700/[0.03] blur-[120px] pointer-events-none animate-orb-float" />
+      <div className="absolute bottom-[20%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-neutral-200/[0.1] dark:bg-amber-500/[0.02] blur-[150px] pointer-events-none" />
+      <div className="absolute top-[50%] right-[-5%] w-[30vw] h-[30vw] rounded-full bg-purple-500/[0.02] blur-[120px] pointer-events-none" />
+      
+      {/* ═══════════════════════════════════════════
+          1. HERO SECTION
+      ═══════════════════════════════════════════ */}
+      <section className="relative min-h-[92vh] flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-20 z-10 w-full">
+        <motion.div
+          style={{ opacity: heroOpacity, scale: heroScale }}
+          className="max-w-6xl mx-auto flex flex-col items-center text-center space-y-12"
         >
-          <motion.div variants={itemVariants} className="bg-white dark:bg-[#0F0F1A]/40 border border-slate-200 dark:border-white/[0.05] backdrop-blur-md rounded-2xl p-8 text-left hover:border-slate-300 dark:hover:border-oneblood-crimson/20 shadow-sm hover:-translate-y-1.5 hover:scale-[1.01] hover:shadow-lg dark:hover:shadow-[0_20px_50px_rgba(192,21,42,0.08)] transition-all duration-300 group">
-            <div className="w-12 h-12 rounded-xl bg-red-150 dark:bg-red-500/[0.05] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-              <Shield className="w-6 h-6 text-[#C0152A]" />
-            </div>
-            <h3 className="text-lg font-bold text-slate-850 dark:text-white mb-3">Claude AI Verification</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-body">
-              Every request requires a prescription letter upload, scanned instantly by Anthropic's Claude API to guarantee authenticity and prevent spam.
-            </p>
+          
+          <motion.div
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+            className="space-y-6 flex flex-col items-center"
+          >
+            {/* Eyebrow Label */}
+            <motion.span 
+              variants={fadeUp}
+              className="px-4 py-1.5 bg-ob-red-700/10 dark:bg-ob-red-700/20 border border-ob-red-700/20 text-ob-red-700 dark:text-ob-red-500 font-bold uppercase tracking-[3px] rounded-full text-xs"
+            >
+              Emergency Coordination Engine
+            </motion.span>
+
+            {/* Headline */}
+            <motion.h1 
+              variants={fadeUp}
+              className="text-5xl sm:text-7xl lg:text-8xl font-display font-black tracking-tight text-neutral-900 dark:text-ob-white leading-[1.05]"
+            >
+              Every Second Counts.<br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-ob-red-700 to-red-400 text-glow-red">Every Drop Saves.</span>
+            </motion.h1>
+
+            {/* Subheadline */}
+            <motion.p 
+              variants={fadeUp}
+              className="text-base sm:text-lg lg:text-xl text-neutral-600 dark:text-neutral-400 max-w-3xl mx-auto leading-relaxed font-light"
+            >
+              A high-precision emergency network matching verified blood donors to real-time local emergencies. AI-powered validation, cryptographic tracking, and zero bureaucracy — when minutes define lives.
+            </motion.p>
           </motion.div>
- 
-          <motion.div variants={itemVariants} className="bg-white dark:bg-[#0F0F1A]/40 border border-slate-200 dark:border-white/[0.05] backdrop-blur-md rounded-2xl p-8 text-left hover:border-slate-300 dark:hover:border-amber-500/20 shadow-sm hover:-translate-y-1.5 hover:scale-[1.01] hover:shadow-lg dark:hover:shadow-[0_20px_50px_rgba(245,158,11,0.08)] transition-all duration-300 group">
-            <div className="w-12 h-12 rounded-xl bg-amber-150 dark:bg-amber-500/[0.05] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-              <Activity className="w-6 h-6 text-amber-500" />
-            </div>
-            <h3 className="text-lg font-bold text-slate-850 dark:text-white mb-3">Proximity Broadcasts</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-body">
-              Proximity filters automatically target matching donors and local blood banks within a 10km to 25km radius for immediate dispatch responses.
-            </p>
+
+          {/* Dual CTAs */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+            className="flex flex-wrap justify-center gap-4"
+          >
+            <Link 
+              to={user ? "/home" : "/auth/signup?role=seeker"}
+              state={{ role: 'seeker' }}
+              className="px-8 py-4 text-base rounded-full bg-ob-red-700 text-white font-bold hover:shadow-[0_0_30px_rgba(192,21,42,0.5)] hover:scale-[1.02] active:scale-[0.97] transition-all duration-200 flex items-center space-x-2 group shadow-glow-red"
+            >
+              <span>Request Emergency Blood</span>
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </Link>
+            <Link 
+              to={user ? "/noticeboard" : "/auth/signup?role=donor"}
+              state={{ role: 'donor' }}
+              className="px-8 py-4 text-base rounded-full bg-neutral-100 hover:bg-neutral-200 dark:bg-ob-glass-hover dark:hover:bg-neutral-800 border border-neutral-200 dark:border-ob-glass-border text-neutral-800 dark:text-ob-white font-semibold active:scale-[0.97] transition-all duration-200 hover:scale-[1.02]"
+            >
+              <span>Become a Registered Donor</span>
+            </Link>
           </motion.div>
- 
-          <motion.div variants={itemVariants} className="bg-white dark:bg-[#0F0F1A]/40 border border-slate-200 dark:border-white/[0.05] backdrop-blur-md rounded-2xl p-8 text-left hover:border-slate-300 dark:hover:border-emerald-500/20 shadow-sm hover:-translate-y-1.5 hover:scale-[1.01] hover:shadow-lg dark:hover:shadow-[0_20px_50px_rgba(16,185,129,0.08)] transition-all duration-300 group">
-            <div className="w-12 h-12 rounded-xl bg-emerald-150 dark:bg-emerald-500/[0.05] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-              <Users className="w-6 h-6 text-emerald-500" />
+
+          {/* Stats Ticker */}
+          <motion.div
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+            className="w-full max-w-5xl pt-10"
+          >
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+              <StatCard label="Registered Donors" value={stats.totalDonors} colorClass="text-ob-red-700 dark:text-ob-red-500" />
+              <StatCard label="Affiliated Banks" value={stats.totalBanks} colorClass="text-blue-600 dark:text-blue-400" />
+              <StatCard label="Dispatches Fulfilled" value={stats.requestsFulfilled} colorClass="text-amber-500" />
+              <StatCard label="Lives Protected" value={stats.livesHelped} colorClass="text-emerald-500" />
             </div>
-            <h3 className="text-lg font-bold text-slate-850 dark:text-white mb-3">Donor Privacy Lock</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-body">
-              Donor contact information is encrypted and completely hidden from public listings, revealed only after the donor accepts a specific emergency.
-            </p>
+          </motion.div>
+
+          {/* Scroll Indicator */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.6 }}
+            transition={{ delay: 1 }}
+            className="absolute bottom-6 flex flex-col items-center gap-1.5"
+          >
+            <span className="text-[10px] tracking-[0.25em] uppercase font-mono">Discover Platform</span>
+            <motion.div animate={{ y: [0, 6, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
+              <ChevronDown className="w-4 h-4" />
+            </motion.div>
           </motion.div>
         </motion.div>
+      </section>
 
-        {/* Blood Donation Knowledge Base */}
-        <div className="mt-32 space-y-16 max-w-5xl mx-auto">
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.6 }}
-            className="text-center space-y-3"
-          >
-            <span className="px-3 py-1.5 bg-[#C0152A]/[0.05] border border-[#C0152A]/10 text-[#C0152A] dark:text-[#FF4D6A] font-bold uppercase tracking-[2px] rounded-full text-[10px]">
-              Education & Safety
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-850 dark:text-white font-display">
-              Understanding Blood Donation
-            </h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xl mx-auto font-body">
-              Basic knowledge, safety guidelines, health advantages, and the different ways you can save lives.
-            </p>
-          </motion.div>
- 
-          <motion.div 
-            variants={containerVariants}
+      {/* ═══════════════════════════════════════════
+          2. THE PROBLEM SECTION
+      ═══════════════════════════════════════════ */}
+      <section className="py-28 px-4 sm:px-6 lg:px-8 border-y border-neutral-200 dark:border-neutral-800/60 bg-neutral-50/50 dark:bg-ob-ink-90/20">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          <motion.div
+            variants={fadeUpSlow}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-100px" }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-8"
+            className="lg:col-span-7 space-y-6"
           >
-            {/* Column 1: Donation Safety */}
-            <motion.div variants={itemVariants} className="bg-white dark:bg-[#0F0F1A]/40 border border-slate-200 dark:border-white/[0.05] rounded-3xl p-8 text-left shadow-sm hover:border-slate-300 dark:hover:border-white/[0.1] hover:-translate-y-1.5 hover:scale-[1.01] hover:shadow-lg dark:hover:shadow-[0_25px_60px_rgba(0,0,0,0.4)] backdrop-blur-md transition-all duration-300 flex flex-col justify-between">
-              <div className="space-y-4">
-                <div className="p-3 bg-slate-100 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] text-[#C0152A] rounded-xl w-fit">
-                  <Shield className="w-5 h-5" />
-                </div>
-                <h3 className="text-xl font-bold text-slate-850 dark:text-white">Donation Safety</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-body">
-                  Donating blood is completely safe. Every donation uses a new, sterile, disposable needle that is discarded immediately after use.
-                </p>
-                <ul className="text-xs text-slate-500 dark:text-slate-400 space-y-3.5 pt-4 border-t border-slate-200 dark:border-white/[0.05]">
-                  <li className="flex items-start gap-2.5">
-                    <span className="text-[#C0152A] font-bold">✓</span>
-                    <span><strong>Eligibility:</strong> Age 18–65, weight ≥ 45 kg, and in generally good health.</span>
-                  </li>
-                  <li className="flex items-start gap-2.5">
-                    <span className="text-[#C0152A] font-bold">✓</span>
-                    <span><strong>Preparation:</strong> Eat a healthy meal, drink plenty of water, and get 8 hours of sleep before donating.</span>
-                  </li>
-                </ul>
-              </div>
-            </motion.div>
- 
-            {/* Column 2: Health Advantages */}
-            <motion.div variants={itemVariants} className="bg-white dark:bg-[#0F0F1A]/40 border border-slate-200 dark:border-white/[0.05] rounded-3xl p-8 text-left shadow-sm hover:border-slate-300 dark:hover:border-white/[0.1] hover:-translate-y-1.5 hover:scale-[1.01] hover:shadow-lg dark:hover:shadow-[0_25px_60px_rgba(0,0,0,0.4)] backdrop-blur-md transition-all duration-300 flex flex-col justify-between">
-              <div className="space-y-4">
-                <div className="p-3 bg-slate-100 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] text-emerald-500 rounded-xl w-fit">
-                  <HeartPulse className="w-5 h-5" />
-                </div>
-                <h3 className="text-xl font-bold text-slate-850 dark:text-white">Health Advantages</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-body">
-                  Saving lives has outstanding biological and psychological rewards for the donor as well.
-                </p>
-                <ul className="text-xs text-slate-500 dark:text-slate-400 space-y-3.5 pt-4 border-t border-slate-200 dark:border-white/[0.05]">
-                  <li className="flex items-start gap-2.5">
-                    <span className="text-emerald-500 font-bold">✓</span>
-                    <span><strong>Regulates Iron:</strong> Helps maintain healthy iron concentrations, reducing the risk of heart disease.</span>
-                  </li>
-                  <li className="flex items-start gap-2.5">
-                    <span className="text-emerald-500 font-bold">✓</span>
-                    <span><strong>Cell Renewal:</strong> Stimulates the production of fresh red blood cells in the bone marrow.</span>
-                  </li>
-                  <li className="flex items-start gap-2.5">
-                    <span className="text-emerald-500 font-bold">✓</span>
-                    <span><strong>Joy of Giving:</strong> Proven psychological benefits from helping those undergoing emergency medical procedures.</span>
-                  </li>
-                </ul>
-              </div>
-            </motion.div>
- 
-            {/* Column 3: Types of Donation */}
-            <motion.div variants={itemVariants} className="bg-white dark:bg-[#0F0F1A]/40 border border-slate-200 dark:border-white/[0.05] rounded-3xl p-8 text-left shadow-sm hover:border-slate-300 dark:hover:border-white/[0.1] hover:-translate-y-1.5 hover:scale-[1.01] hover:shadow-lg dark:hover:shadow-[0_25px_60px_rgba(0,0,0,0.4)] backdrop-blur-md transition-all duration-300 flex flex-col justify-between">
-              <div className="space-y-4">
-                <div className="p-3 bg-slate-100 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] text-amber-500 rounded-xl w-fit">
-                  <Activity className="w-5 h-5" />
-                </div>
-                <h3 className="text-xl font-bold text-slate-850 dark:text-white">Types of Donations</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-body">
-                  Your blood is separated into multiple life-saving components depending on patients' medical needs:
-                </p>
-                <div className="space-y-3.5 pt-4 border-t border-slate-200 dark:border-white/[0.05]">
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                    <span className="text-slate-850 dark:text-white font-bold block mb-0.5">Whole Blood</span>
-                    The most common type. Includes red cells, plasma, and platelets. Used for trauma, surgeries, and anemia.
-                  </div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                    <span className="text-slate-850 dark:text-white font-bold block mb-0.5">Platelets (Apheresis)</span>
-                    Crucial for cancer patients undergoing chemotherapy, organ transplants, and massive blood loss.
-                  </div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                    <span className="text-slate-850 dark:text-white font-bold block mb-0.5">Plasma / RBCs</span>
-                    Plasma is used for severe burns and shock. Red blood cells (RBCs) target oxygen delivery.
-                  </div>
-                </div>
-              </div>
-            </motion.div>
+            <span className="px-3 py-1.5 bg-ob-red-700/10 dark:bg-ob-red-700/20 text-ob-red-700 dark:text-ob-red-500 text-xs font-mono rounded font-semibold uppercase tracking-[3px]">
+              The Reality
+            </span>
+            <h2 className="text-4xl lg:text-5xl font-display text-neutral-900 dark:text-ob-white leading-tight">
+              India's Hidden Healthcare Crisis
+            </h2>
+            <div className="flex gap-4">
+              <Quote className="w-10 h-10 text-ob-red-700/40 shrink-0" />
+              <blockquote className="text-lg md:text-xl text-neutral-600 dark:text-neutral-400 italic font-light leading-relaxed">
+                India faces an annual deficit of over 2 million blood units. In critical surgeries, accidents, and postpartum emergencies, finding a compatible donor is a race against a clock measured in minutes — not hours.
+              </blockquote>
+            </div>
+            <p className="text-neutral-500 dark:text-neutral-400 text-sm leading-relaxed max-w-2xl pl-14">
+              Traditional coordination depends on phone trees and social media broadcasts — methods that are slow, insecure, and highly localized. OneBlood replaces this chaos with structured, AI-verified emergency dispatching across a verified donor network.
+            </p>
+          </motion.div>
+          
+          <motion.div
+            variants={revealFromBelow}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-80px" }}
+            className="lg:col-span-5 flex flex-col items-center justify-center p-8 rounded-3xl bg-neutral-100 dark:bg-ob-ink-90/40 border border-neutral-200 dark:border-ob-glass-border shadow-sm relative overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(185,28,28,0.04),transparent_70%)] pointer-events-none" />
+            <h4 className="text-xs uppercase font-mono font-bold tracking-[3px] text-neutral-400 dark:text-neutral-500 mb-6">
+              Vital Recipient Compatibility
+            </h4>
+            <div className="grid grid-cols-4 gap-3 w-full">
+              {bloodGroups.map((group, idx) => {
+                const isActive = idx === activeBloodGroupIndex;
+                return (
+                  <motion.div
+                    key={group}
+                    animate={{ 
+                      scale: isActive ? 1.1 : 1,
+                      backgroundColor: isActive ? 'rgb(185, 28, 28)' : 'rgba(0,0,0,0)',
+                      borderColor: isActive ? 'rgb(185, 28, 28)' : 'rgba(128,128,128,0.2)'
+                    }}
+                    transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
+                    className={`h-16 rounded-xl flex items-center justify-center border font-mono text-lg font-black transition-all ${
+                      isActive 
+                        ? 'text-white shadow-glow-red z-10' 
+                        : 'text-neutral-400 dark:text-neutral-600 border-neutral-300 dark:border-neutral-800'
+                    }`}
+                  >
+                    {group}
+                  </motion.div>
+                );
+              })}
+            </div>
+            <p className="text-[11px] text-neutral-400 dark:text-neutral-500 mt-6 font-mono">
+              * Red cells require exact biological matching
+            </p>
           </motion.div>
         </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════
+          3. HOW IT WORKS SECTION
+      ═══════════════════════════════════════════ */}
+      <section className="py-28 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
+        <motion.div
+          variants={fadeUpSlow}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          className="text-center space-y-4 mb-20"
+        >
+          <span className="px-3 py-1.5 bg-ob-red-700/10 dark:bg-ob-red-700/20 text-ob-red-700 dark:text-ob-red-500 text-xs font-mono rounded font-semibold uppercase tracking-[3px]">
+            Precision Pipeline
+          </span>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display text-neutral-900 dark:text-ob-white">
+            Three Steps. Infinite Lifelines.
+          </h2>
+          <p className="text-sm sm:text-base text-neutral-500 dark:text-neutral-400 max-w-xl mx-auto">
+            Engineered to remove friction, verify identity instantly, and match donors in under 30 seconds.
+          </p>
+        </motion.div>
+
+        <motion.div 
+          variants={staggerGrid}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-80px" }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-8 relative"
+        >
+          {/* Timeline Connector Line */}
+          <div className="hidden md:block absolute top-[28%] left-[15%] right-[15%] h-0.5 border-t-2 border-dashed border-neutral-200 dark:border-neutral-800/80 pointer-events-none z-0" />
+
+          <FeatureStep
+            icon={Scan}
+            step="01"
+            title="Upload & Verify"
+            description="Upload the doctor's prescription. Claude AI instantly validates authenticity via OCR, extracting blood type, hospital, and urgency — stopping spam and protecting precious donor slots."
+            accent
+          />
+          <FeatureStep
+            icon={MapPin}
+            step="02"
+            title="Match & Broadcast"
+            description="The geospatial engine searches compatible blood groups within a 25km radius. A push broadcast triggers immediately to verified donors, keeping all contact details encrypted."
+          />
+          <FeatureStep
+            icon={Handshake}
+            step="03"
+            title="Confirm & Dispatch"
+            description="Donor accepts the request, a unique Match ID (MOB-XXXXXXX) is generated, and live tracking begins. The hospital confirms receipt to close the loop — all in real-time."
+          />
+        </motion.div>
+
+        {/* Learn more link */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.4 }}
+          className="text-center mt-12"
+        >
+          <Link
+            to="/how-it-works"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-ob-red-700 dark:text-ob-red-500 hover:gap-3 transition-all duration-300"
+          >
+            See the full 6-step protocol
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </motion.div>
+      </section>
+
+      {/* ═══════════════════════════════════════════
+          4. BLOOD COMPATIBILITY MATRIX SECTION
+      ═══════════════════════════════════════════ */}
+      <section className="py-28 px-4 sm:px-6 lg:px-8 border-t border-neutral-200 dark:border-neutral-800/60 bg-neutral-50/30 dark:bg-ob-ink-90/10">
+        <div className="max-w-6xl mx-auto space-y-12">
+          <motion.div
+            variants={fadeUpSlow}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-80px" }}
+            className="text-center space-y-4"
+          >
+            <span className="px-3 py-1.5 bg-ob-red-700/10 dark:bg-ob-red-700/20 text-ob-red-700 dark:text-ob-red-500 text-xs font-mono rounded font-semibold uppercase tracking-wider">
+              Clinical Standard
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-display text-neutral-900 dark:text-ob-white">
+              Interactive Compatibility Tool
+            </h2>
+            <p className="text-sm sm:text-base text-neutral-500 dark:text-neutral-400 max-w-xl mx-auto">
+              Understand which blood types can be safely donated and received — powered by clinical matching logic.
+            </p>
+          </motion.div>
+          
+          <BloodCompatibilityMatrix />
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════
+          5. TRUST & TESTIMONIALS SECTION
+      ═══════════════════════════════════════════ */}
+      <section className="py-28 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+        <motion.div
+          variants={fadeUpSlow}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-80px" }}
+          className="lg:col-span-5 space-y-6 lg:sticky lg:top-24"
+        >
+          <span className="px-3 py-1.5 bg-ob-red-700/10 dark:bg-ob-red-700/20 text-ob-red-700 dark:text-ob-red-500 text-xs font-mono rounded font-semibold uppercase tracking-[3px]">
+            Network Integrity
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-display text-neutral-900 dark:text-ob-white">
+            Trust Earned Through Action
+          </h2>
+          <div className="space-y-4 text-neutral-600 dark:text-neutral-400 text-sm leading-relaxed">
+            <p>
+              OneBlood operates on complete transparency. Our security models ensure that patient documents and donor health matrices are kept AES-256 encrypted and separate from global search indexing.
+            </p>
+            <p>
+              By partnering with verified local blood banks and government emergency lines, we bridge critical system gaps in real-time — creating a unified supply chain for life-saving resources.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4 pt-4">
+            <motion.div
+              whileHover={{ scale: 1.03 }}
+              className="p-5 rounded-2xl bg-neutral-50 dark:bg-ob-ink-90/40 border border-neutral-200 dark:border-ob-glass-border"
+            >
+              <p className="text-3xl font-bold text-neutral-900 dark:text-ob-white font-mono">100%</p>
+              <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1 font-semibold uppercase tracking-wider">AI-Verified Inquiries</p>
+            </motion.div>
+            <motion.div
+              whileHover={{ scale: 1.03 }}
+              className="p-5 rounded-2xl bg-neutral-50 dark:bg-ob-ink-90/40 border border-neutral-200 dark:border-ob-glass-border"
+            >
+              <p className="text-3xl font-bold text-neutral-900 dark:text-ob-white font-mono">&lt; 5 Min</p>
+              <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1 font-semibold uppercase tracking-wider">Match Dispatch Time</p>
+            </motion.div>
+          </div>
+        </motion.div>
+
+        <div className="lg:col-span-7 space-y-8">
+          <HallOfFameSection />
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════
+          6. CTA BANNER
+      ═══════════════════════════════════════════ */}
+      <section className="py-24 px-4 sm:px-6 lg:px-8 border-t border-neutral-200 dark:border-neutral-800/60 bg-gradient-to-br from-ob-red-950 via-ob-red-900 to-ob-red-950 text-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.4),transparent_90%)] pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-ob-red-700/20 rounded-full blur-[150px] pointer-events-none" />
         
-        {/* Hall of Fame section */}
-        <HallOfFameSection />
-      </div>
+        <motion.div
+          variants={revealFromBelow}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-80px" }}
+          className="max-w-4xl mx-auto text-center space-y-8 relative z-10"
+        >
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-display font-black leading-tight text-white">
+            Your blood could save a life today.
+          </h2>
+          <p className="text-sm sm:text-base text-red-200 max-w-2xl mx-auto leading-relaxed">
+            Every day, thousands of patients await critical matches. Registering takes less than two minutes. Let's make sure no request goes unanswered.
+          </p>
+          <div className="flex flex-wrap justify-center gap-4 pt-4">
+            <Link 
+              to={user ? "/home" : "/auth/signup?role=donor"}
+              state={{ role: 'donor' }}
+              className="px-8 py-4 text-base rounded-full bg-white text-ob-red-900 font-bold hover:bg-neutral-100 hover:scale-[1.02] active:scale-[0.97] transition-all duration-200 shadow-lg"
+            >
+              Register to Donate
+            </Link>
+            <Link 
+              to={user ? "/home" : "/auth/signup?role=seeker"}
+              state={{ role: 'seeker' }}
+              className="px-8 py-4 text-base rounded-full bg-transparent hover:bg-white/10 border border-white/20 text-white font-semibold active:scale-[0.97] transition-all duration-200 hover:border-white/40"
+            >
+              Request Assistance
+            </Link>
+          </div>
+        </motion.div>
+      </section>
+      
     </div>
   );
-};
-
-export default LandingPage;
+}
