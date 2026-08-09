@@ -118,14 +118,6 @@ export default function LandingPage() {
             animate="visible"
             className="space-y-6 flex flex-col items-center"
           >
-            {/* Eyebrow Label */}
-            <motion.span 
-              variants={fadeUp}
-              className="px-4 py-1.5 bg-ob-red-700/10 dark:bg-ob-red-700/20 border border-ob-red-700/20 text-ob-red-700 dark:text-ob-red-500 font-bold uppercase tracking-[3px] rounded-full text-xs"
-            >
-              Emergency Coordination Engine
-            </motion.span>
-
             {/* Headline */}
             <motion.h1 
               variants={fadeUp}
@@ -165,6 +157,12 @@ export default function LandingPage() {
               className="px-8 py-4 text-base rounded-full bg-neutral-100 hover:bg-neutral-200 dark:bg-ob-glass-hover dark:hover:bg-neutral-800 border border-neutral-200 dark:border-ob-glass-border text-neutral-800 dark:text-ob-white font-semibold active:scale-[0.97] transition-all duration-200 hover:scale-[1.02]"
             >
               <span>Become a Registered Donor</span>
+            </Link>
+            <Link 
+              to="/donate"
+              className="px-8 py-4 text-base rounded-full border border-[#F59E0B] text-[#F59E0B] font-semibold active:scale-[0.97] transition-all duration-200 hover:scale-[1.02] hover:bg-[#F59E0B] hover:text-neutral-900"
+            >
+              <span>Donate Financially</span>
             </Link>
           </motion.div>
 
@@ -367,7 +365,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════════════════════════════
-          5. TRUST & TESTIMONIALS SECTION
+          5. TRUST & NETWORK INTEGRITY SECTION
       ═══════════════════════════════════════════ */}
       <section className="py-28 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
         <motion.div

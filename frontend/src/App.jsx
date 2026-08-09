@@ -26,6 +26,8 @@ import AdminPortal from './pages/AdminPortal';
 import NotFoundPage from './pages/NotFoundPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import DonatePage from './pages/DonatePage';
+import DonateSuccessPage from './pages/DonateSuccessPage';
 
 // New V3 Pages
 import DonorHomePage from './pages/DonorHomePage';
@@ -99,8 +101,10 @@ function App() {
             <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
             <Route path="/welcome" element={<SuccessPage />} />
-            <Route path="/blood-bank/:id" element={<BloodBankDetailPage />} />
+             <Route path="/blood-bank/:id" element={<BloodBankDetailPage />} />
             <Route path="/donor/:id" element={<DonorPublicProfilePage />} />
+            <Route path="/donate" element={<DonatePage />} />
+            <Route path="/donate/success" element={<DonateSuccessPage />} />
 
             {/* Notice Board Routes */}
             <Route path="/noticeboard" element={<NoticeBoardPage />} />

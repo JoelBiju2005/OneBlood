@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import toast from 'react-hot-toast';
-import { HeartPulse, User, Mail, Phone, Lock, Landmark, Heart, Loader2, Eye, EyeOff, MapPin, AlertCircle, Quote } from 'lucide-react';
+import { HeartPulse, User, Mail, Phone, Lock, Landmark, Heart, Loader2, Eye, EyeOff, MapPin, AlertCircle, ShieldCheck, UserCheck, Activity } from 'lucide-react';
 import Logo from '../components/shared/Logo';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 const CITIES = [
   'Bengaluru',
@@ -19,27 +19,11 @@ const CITIES = [
   'Visakhapatnam'
 ];
 
-const TESTIMONIALS = [
-  {
-    text: "India needs structured, fast donor dispatching. OneBlood does exactly that—ensuring emergency requests get matched instantly, saving lives during crucial golden hours.",
-    author: "Karan Johar",
-    role: "Red Cross Volunteer",
-    stat: "Verified Partner"
-  },
-  {
-    text: "I registered in under two minutes. Knowing my identity is encrypted and only shared with verified patients is why I choose OneBlood for my regular donations.",
-    author: "Shreya Ghoshal",
-    role: "Active A+ Donor",
-    stat: "5 Donations Logged"
-  }
-];
-
 export default function SignupPage() {
   const { register: registerUser, isLoading, isAuthenticated, user } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [testimonialIndex, setTestimonialIndex] = useState(0);
 
   // Auto-redirect if already logged in
   useEffect(() => {
@@ -47,14 +31,6 @@ export default function SignupPage() {
       navigate('/home', { replace: true });
     }
   }, [isAuthenticated, user, isSubmitting, navigate]);
-
-  // Cycle testimonials
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTestimonialIndex((prev) => (prev + 1) % TESTIMONIALS.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, []);
 
   const [selectedRole, setSelectedRole] = useState(() => {
     if (location.state?.role) return location.state.role;
@@ -214,31 +190,33 @@ export default function SignupPage() {
           </div>
         </div>
 
-        {/* Testimonials */}
-        <div className="relative z-10 max-w-xl pr-8 my-auto">
-          <Quote className="w-12 h-12 text-red-400/40 mb-6" />
-          <div className="min-h-[140px] relative">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={testimonialIndex}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.4 }}
-                className="space-y-4"
-              >
-                <p className="text-lg md:text-xl font-light leading-relaxed text-red-100 font-sans">
-                  "{TESTIMONIALS[testimonialIndex].text}"
-                </p>
-                <div>
-                  <h4 className="font-bold text-white text-sm">{TESTIMONIALS[testimonialIndex].author}</h4>
-                  <p className="text-xs text-red-300">{TESTIMONIALS[testimonialIndex].role}</p>
-                </div>
-                <div className="inline-block px-3 py-1 bg-white/10 rounded-full text-[10px] font-mono font-semibold uppercase tracking-wider text-red-200">
-                  {TESTIMONIALS[testimonialIndex].stat}
-                </div>
-              </motion.div>
-            </AnimatePresence>
+        {/* Platform Overview */}
+        <div className="relative z-10 max-w-xl pr-8 my-auto space-y-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-xs font-mono font-bold tracking-widest text-red-200 uppercase">
+            <UserCheck className="w-3.5 h-3.5 text-red-400" /> Unified Health Identity
+          </div>
+          <h3 className="text-2xl md:text-3xl font-display font-bold text-white leading-tight">
+            Join India's Most Trusted Emergency Blood Network
+          </h3>
+          <p className="text-sm font-light text-red-100/90 leading-relaxed">
+            Register as a Donor, Emergency Seeker, Hospital, or Blood Bank to access instant proximity matching and automated emergency workflows.
+          </p>
+
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
+              <ShieldCheck className="w-5 h-5 text-red-400 shrink-0" />
+              <div>
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider">Privacy Protected</h4>
+                <p className="text-xs text-red-200/80">Contact details stay encrypted until dispatch confirmation</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
+              <Activity className="w-5 h-5 text-red-400 shrink-0" />
+              <div>
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider">AI Emergency Matching</h4>
+                <p className="text-xs text-red-200/80">Instant blood compatibility calculation & fast alert dispatch</p>
+              </div>
+            </div>
           </div>
         </div>
 

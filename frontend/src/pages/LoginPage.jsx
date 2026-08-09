@@ -5,35 +5,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import useAuthStore from '../store/authStore';
 import toast from 'react-hot-toast';
-import { HeartPulse, Mail, Lock, Loader2, Eye, EyeOff, Quote } from 'lucide-react';
+import { HeartPulse, Mail, Lock, Loader2, Eye, EyeOff, ShieldCheck, Zap, Radio } from 'lucide-react';
 import Logo from '../components/shared/Logo';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 const loginSchema = z.object({
   identifier: z.string().min(1, { message: 'OneBlood ID or Email is required' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
 });
-
-const TESTIMONIALS = [
-  {
-    text: "When my mother needed emergency surgery in Chennai, traditional social broadcasts failed. Within minutes of uploading her request to OneBlood, three donors matched and responded. Absolute lifesaver.",
-    author: "Priya Ramanathan",
-    role: "Emergency Seeker",
-    stat: "Matched in 4 mins"
-  },
-  {
-    text: "Being a regular O- donor, I wanted a secure way to help without having my phone number publicly listed. OneBlood keeps my details encrypted until I actively accept a dispatch request.",
-    author: "Arjun Mehta",
-    role: "Verified O- Donor",
-    stat: "14 Life Saves"
-  },
-  {
-    text: "Integrating our hospital ward with the OneBlood coordination portal has completely modernized how we request emergency units. No phone tag, just verified digital matches.",
-    author: "Dr. K. Raghavan",
-    role: "Chief Medical Officer",
-    stat: "Hospital Network Member"
-  }
-];
 
 export default function LoginPage() {
   const { login, isLoading, isAuthenticated, user } = useAuthStore();
@@ -41,7 +20,6 @@ export default function LoginPage() {
   const location = useLocation();
   const [showPass, setShowPass] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [testimonialIndex, setTestimonialIndex] = useState(0);
 
   // Show success message from password reset redirect
   useEffect(() => {
@@ -57,14 +35,6 @@ export default function LoginPage() {
       navigate('/home', { replace: true });
     }
   }, [isAuthenticated, user, isSubmitting, navigate]);
-
-  // Cycle testimonials
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTestimonialIndex((prev) => (prev + 1) % TESTIMONIALS.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, []);
 
   const {
     register,
@@ -106,31 +76,31 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Testimonial Crossfade Slider */}
-        <div className="relative z-10 max-w-xl pr-8 my-auto">
-          <Quote className="w-12 h-12 text-red-400/40 mb-6" />
-          <div className="min-h-[140px] relative">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={testimonialIndex}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.4 }}
-                className="space-y-4"
-              >
-                <p className="text-lg md:text-xl font-light leading-relaxed text-red-100">
-                  "{TESTIMONIALS[testimonialIndex].text}"
-                </p>
-                <div>
-                  <h4 className="font-bold text-white text-sm">{TESTIMONIALS[testimonialIndex].author}</h4>
-                  <p className="text-xs text-red-300">{TESTIMONIALS[testimonialIndex].role}</p>
-                </div>
-                <div className="inline-block px-3 py-1 bg-white/10 rounded-full text-[10px] font-mono font-semibold uppercase tracking-wider text-red-200">
-                  {TESTIMONIALS[testimonialIndex].stat}
-                </div>
-              </motion.div>
-            </AnimatePresence>
+        {/* Platform Overview Feature Panel */}
+        <div className="relative z-10 max-w-xl pr-8 my-auto space-y-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-xs font-mono font-bold tracking-widest text-red-200 uppercase">
+            <Radio className="w-3.5 h-3.5 text-red-400 animate-pulse" /> Live Emergency Grid
+          </div>
+          <h3 className="text-2xl md:text-3xl font-display font-bold text-white leading-tight">
+            Accelerating Emergency Blood Response Across India
+          </h3>
+          <p className="text-sm md:text-base font-light text-red-100/90 leading-relaxed">
+            OneBlood coordinates verified donors, blood banks, and hospitals in real-time. Fast matching, encrypted data privacy, and zero broadcast delay.
+          </p>
+
+          <div className="grid grid-cols-2 gap-4 pt-2">
+            <div className="p-4 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm space-y-1">
+              <div className="flex items-center gap-2 text-red-300 font-semibold text-xs uppercase tracking-wider">
+                <Zap className="w-4 h-4 text-red-400" /> &lt; 5 Min Dispatch
+              </div>
+              <p className="text-xs text-red-200/80">Proximity-based smart donor routing</p>
+            </div>
+            <div className="p-4 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm space-y-1">
+              <div className="flex items-center gap-2 text-red-300 font-semibold text-xs uppercase tracking-wider">
+                <ShieldCheck className="w-4 h-4 text-red-400" /> AES-256 Encrypted
+              </div>
+              <p className="text-xs text-red-200/80">Strict privacy & identity isolation</p>
+            </div>
           </div>
         </div>
 

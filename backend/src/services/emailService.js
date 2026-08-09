@@ -673,6 +673,75 @@ const sendPasswordResetConfirmEmail = async ({ name, email }) => {
   });
 };
 
+const financialDonationThankYouTemplate = ({ name, amountInRupees, receiptId, paymentId }) => `
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0"
+        style="max-width:600px;width:100%;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="background:#C0152A;padding:28px 40px;text-align:center;">
+            <h1 style="color:#fff;margin:0;font-size:28px;font-weight:800;">One<span style="font-weight:400;">Blood</span></h1>
+            <p style="color:rgba(255,255,255,0.75);margin:6px 0 0;font-size:11px;letter-spacing:3px;text-transform:uppercase;">Emergency Blood Resource Platform</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:40px;">
+            <h2 style="color:#1a1a1a;font-size:20px;margin:0 0 12px;">Thank you for your generosity, ${name} 🙏</h2>
+            <p style="color:#555;font-size:15px;line-height:1.6;margin:0 0 28px;">
+              Your financial contribution of <strong style="color:#C0152A;">₹${amountInRupees.toLocaleString('en-IN')}</strong> has been received successfully.
+              Every rupee goes directly towards supporting blood transfusion costs for patients who cannot afford them across Karnataka, Andhra Pradesh, and Telangana.
+            </p>
+            <div style="background:#fff5f5;border:1.5px solid #C0152A;border-radius:10px;padding:20px 24px;margin:0 0 28px;">
+              <p style="color:#888;font-size:11px;margin:0 0 12px;text-transform:uppercase;letter-spacing:2px;">Payment Receipt</p>
+              <table width="100%" style="font-size:14px;border-collapse:collapse;">
+                <tr>
+                  <td style="color:#888;padding:6px 0;border-bottom:1px solid #fde8e8;">Receipt ID</td>
+                  <td style="color:#C0152A;font-family:monospace;font-weight:700;padding:6px 0;border-bottom:1px solid #fde8e8;text-align:right;">${receiptId}</td>
+                </tr>
+                <tr>
+                  <td style="color:#888;padding:6px 0;border-bottom:1px solid #fde8e8;">Payment ID</td>
+                  <td style="color:#333;font-family:monospace;padding:6px 0;border-bottom:1px solid #fde8e8;text-align:right;">${paymentId}</td>
+                </tr>
+                <tr>
+                  <td style="color:#888;padding:6px 0;">Amount</td>
+                  <td style="color:#1a1a1a;font-weight:700;font-size:16px;padding:6px 0;text-align:right;">₹${amountInRupees.toLocaleString('en-IN')}</td>
+                </tr>
+              </table>
+            </div>
+            <p style="color:#888;font-size:13px;line-height:1.6;margin:0 0 24px;">
+              Please save your Receipt ID <strong style="color:#C0152A;">${receiptId}</strong> for your records. If you have any questions about your donation, please reach out to us and quote this ID.
+            </p>
+            <div style="text-align:center;">
+              <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/donate" style="display:inline-block;background:#C0152A;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:700;font-size:15px;">Visit OneBlood →</a>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#1a1a1a;padding:20px 40px;text-align:center;">
+            <p style="color:#888;font-size:12px;margin:0;">OneBlood · Connecting lives, one drop at a time.</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+const sendFinancialDonationThankYouEmail = ({ name, email, amountInRupees, receiptId, paymentId }) => {
+  return sendEmailViaBrevo({
+    to: email,
+    toName: name,
+    subject: `Thank you for your donation — Receipt ${receiptId} | OneBlood`,
+    html: financialDonationThankYouTemplate({ name, amountInRupees, receiptId, paymentId }),
+    templateName: 'financial_donation_thank_you',
+    emailType: 'financial_donation_thank_you'
+  });
+};
+
 module.exports = {
   sendEmail,
   sendTemplateEmail,
@@ -684,6 +753,7 @@ module.exports = {
   runEmailRetryJob,
   sendEmailViaBrevo,
   sendPasswordResetOTPEmail,
-  sendPasswordResetConfirmEmail
+  sendPasswordResetConfirmEmail,
+  sendFinancialDonationThankYouEmail
 };
 

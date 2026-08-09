@@ -21,6 +21,7 @@ const chatRoutes = require('./routes/chatRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const noticeBoardRoutes = require('./routes/noticeBoardRoutes');
 const hospitalRoutes = require('./routes/hospitalRoutes');
+const financialDonationRoutes = require('./routes/financialDonationRoutes');
 
 const app = express();
 
@@ -99,7 +100,7 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'"],
+      scriptSrc: ["'self'", "https://checkout.razorpay.com"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com", "https://fonts.googleapis.com"],
       imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://*.tile.openstreetmap.org", "https://*.basemaps.cartocdn.com", "https://cdnjs.cloudflare.com"],
       connectSrc: [
@@ -107,12 +108,14 @@ app.use(helmet({
         process.env.FRONTEND_URL || 'http://localhost:5173',
         "wss://oneblood-nvg1.onrender.com",
         "https://router.project-osrm.org",
-        "https://ipapi.co"
+        "https://ipapi.co",
+        "https://api.razorpay.com",
+        "https://lumberjack.razorpay.com"
       ],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
-      frameSrc: ["'none'"],
+      frameSrc: ["https://api.razorpay.com"],
       upgradeInsecureRequests: []
     }
   },
@@ -166,6 +169,7 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/noticeboard', noticeBoardRoutes);
 app.use('/api/hospitals', hospitalRoutes);
+app.use('/api/financial-donations', financialDonationRoutes);
 app.get('/api/stats/public', require('./controllers/analyticsController').getPublicStats);
 app.get('/api/directions', require('./controllers/searchController').getDirections);
 

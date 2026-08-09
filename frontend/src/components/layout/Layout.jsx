@@ -170,6 +170,9 @@ const Layout = () => {
 
             {/* Desktop Auth Controls — right */}
             <div className="hidden md:flex items-center space-x-3 shrink-0">
+              <Link to="/donate" className="text-amber-400 hover:text-amber-300 text-sm font-medium transition mr-2 flex items-center">
+                <span>Support Us</span>
+              </Link>
               {isAuthenticated ? (
                 <>
                   {/* Role Toggle */}
@@ -500,6 +503,9 @@ const Layout = () => {
 
               {/* Auth section */}
               <div className="p-4 border-t border-ob-glass-border">
+                <Link to="/donate" className="flex items-center space-x-2.5 px-3 py-2.5 rounded-xl text-sm text-amber-400 hover:text-amber-300 hover:bg-ob-glass-hover transition-colors mb-2" onClick={() => setIsMenuOpen(false)}>
+                  <span>Support Us</span>
+                </Link>
                 {isAuthenticated ? (
                   <div className="space-y-2">
                     {/* User info */}
